@@ -8,6 +8,7 @@ fresh_install() {
   # create new output directory
   [ ! -e "$FRESH_PATH/build.new" ] || rm -rf "$FRESH_PATH/build.new"
   mkdir -p "$FRESH_PATH/build.new"
+  touch "$FRESH_PATH/build.new/shell.sh"
 
   # freshrc DSL
   fresh() {
@@ -15,7 +16,9 @@ fresh_install() {
   }
 
   # load the freshrc file
-  source "$FRESH_RCFILE"
+  if [ -e "$FRESH_RCFILE" ]; then
+    source "$FRESH_RCFILE"
+  fi
 
   # move output into place
   [ ! -e "$FRESH_PATH/build" ] || rm -rf "$FRESH_PATH/build"

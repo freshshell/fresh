@@ -18,6 +18,12 @@ EOF
   assertTrue 'concatenates source files' $?
 }
 
+it_creates_empty_output_with_no_rcfile() {
+  assertFalse 'file does not exist before' '[ -f "$FRESH_PATH/build/shell.sh" ]'
+  assertTrue 'returns true' bin/fresh
+  assertTrue 'file exists after' '[ -f "$FRESH_PATH/build/shell.sh" ]'
+}
+
 it_errors_with_missing_local_file() {
   echo fresh no_such_file >> $FRESH_RCFILE
   assertFalse 'returns false' bin/fresh
