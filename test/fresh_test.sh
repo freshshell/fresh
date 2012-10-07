@@ -9,13 +9,11 @@ it_concatenates_local_shell_files() {
 
   assertTrue 'returns true' bin/fresh
 
-  cat > tmp/sandbox/expected.sh <<EOF
+  assertFileMatches $FRESH_PATH/build/shell.sh <<EOF
 alias gs='git status'
 alias gl='git log'
 alias rake='bundle exec rake'
 EOF
-  diff -U2 tmp/sandbox/expected.sh $FRESH_PATH/build/shell.sh
-  assertTrue 'concatenates source files' $?
 }
 
 it_creates_empty_output_with_no_rcfile() {

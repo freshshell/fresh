@@ -16,4 +16,13 @@ suite() {
   done
 }
 
+# Usage:
+# assertFileMatches FILE <<EOF
+# content
+# EOF
+assertFileMatches() {
+  diff -U2 <(cat) "$1"
+  assertTrue "$1 matches" $?
+}
+
 source test/support/shunit2
