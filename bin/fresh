@@ -4,10 +4,15 @@ FRESH_RCFILE="${FRESH_RCFILE:-$HOME/.freshrc}"
 FRESH_PATH="${FRESH_PATH:-$HOME/.fresh}"
 FRESH_LOCAL="${FRESH_LOCAL:-$HOME/.dotfiles}"
 
+self() {
+  readlink -f "$0"
+}
+
 fresh_install() {
   # create new output directory
   [ ! -e "$FRESH_PATH/build.new" ] || rm -rf "$FRESH_PATH/build.new"
   mkdir -p "$FRESH_PATH/build.new"
+  echo "export PATH=\"$(dirname $(self)):\$PATH\"" >> "$FRESH_PATH/build.new/shell.sh"
   touch "$FRESH_PATH/build.new/shell.sh"
 
   # freshrc DSL

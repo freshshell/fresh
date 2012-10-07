@@ -10,6 +10,7 @@ it_concatenates_local_shell_files() {
   assertTrue 'returns true' bin/fresh
 
   assertFileMatches $FRESH_PATH/build/shell.sh <<EOF
+export PATH="$(readlink -f bin):\$PATH"
 alias gs='git status'
 alias gl='git log'
 alias rake='bundle exec rake'
@@ -20,6 +21,9 @@ it_creates_empty_output_with_no_rcfile() {
   assertFalse 'file does not exist before' '[ -f "$FRESH_PATH/build/shell.sh" ]'
   assertTrue 'returns true' bin/fresh
   assertTrue 'file exists after' '[ -f "$FRESH_PATH/build/shell.sh" ]'
+  assertFileMatches $FRESH_PATH/build/shell.sh <<EOF
+export PATH="$(readlink -f bin):\$PATH"
+EOF
 }
 
 it_errors_with_missing_local_file() {
