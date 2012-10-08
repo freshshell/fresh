@@ -13,7 +13,6 @@ fresh_install() {
   [ ! -e "$FRESH_PATH/build.new" ] || rm -rf "$FRESH_PATH/build.new"
   mkdir -p "$FRESH_PATH/build.new"
   echo "export PATH=\"$(bin_path):\$PATH\"" >> "$FRESH_PATH/build.new/shell.sh"
-  touch "$FRESH_PATH/build.new/shell.sh"
 
   # freshrc DSL
   fresh() {
