@@ -31,4 +31,12 @@ assertFileMatches() {
   assertTrue "$1 matches" $?
 }
 
+runFresh() {
+  if [ "$1" == 'fails' ]; then
+    assertFalse 'fails to build' bin/fresh
+  else
+    assertTrue 'successfully builds' bin/fresh
+  fi
+}
+
 source test/support/shunit2
