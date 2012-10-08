@@ -74,13 +74,13 @@ it_does_not_clone_existing_repos() {
 #!/bin/bash -e
 echo "\$@" >> tmp/sandbox/git.log
 EOF
-chmod +x tmp/sandbox/bin/git
-mkdir -p $FRESH_PATH/source/repo/name
-touch $FRESH_PATH/source/repo/name/file
+  chmod +x tmp/sandbox/bin/git
+  mkdir -p $FRESH_PATH/source/repo/name
+  touch $FRESH_PATH/source/repo/name/file
 
-runFresh
+  runFresh
 
-assertFalse 'did not run git' '[ -f tmp/sandbox/git.log ]'
+  assertFalse 'did not run git' '[ -f tmp/sandbox/git.log ]'
 }
 
 it_copies_files_from_cloned_repos() {
