@@ -34,10 +34,12 @@ fresh() {
     if ! [ -e "$REPO_DIR" ]; then
       git clone "http://github.com/$REPO_NAME" "$REPO_DIR"
     fi
-    cat "$REPO_DIR/$FILE_NAME" >> "$FRESH_PATH/build.new/shell.sh"
+    local SOURCE_FILE="$REPO_DIR/$FILE_NAME"
   else
-    cat "$FRESH_LOCAL/$FILE_NAME" >> "$FRESH_PATH/build.new/shell.sh"
+    local SOURCE_FILE="$FRESH_LOCAL/$FILE_NAME"
   fi
+
+  cat "$SOURCE_FILE" >> "$FRESH_PATH/build.new/shell.sh"
 }
 
 function parse_fresh_dsl_args() {
