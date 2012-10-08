@@ -44,4 +44,54 @@ it_preserves_existing_compiled_file_when_failing() {
   assertTrue 'original content exists' $?
 }
 
+it_clones_github_repos() {
+  echo fresh repo/name file >> $FRESH_RCFILE
+  mkdir -p tmp/sandbox/bin
+  cat > tmp/sandbox/bin/git <<EOF
+#!/bin/bash -e
+echo "\$@" >> tmp/sandbox/git.log
+mkdir "\$3"
+echo test data > "\$3/file"
+EOF
+  chmod +x tmp/sandbox/bin/git
+
+  assertTrue 'returns true' bin/fresh
+
+  assertFileMatches tmp/sandbox/git.log <<EOF
+clone http://github.com/repo/name tmp/sandbox/fresh/source/repo/name
+EOF
+  assertFileMatches $FRESH_PATH/source/repo/name/file <<EOF
+test data
+EOF
+}
+
+it_does_not_clone_existing_repos() {
+  echo fresh repo/name file >> $FRESH_RCFILE
+  mkdir -p tmp/sandbox/bin
+  cat > tmp/sandbox/bin/git <<EOF
+#!/bin/bash -e
+echo "\$@" >> tmp/sandbox/git.log
+EOF
+chmod +x tmp/sandbox/bin/git
+mkdir -p $FRESH_PATH/source/repo/name
+touch $FRESH_PATH/source/repo/name/file
+
+assertTrue 'returns true' bin/fresh
+
+assertFalse 'did not run git' '[ -f tmp/sandbox/git.log ]'
+}
+
+it_copies_files_from_cloned_repos() {
+  echo fresh repo/name file >> $FRESH_RCFILE
+  mkdir -p $FRESH_PATH/source/repo/name
+  echo remote content > $FRESH_PATH/source/repo/name/file
+
+  assertTrue 'returns true' bin/fresh
+
+  assertFileMatches $FRESH_PATH/build/shell.sh <<EOF
+export PATH="$(bin_path):\$PATH"
+remote content
+EOF
+}
+
 source test/test_helper.sh
