@@ -14,20 +14,6 @@ fresh_install() {
   mkdir -p "$FRESH_PATH/build.new"
   echo "export PATH=\"$(bin_path):\$PATH\"" >> "$FRESH_PATH/build.new/shell.sh"
 
-  # freshrc DSL
-  fresh() {
-    if [ -z "$2" ]; then
-      cat "$FRESH_LOCAL/$1" >> "$FRESH_PATH/build.new/shell.sh"
-    else
-      local REPO_DIR="$FRESH_PATH/source/$1"
-      mkdir -p "$(dirname "$REPO_DIR")"
-      if ! [ -e "$REPO_DIR" ]; then
-        git clone "http://github.com/$1" "$REPO_DIR"
-      fi
-      cat "$REPO_DIR/$2" >> "$FRESH_PATH/build.new/shell.sh"
-    fi
-  }
-
   # load the freshrc file
   if [ -e "$FRESH_RCFILE" ]; then
     source "$FRESH_RCFILE"
@@ -36,6 +22,20 @@ fresh_install() {
   # move output into place
   [ ! -e "$FRESH_PATH/build" ] || rm -rf "$FRESH_PATH/build"
   mv "$FRESH_PATH/build.new" "$FRESH_PATH/build"
+}
+
+# freshrc DSL
+fresh() {
+  if [ -z "$2" ]; then
+    cat "$FRESH_LOCAL/$1" >> "$FRESH_PATH/build.new/shell.sh"
+  else
+    local REPO_DIR="$FRESH_PATH/source/$1"
+    mkdir -p "$(dirname "$REPO_DIR")"
+    if ! [ -e "$REPO_DIR" ]; then
+      git clone "http://github.com/$1" "$REPO_DIR"
+    fi
+    cat "$REPO_DIR/$2" >> "$FRESH_PATH/build.new/shell.sh"
+  fi
 }
 
 fresh_install
