@@ -26,15 +26,48 @@ fresh_install() {
 
 # freshrc DSL
 fresh() {
-  if [ -z "$2" ]; then
-    cat "$FRESH_LOCAL/$1" >> "$FRESH_PATH/build.new/shell.sh"
-  else
-    local REPO_DIR="$FRESH_PATH/source/$1"
+  parse_fresh_dsl_args "$@"
+
+  if [ -n "$REPO_NAME" ]; then
+    local REPO_DIR="$FRESH_PATH/source/$REPO_NAME"
     mkdir -p "$(dirname "$REPO_DIR")"
     if ! [ -e "$REPO_DIR" ]; then
-      git clone "http://github.com/$1" "$REPO_DIR"
+      git clone "http://github.com/$REPO_NAME" "$REPO_DIR"
     fi
-    cat "$REPO_DIR/$2" >> "$FRESH_PATH/build.new/shell.sh"
+    cat "$REPO_DIR/$FILE_NAME" >> "$FRESH_PATH/build.new/shell.sh"
+  else
+    cat "$FRESH_LOCAL/$FILE_NAME" >> "$FRESH_PATH/build.new/shell.sh"
+  fi
+}
+
+function parse_fresh_dsl_args() {
+  REPO_NAME=
+  FILE_NAME=
+  while [ $# -gt 0 ]
+  do
+    case "$1" in
+      -*)
+        echo "Unknown option: $1" >&2
+        exit 1
+        ;;
+      *)
+        if [ -n "$FILE_NAME" ]; then
+          if [ -n "$REPO_NAME" ]; then
+            echo "Expected 1 or 2 args." >&2
+            exit 1
+          fi
+          REPO_NAME="$FILE_NAME"
+          FILE_NAME="$1"
+        else
+          FILE_NAME="$1"
+        fi
+        ;;
+    esac
+    shift
+  done
+  if [ -z "$FILE_NAME" ]; then
+    echo "Filename is required" >&2
+    exit 1
   fi
 }
 
