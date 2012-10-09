@@ -1,6 +1,6 @@
 #!/bin/bash
 
-it_concatenates_local_shell_files() {
+it_builds_local_shell_files() {
   echo fresh aliases/git >> $FRESH_RCFILE
   echo fresh aliases/ruby >> $FRESH_RCFILE
 
