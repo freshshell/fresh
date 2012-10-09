@@ -141,4 +141,28 @@ it_links_generic_files_to_destination() {
   assertEquals "$(readlink ~/.gitconfig)" "$FRESH_PATH/build/gitconfig"
 }
 
+it_does_not_override_existing_links() {
+  echo fresh pryrc --file >> $FRESH_RCFILE
+  mkdir -p $FRESH_LOCAL
+  touch $FRESH_LOCAL/pryrc
+  ln -s /dev/null ~/.pryrc
+
+  runFresh
+
+  assertEquals "$(readlink ~/.pryrc)" "/dev/null"
+}
+
+it_errors_if_link_destination_is_a_file() {
+  echo fresh gitconfig --file >> $FRESH_RCFILE
+  mkdir -p $FRESH_LOCAL
+  touch $FRESH_LOCAL/gitconfig
+  echo foo > ~/.gitconfig
+
+  runFresh fails
+
+  assertFileMatches ~/.gitconfig <<EOF
+foo
+EOF
+}
+
 source test/test_helper.sh

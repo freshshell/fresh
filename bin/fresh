@@ -52,7 +52,10 @@ fresh() {
         SYMLINK_PATH="~/.$DEST_NAME"
       fi
       cat "$SOURCE_FILE" >> "$FRESH_PATH/build.new/$DEST_NAME"
-      ln -s "$FRESH_PATH/build/$DEST_NAME" "$(eval echo "$SYMLINK_PATH")"
+      SYMLINK_PATH="$(eval echo "$SYMLINK_PATH")"
+      if ! [ -L "$SYMLINK_PATH" ]; then
+        ln -s "$FRESH_PATH/build/$DEST_NAME" "$SYMLINK_PATH"
+      fi
       ;;
     *)
       echo "Unknown mode: $MODE" 2>&1
