@@ -46,10 +46,13 @@ fresh() {
     file)
       if [ -n "$MODE_ARG" ]; then
         DEST_NAME="$(basename "$MODE_ARG" | sed 's/^\.//')"
+        SYMLINK_PATH="$MODE_ARG"
       else
         DEST_NAME="$(basename "$FILE_NAME" | sed 's/^\.//')"
+        SYMLINK_PATH="~/.$DEST_NAME"
       fi
       cat "$SOURCE_FILE" >> "$FRESH_PATH/build.new/$DEST_NAME"
+      ln -s "$FRESH_PATH/build/$DEST_NAME" "$(eval echo "$SYMLINK_PATH")"
       ;;
     *)
       echo "Unknown mode: $MODE" 2>&1

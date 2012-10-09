@@ -127,4 +127,18 @@ ui = auto
 EOF
 }
 
+it_links_generic_files_to_destination() {
+  echo 'fresh lib/tmux.conf --file' >> $FRESH_RCFILE
+  echo 'fresh lib/pryrc.rb --file=~/.pryrc' >> $FRESH_RCFILE
+  echo 'fresh .gitconfig --file' >> $FRESH_RCFILE
+  mkdir -p $FRESH_LOCAL/lib
+  touch $FRESH_LOCAL/{lib/tmux.conf,lib/pryrc.rb,.gitconfig}
+
+  runFresh
+
+  assertEquals "$(readlink ~/.tmux.conf)" "$FRESH_PATH/build/tmux.conf"
+  assertEquals "$(readlink ~/.pryrc)" "$FRESH_PATH/build/pryrc"
+  assertEquals "$(readlink ~/.gitconfig)" "$FRESH_PATH/build/gitconfig"
+}
+
 source test/test_helper.sh

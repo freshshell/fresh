@@ -1,4 +1,5 @@
 export PATH="tmp/sandbox/bin:$PATH"
+export HOME="tmp/sandbox/home"
 export FRESH_RCFILE=tmp/sandbox/freshrc
 export FRESH_PATH=tmp/sandbox/fresh
 export FRESH_LOCAL=tmp/sandbox/dotfiles
@@ -9,6 +10,7 @@ setUp() {
     rm -rf tmp/sandbox
   fi
   mkdir tmp/sandbox
+  mkdir tmp/sandbox/home
 }
 
 suite() {
