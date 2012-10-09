@@ -151,11 +151,15 @@ a.button span {
   height: 23px;
 }
 
-#view-on-github span {
-  background: transparent url(../images/octocat-icon.png) 12px 50% no-repeat;
-}
 #view-on-github {
-  margin-right: 0;
+  display: block;
+  height: 149px;
+  width: 149px;
+  position: absolute;
+  top: 0;
+  right: 0;
+  text-indent: -9001px;
+  background: transparent url(../images/forkme.png);
 }
 
 code, pre {
