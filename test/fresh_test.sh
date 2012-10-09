@@ -165,4 +165,47 @@ foo
 EOF
 }
 
+test_parse_fresh_dsl_args() {
+  (
+    set -e
+    __FRESH_TEST_MODE=1
+    source bin/fresh
+    parse_fresh_dsl_args "$@"
+    echo REPO_NAME="$REPO_NAME"
+    echo FILE_NAME="$FILE_NAME"
+    echo MODE="$MODE"
+    echo MODE_ARG="$MODE_ARG"
+  ) > tmp/sandbox/test_parse_fresh_dsl_args.log 2>&1
+  echo EXIT_STATUS=$? >> tmp/sandbox/test_parse_fresh_dsl_args.log
+  assertFileMatches tmp/sandbox/test_parse_fresh_dsl_args.log
+}
+
+it_parses_fresh_dsl_args() {
+  test_parse_fresh_dsl_args twe4ked/dotfiles lib/tmux.conf --file=~/.tmux.conf <<EOF
+REPO_NAME=twe4ked/dotfiles
+FILE_NAME=lib/tmux.conf
+MODE=file
+MODE_ARG=~/.tmux.conf
+EXIT_STATUS=0
+EOF
+
+  test_parse_fresh_dsl_args jasoncodes/dotfiles .gitconfig --file <<EOF
+REPO_NAME=jasoncodes/dotfiles
+FILE_NAME=.gitconfig
+MODE=file
+MODE_ARG=
+EXIT_STATUS=0
+EOF
+
+  test_parse_fresh_dsl_args <<EOF
+Filename is required
+EXIT_STATUS=1
+EOF
+
+  test_parse_fresh_dsl_args foo bar baz <<EOF
+Expected 1 or 2 args.
+EXIT_STATUS=1
+EOF
+}
+
 source test/test_helper.sh

@@ -105,4 +105,6 @@ function parse_fresh_dsl_args() {
   fi
 }
 
-fresh_install
+if [ -z "$__FRESH_TEST_MODE" ]; then
+  fresh_install
+fi
