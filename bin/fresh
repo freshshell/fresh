@@ -45,11 +45,10 @@ fresh() {
       ;;
     file)
       if [ -n "$MODE_ARG" ]; then
-        DEST_NAME="$(basename "$MODE_ARG")"
+        DEST_NAME="$(basename "$MODE_ARG" | sed 's/^\.//')"
       else
-        DEST_NAME="$(basename "$FILE_NAME")"
+        DEST_NAME="$(basename "$FILE_NAME" | sed 's/^\.//')"
       fi
-      DEST_NAME="$(echo "$DEST_NAME" | sed 's/^\.//')"
       cat "$SOURCE_FILE" >> "$FRESH_PATH/build.new/$DEST_NAME"
       ;;
     *)
