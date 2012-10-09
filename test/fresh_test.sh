@@ -97,13 +97,16 @@ EOF
 }
 
 it_builds_generic_files() {
-  echo fresh lib/tmux.conf --file >> $FRESH_RCFILE
-  echo fresh lib/pryrc.rb --file=~/.pryrc >> $FRESH_RCFILE
+  echo 'fresh lib/tmux.conf --file' >> $FRESH_RCFILE
+  echo 'fresh lib/pryrc.rb --file=~/.pryrc' >> $FRESH_RCFILE
+  echo 'fresh .gitconfig --file' >> $FRESH_RCFILE
   mkdir -p $FRESH_LOCAL/lib
   echo unbind C-b >> $FRESH_LOCAL/lib/tmux.conf
   echo set -g prefix C-a >> $FRESH_LOCAL/lib/tmux.conf
   echo Pry.config.color = true >> $FRESH_LOCAL/lib/pryrc.rb
   echo Pry.config.history.should_save = true >> $FRESH_LOCAL/lib/pryrc.rb
+  echo '[color]' >> $FRESH_LOCAL/.gitconfig
+  echo 'ui = auto' >> $FRESH_LOCAL/.gitconfig
 
   runFresh
 
@@ -117,6 +120,10 @@ EOF
   assertFileMatches $FRESH_PATH/build/pryrc <<EOF
 Pry.config.color = true
 Pry.config.history.should_save = true
+EOF
+  assertFileMatches $FRESH_PATH/build/gitconfig <<EOF
+[color]
+ui = auto
 EOF
 }
 
