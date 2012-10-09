@@ -83,7 +83,7 @@ EOF
   assertFalse 'did not run git' '[ -f tmp/sandbox/git.log ]'
 }
 
-it_copies_files_from_cloned_repos() {
+it_builds_shell_files_from_cloned_repos() {
   echo fresh repo/name file >> $FRESH_RCFILE
   mkdir -p $FRESH_PATH/source/repo/name
   echo remote content > $FRESH_PATH/source/repo/name/file
