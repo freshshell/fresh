@@ -22,9 +22,10 @@ bin_path() {
 }
 
 # Usage:
-# assertFileMatches FILE <<EOF
-# content
-# EOF
+#
+#   assertFileMatches FILE <<EOF
+#   content
+#   EOF
 assertFileMatches() {
   diff -U2 <(cat) "$1"
   assertTrue "$1 matches" $?
