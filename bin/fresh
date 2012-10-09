@@ -39,15 +39,42 @@ fresh() {
     local SOURCE_FILE="$FRESH_LOCAL/$FILE_NAME"
   fi
 
-  cat "$SOURCE_FILE" >> "$FRESH_PATH/build.new/shell.sh"
+  case "${MODE:-shell}" in
+    shell)
+      cat "$SOURCE_FILE" >> "$FRESH_PATH/build.new/shell.sh"
+      ;;
+    file)
+      if [ -n "$MODE_ARG" ]; then
+        DEST_NAME="$(basename "$MODE_ARG")"
+      else
+        DEST_NAME="$(basename "$FILE_NAME")"
+      fi
+      DEST_NAME="$(echo "$DEST_NAME" | sed 's/^\.//')"
+      cat "$SOURCE_FILE" >> "$FRESH_PATH/build.new/$DEST_NAME"
+      ;;
+    *)
+      echo "Unknown mode: $MODE" 2>&1
+      exit 1
+      ;;
+  esac
 }
 
 function parse_fresh_dsl_args() {
+  MODE=
+  MODE_ARG=
   REPO_NAME=
   FILE_NAME=
   while [ $# -gt 0 ]
   do
     case "$1" in
+      --file|--file=*)
+        if [ -n "$MODE" ]; then
+          echo "Cannot have more than one mode." 2>&1
+          exit 1
+        fi
+        MODE=file
+        MODE_ARG="$(echo "$1" | sed 's/^--[^=]*=*//')"
+        ;;
       -*)
         echo "Unknown option: $1" >&2
         exit 1

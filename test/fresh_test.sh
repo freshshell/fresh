@@ -96,4 +96,28 @@ remote content
 EOF
 }
 
+it_builds_generic_files() {
+  echo fresh lib/tmux.conf --file >> $FRESH_RCFILE
+  echo fresh lib/pryrc.rb --file=~/.pryrc >> $FRESH_RCFILE
+  mkdir -p $FRESH_LOCAL/lib
+  echo unbind C-b >> $FRESH_LOCAL/lib/tmux.conf
+  echo set -g prefix C-a >> $FRESH_LOCAL/lib/tmux.conf
+  echo Pry.config.color = true >> $FRESH_LOCAL/lib/pryrc.rb
+  echo Pry.config.history.should_save = true >> $FRESH_LOCAL/lib/pryrc.rb
+
+  runFresh
+
+  assertFileMatches $FRESH_PATH/build/shell.sh <<EOF
+export PATH="$(bin_path):\$PATH"
+EOF
+  assertFileMatches $FRESH_PATH/build/tmux.conf <<EOF
+unbind C-b
+set -g prefix C-a
+EOF
+  assertFileMatches $FRESH_PATH/build/pryrc <<EOF
+Pry.config.color = true
+Pry.config.history.should_save = true
+EOF
+}
+
 source test/test_helper.sh
