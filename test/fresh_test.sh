@@ -197,6 +197,27 @@ MODE_ARG=
 EXIT_STATUS=0
 EOF
 
+  test_parse_fresh_dsl_args sedmv --bin <<EOF
+REPO_NAME=
+FILE_NAME=sedmv
+MODE=bin
+MODE_ARG=
+EXIT_STATUS=0
+EOF
+
+  test_parse_fresh_dsl_args scripts/pidof.sh --bin=~/bin/pidof <<EOF
+REPO_NAME=
+FILE_NAME=scripts/pidof.sh
+MODE=bin
+MODE_ARG=~/bin/pidof
+EXIT_STATUS=0
+EOF
+
+  test_parse_fresh_dsl_args foo --file --bin <<EOF
+Cannot have more than one mode.
+EXIT_STATUS=1
+EOF
+
   test_parse_fresh_dsl_args <<EOF
 Filename is required
 EXIT_STATUS=1

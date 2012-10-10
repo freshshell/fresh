@@ -72,12 +72,12 @@ function parse_fresh_dsl_args() {
   while [ $# -gt 0 ]
   do
     case "$1" in
-      --file|--file=*)
+      --file|--file=*|--bin|--bin=*)
         if [ -n "$MODE" ]; then
           echo "Cannot have more than one mode." 2>&1
           exit 1
         fi
-        MODE=file
+        MODE="$(echo "$1" | sed -e 's/^--//' -e 's/=.*//')"
         MODE_ARG="$(echo "$1" | sed 's/^--[^=]*=*//')"
         ;;
       -*)
