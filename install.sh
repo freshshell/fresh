@@ -15,7 +15,7 @@ else
 fi
 
 if ! [ -e ~/.freshrc ]; then
-  touch ~/.freshrc
+  echo 'fresh jasoncodes/fresh bin/fresh --bin' > ~/.freshrc
 fi
 
 ~/.fresh/source/jasoncodes/fresh/bin/fresh

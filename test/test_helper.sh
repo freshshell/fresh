@@ -19,10 +19,6 @@ suite() {
   done
 }
 
-bin_path() {
-  (cd bin && pwd)
-}
-
 # Usage:
 #
 #   assertFileMatches FILE <<EOF
