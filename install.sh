@@ -30,5 +30,8 @@ cat <<-MESSAGE
 |_| |_|  \___||___/_| |_|
 http://freshshell.com/
 
-Add \`source ~/.fresh/build/shell.sh\` to your shell config.
+You're all ready to get fresh!
+
+Add \`$(echo $'\033[1;32msource ~/.fresh/build/shell.sh\033[0m')\` to your shell config.
+
 MESSAGE
