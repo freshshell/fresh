@@ -57,6 +57,22 @@ fresh() {
         ln -s "$FRESH_PATH/build/$DEST_NAME" "$SYMLINK_PATH"
       fi
       ;;
+    bin)
+      if [ -n "$MODE_ARG" ]; then
+        DEST_NAME="$(basename "$MODE_ARG")"
+        SYMLINK_PATH="$MODE_ARG"
+      else
+        DEST_NAME="$(basename "$FILE_NAME")"
+        SYMLINK_PATH="~/bin/$DEST_NAME"
+      fi
+      mkdir -p "$FRESH_PATH/build.new/bin" ~/bin
+      cat "$SOURCE_FILE" >> "$FRESH_PATH/build.new/bin/$DEST_NAME"
+      chmod +x "$FRESH_PATH/build.new/bin/$DEST_NAME"
+      SYMLINK_PATH="$(eval echo "$SYMLINK_PATH")"
+      if ! [ -L "$SYMLINK_PATH" ]; then
+        ln -s "$FRESH_PATH/build/bin/$DEST_NAME" "$SYMLINK_PATH"
+      fi
+      ;;
     *)
       echo "Unknown mode: $MODE" 2>&1
       exit 1

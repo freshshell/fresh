@@ -141,27 +141,68 @@ it_links_generic_files_to_destination() {
   assertEquals "$(readlink ~/.gitconfig)" "$FRESH_PATH/build/gitconfig"
 }
 
+it_builds_bin_files() {
+  echo 'fresh scripts/sedmv --bin' >> $FRESH_RCFILE
+  echo 'fresh pidof.sh --bin=~/bin/pidof' >> $FRESH_RCFILE
+  mkdir -p $FRESH_LOCAL/scripts
+  echo foo >> $FRESH_LOCAL/scripts/sedmv
+  echo bar >> $FRESH_LOCAL/pidof.sh
+
+  runFresh
+
+  assertFileMatches $FRESH_PATH/build/bin/sedmv <<EOF
+foo
+EOF
+  assertFileMatches $FRESH_PATH/build/bin/pidof <<EOF
+bar
+EOF
+
+  assertTrue 'is executable' '[ -x $FRESH_PATH/build/bin/sedmv ]'
+  assertTrue 'is executable' '[ -x $FRESH_PATH/build/bin/pidof ]'
+}
+
+it_links_bin_files_to_destination() {
+  echo 'fresh scripts/sedmv --bin' >> $FRESH_RCFILE
+  echo 'fresh pidof.sh --bin=~/bin/pidof' >> $FRESH_RCFILE
+  mkdir -p $FRESH_LOCAL/scripts
+  touch $FRESH_LOCAL/{scripts/sedmv,pidof.sh}
+
+  runFresh
+
+  assertEquals "$(readlink ~/bin/sedmv)" "$FRESH_PATH/build/bin/sedmv"
+  assertEquals "$(readlink ~/bin/pidof)" "$FRESH_PATH/build/bin/pidof"
+}
+
 it_does_not_override_existing_links() {
   echo fresh pryrc --file >> $FRESH_RCFILE
-  mkdir -p $FRESH_LOCAL
-  touch $FRESH_LOCAL/pryrc
+  echo fresh sedmv --bin >> $FRESH_RCFILE
+  mkdir -p $FRESH_LOCAL ~/bin
+  touch $FRESH_LOCAL/{pryrc,sedmv}
   ln -s /dev/null ~/.pryrc
+  ln -s /dev/null ~/bin/sedmv
 
   runFresh
 
   assertEquals "$(readlink ~/.pryrc)" "/dev/null"
+  assertEquals "$(readlink ~/bin/sedmv)" "/dev/null"
 }
 
 it_errors_if_link_destination_is_a_file() {
-  echo fresh gitconfig --file >> $FRESH_RCFILE
-  mkdir -p $FRESH_LOCAL
-  touch $FRESH_LOCAL/gitconfig
+  mkdir -p $FRESH_LOCAL ~/bin
+  touch $FRESH_LOCAL/{gitconfig,sedmv}
   echo foo > ~/.gitconfig
+  echo bar > ~/bin/sedmv
 
+  echo fresh gitconfig --file > $FRESH_RCFILE
   runFresh fails
-
   assertFileMatches ~/.gitconfig <<EOF
 foo
+EOF
+
+  echo fresh sedmv --bin > $FRESH_RCFILE
+  runFresh fails
+  assertFileMatches ~/bin/sedmv <<EOF
+bar
 EOF
 }
 
