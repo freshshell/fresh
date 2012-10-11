@@ -19,6 +19,39 @@ alias rake='bundle exec rake'
 EOF
 }
 
+it_builds_local_shell_files_with_spaces() {
+  echo "fresh 'aliases/foo bar'" >> $FRESH_RCFILE
+
+  mkdir -p $FRESH_LOCAL/aliases
+  echo SPACE > $FRESH_LOCAL/aliases/'foo bar'
+  echo foo > $FRESH_LOCAL/aliases/foo
+  echo bar > $FRESH_LOCAL/aliases/bar
+
+  runFresh
+
+  assertFileMatches $FRESH_PATH/build/shell.sh <<EOF
+export PATH="~/bin:\$PATH"
+SPACE
+EOF
+}
+
+it_builds_local_shell_files_with_globbing() {
+  echo "fresh 'aliases/file*'" >> $FRESH_RCFILE
+
+  mkdir -p $FRESH_LOCAL/aliases
+  echo file1 > $FRESH_LOCAL/aliases/file1
+  echo file2 > $FRESH_LOCAL/aliases/file2
+  echo other > $FRESH_LOCAL/aliases/other
+
+  runFresh
+
+  assertFileMatches $FRESH_PATH/build/shell.sh <<EOF
+export PATH="~/bin:\$PATH"
+file1
+file2
+EOF
+}
+
 it_creates_empty_output_with_no_rcfile() {
   assertFalse 'file does not exist before' '[ -f "$FRESH_PATH/build/shell.sh" ]'
   runFresh
@@ -127,6 +160,21 @@ ui = auto
 EOF
 }
 
+it_builds_generic_files_with_globbing() {
+  echo "fresh 'file*' --file" >> $FRESH_RCFILE
+
+  mkdir -p $FRESH_LOCAL
+  echo file1 > $FRESH_LOCAL/file1
+  echo file2 > $FRESH_LOCAL/file2
+  echo other > $FRESH_LOCAL/other
+
+  runFresh
+
+  assertTrue 'file1 exists' '[ -f $FRESH_PATH/build/file1 ]'
+  assertTrue 'file2 exists' '[ -f $FRESH_PATH/build/file2 ]'
+  assertFalse 'other files do not exist' '[ -f $FRESH_BUILD/other ]'
+}
+
 it_links_generic_files_to_destination() {
   echo 'fresh lib/tmux.conf --file' >> $FRESH_RCFILE
   echo 'fresh lib/pryrc.rb --file=~/.pryrc' >> $FRESH_RCFILE
@@ -159,6 +207,21 @@ EOF
 
   assertTrue 'is executable' '[ -x $FRESH_PATH/build/bin/sedmv ]'
   assertTrue 'is executable' '[ -x $FRESH_PATH/build/bin/pidof ]'
+}
+
+it_builds_bin_files_with_globbing() {
+  echo "fresh 'file*' --bin" >> $FRESH_RCFILE
+
+  mkdir -p $FRESH_LOCAL
+  echo file1 > $FRESH_LOCAL/file1
+  echo file2 > $FRESH_LOCAL/file2
+  echo other > $FRESH_LOCAL/other
+
+  runFresh
+
+  assertTrue 'file1 exists' '[ -f $FRESH_PATH/build/bin/file1 ]'
+  assertTrue 'file2 exists' '[ -f $FRESH_PATH/build/bin/file2 ]'
+  assertFalse 'other files do not exist' '[ -f $FRESH_BUILD/bin/other ]'
 }
 
 it_links_bin_files_to_destination() {

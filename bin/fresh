@@ -30,44 +30,50 @@ fresh() {
     if ! [ -e "$REPO_DIR" ]; then
       git clone "http://github.com/$REPO_NAME" "$REPO_DIR"
     fi
-    local SOURCE_FILE="$REPO_DIR/$FILE_NAME"
+    local SOURCE_DIR="$REPO_DIR"
   else
-    local SOURCE_FILE="$FRESH_LOCAL/$FILE_NAME"
+    local SOURCE_DIR="$FRESH_LOCAL"
   fi
 
   case "${MODE:-shell}" in
     shell)
-      cat "$SOURCE_FILE" >> "$FRESH_PATH/build.new/shell.sh"
+      find "$SOURCE_DIR" -path "$SOURCE_DIR/$FILE_NAME" -exec cat {} \+ >> "$FRESH_PATH/build.new/shell.sh"
       ;;
     file)
-      if [ -n "$MODE_ARG" ]; then
-        DEST_NAME="$(basename "$MODE_ARG" | sed 's/^\.//')"
-        SYMLINK_PATH="$MODE_ARG"
-      else
-        DEST_NAME="$(basename "$FILE_NAME" | sed 's/^\.//')"
-        SYMLINK_PATH="~/.$DEST_NAME"
-      fi
-      cat "$SOURCE_FILE" >> "$FRESH_PATH/build.new/$DEST_NAME"
-      SYMLINK_PATH="$(eval echo "$SYMLINK_PATH")"
-      if ! [ -L "$SYMLINK_PATH" ]; then
-        ln -s "$FRESH_PATH/build/$DEST_NAME" "$SYMLINK_PATH"
-      fi
+      find "$SOURCE_DIR" -path "$SOURCE_DIR/$FILE_NAME" | while read SOURCE_FILE
+      do
+        if [ -n "$MODE_ARG" ]; then
+          DEST_NAME="$(basename "$MODE_ARG" | sed 's/^\.//')"
+          SYMLINK_PATH="$MODE_ARG"
+        else
+          DEST_NAME="$(basename "$SOURCE_FILE" | sed 's/^\.//')"
+          SYMLINK_PATH="~/.$DEST_NAME"
+        fi
+        cat "$SOURCE_FILE" >> "$FRESH_PATH/build.new/$DEST_NAME"
+        SYMLINK_PATH="$(eval echo "$SYMLINK_PATH")"
+        if ! [ -L "$SYMLINK_PATH" ]; then
+          ln -s "$FRESH_PATH/build/$DEST_NAME" "$SYMLINK_PATH"
+        fi
+      done
       ;;
     bin)
-      if [ -n "$MODE_ARG" ]; then
-        DEST_NAME="$(basename "$MODE_ARG")"
-        SYMLINK_PATH="$MODE_ARG"
-      else
-        DEST_NAME="$(basename "$FILE_NAME")"
-        SYMLINK_PATH="~/bin/$DEST_NAME"
-      fi
-      mkdir -p "$FRESH_PATH/build.new/bin" ~/bin
-      cat "$SOURCE_FILE" >> "$FRESH_PATH/build.new/bin/$DEST_NAME"
-      chmod +x "$FRESH_PATH/build.new/bin/$DEST_NAME"
-      SYMLINK_PATH="$(eval echo "$SYMLINK_PATH")"
-      if ! [ -L "$SYMLINK_PATH" ]; then
-        ln -s "$FRESH_PATH/build/bin/$DEST_NAME" "$SYMLINK_PATH"
-      fi
+      find "$SOURCE_DIR" -path "$SOURCE_DIR/$FILE_NAME" | while read SOURCE_FILE
+      do
+        if [ -n "$MODE_ARG" ]; then
+          DEST_NAME="$(basename "$MODE_ARG")"
+          SYMLINK_PATH="$MODE_ARG"
+        else
+          DEST_NAME="$(basename "$SOURCE_FILE")"
+          SYMLINK_PATH="~/bin/$DEST_NAME"
+        fi
+        mkdir -p "$FRESH_PATH/build.new/bin" ~/bin
+        cat "$SOURCE_FILE" >> "$FRESH_PATH/build.new/bin/$DEST_NAME"
+        chmod +x "$FRESH_PATH/build.new/bin/$DEST_NAME"
+        SYMLINK_PATH="$(eval echo "$SYMLINK_PATH")"
+        if ! [ -L "$SYMLINK_PATH" ]; then
+          ln -s "$FRESH_PATH/build/bin/$DEST_NAME" "$SYMLINK_PATH"
+        fi
+      done
       ;;
     *)
       echo "Unknown mode: $MODE" 2>&1
