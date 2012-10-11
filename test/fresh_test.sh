@@ -62,7 +62,9 @@ EOF
 }
 
 it_errors_with_missing_local_file() {
-  echo fresh no_such_file >> $FRESH_RCFILE
+  echo fresh foo >> $FRESH_RCFILE
+  mkdir -p $FRESH_LOCAL
+  touch $FRESH_LOCAL/bar
   runFresh fails
 }
 

@@ -35,6 +35,11 @@ fresh() {
     local SOURCE_DIR="$FRESH_LOCAL"
   fi
 
+  if [[ $(find "$SOURCE_DIR" -path "$SOURCE_DIR/$FILE_NAME" | wc -l) -lt 1 ]]; then
+    echo "Could not find \"$FILE_NAME\" source file. 2>&1" >&2
+    exit 1
+  fi
+
   case "${MODE:-shell}" in
     shell)
       find "$SOURCE_DIR" -path "$SOURCE_DIR/$FILE_NAME" -exec cat {} \+ >> "$FRESH_PATH/build.new/shell.sh"
