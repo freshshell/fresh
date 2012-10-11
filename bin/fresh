@@ -42,10 +42,13 @@ fresh() {
 
   case "${MODE:-shell}" in
     shell)
-      find "$SOURCE_DIR" -path "$SOURCE_DIR/$FILE_NAME" -exec cat {} \+ >> "$FRESH_PATH/build.new/shell.sh"
+      find "$SOURCE_DIR" -path "$SOURCE_DIR/$FILE_NAME" | sort | while read SOURCE_FILE
+      do
+        cat "$SOURCE_FILE" >> "$FRESH_PATH/build.new/shell.sh"
+      done
       ;;
     file)
-      find "$SOURCE_DIR" -path "$SOURCE_DIR/$FILE_NAME" | while read SOURCE_FILE
+      find "$SOURCE_DIR" -path "$SOURCE_DIR/$FILE_NAME" | sort | while read SOURCE_FILE
       do
         if [ -n "$MODE_ARG" ]; then
           DEST_NAME="$(basename "$MODE_ARG" | sed 's/^\.//')"
@@ -62,7 +65,7 @@ fresh() {
       done
       ;;
     bin)
-      find "$SOURCE_DIR" -path "$SOURCE_DIR/$FILE_NAME" | while read SOURCE_FILE
+      find "$SOURCE_DIR" -path "$SOURCE_DIR/$FILE_NAME" | sort | while read SOURCE_FILE
       do
         if [ -n "$MODE_ARG" ]; then
           DEST_NAME="$(basename "$MODE_ARG")"
