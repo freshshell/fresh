@@ -149,6 +149,7 @@ EOF
       ;;
     install|'')
       fresh_install
+      echo Your dot files are now fresh.
       ;;
     *)
       echo "Unknown option: $1" >&2
