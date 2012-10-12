@@ -132,5 +132,27 @@ function parse_fresh_dsl_args() {
 }
 
 if [ -z "$__FRESH_TEST_MODE" ]; then
-  fresh_install
+  if [ -n "$2" ]; then
+    echo "Invalid arguments" >&2
+    exit 1
+  fi
+
+  case "$1" in
+    help|--help)
+      cat <<EOF
+usage: fresh <command>
+
+Available commands:
+    install  Build shell configuration and relevant symlinks (default)
+    help     Show this help
+EOF
+      ;;
+    install|'')
+      fresh_install
+      ;;
+    *)
+      echo "Unknown option: $1" >&2
+      exit 1
+      ;;
+  esac
 fi
