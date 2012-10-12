@@ -37,4 +37,19 @@ runFresh() {
   fi
 }
 
+stubGit() {
+  mkdir -p tmp/sandbox/bin
+  cat > tmp/sandbox/bin/git <<EOF
+#!/bin/bash -e
+echo "\$@" >> tmp/sandbox/git.log
+case "\$1" in
+  *)
+    mkdir "\$3"
+    echo test data > "\$3/file"
+    ;;
+esac
+EOF
+  chmod +x tmp/sandbox/bin/git
+}
+
 source test/support/shunit2

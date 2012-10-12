@@ -83,14 +83,7 @@ it_preserves_existing_compiled_file_when_failing() {
 
 it_clones_github_repos() {
   echo fresh repo/name file >> $FRESH_RCFILE
-  mkdir -p tmp/sandbox/bin
-  cat > tmp/sandbox/bin/git <<EOF
-#!/bin/bash -e
-echo "\$@" >> tmp/sandbox/git.log
-mkdir "\$3"
-echo test data > "\$3/file"
-EOF
-  chmod +x tmp/sandbox/bin/git
+  stubGit
 
   runFresh
 
@@ -104,12 +97,7 @@ EOF
 
 it_does_not_clone_existing_repos() {
   echo fresh repo/name file >> $FRESH_RCFILE
-  mkdir -p tmp/sandbox/bin
-  cat > tmp/sandbox/bin/git <<EOF
-#!/bin/bash -e
-echo "\$@" >> tmp/sandbox/git.log
-EOF
-  chmod +x tmp/sandbox/bin/git
+  stubGit
   mkdir -p $FRESH_PATH/source/repo/name
   touch $FRESH_PATH/source/repo/name/file
 
