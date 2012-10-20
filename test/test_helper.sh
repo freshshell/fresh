@@ -1,16 +1,16 @@
-export PATH="tmp/sandbox/bin:$PATH"
-export HOME="tmp/sandbox/home"
-export FRESH_RCFILE=tmp/sandbox/freshrc
-export FRESH_PATH=tmp/sandbox/fresh
-export FRESH_LOCAL=tmp/sandbox/dotfiles
+mkdir -p tmp/sandbox
+export SANDBOX_PATH="$(CDPATH= cd tmp/sandbox && pwd)"
+export PATH="$SANDBOX_PATH/bin:$PATH"
+export HOME="$SANDBOX_PATH/home"
+export FRESH_RCFILE="$SANDBOX_PATH/freshrc"
+export FRESH_PATH="$SANDBOX_PATH/fresh"
+export FRESH_LOCAL="$SANDBOX_PATH/dotfiles"
 
 setUp() {
-  mkdir -p tmp
-  if [[ -e tmp/sandbox ]]; then
-    rm -rf tmp/sandbox
+  if [[ -e "$SANDBOX_PATH" ]]; then
+    rm -rf "$SANDBOX_PATH"
   fi
-  mkdir tmp/sandbox
-  mkdir tmp/sandbox/home
+  mkdir -p "$SANDBOX_PATH"/{home,bin}
 }
 
 suite() {
@@ -38,11 +38,10 @@ runFresh() {
 }
 
 stubGit() {
-  mkdir -p tmp/sandbox/bin
-  cat > tmp/sandbox/bin/git <<EOF
+  cat > $SANDBOX_PATH/bin/git <<EOF
 #!/bin/bash -e
-echo cd "$(pwd)" >> tmp/sandbox/git.log
-echo git "\$@" >> tmp/sandbox/git.log
+echo cd "\$(pwd)" >> $SANDBOX_PATH/git.log
+echo git "\$@" >> $SANDBOX_PATH/git.log
 case "\$1" in
   clone)
     mkdir "\$3"
@@ -50,7 +49,7 @@ case "\$1" in
     ;;
 esac
 EOF
-  chmod +x tmp/sandbox/bin/git
+  chmod +x $SANDBOX_PATH/bin/git
 }
 
 source test/support/shunit2

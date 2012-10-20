@@ -71,13 +71,13 @@ it_errors_with_missing_local_file() {
 it_preserves_existing_compiled_file_when_failing() {
   mkdir -p $FRESH_PATH/build
   echo 'existing file' > $FRESH_PATH/build/shell.sh
-  cp $FRESH_PATH/build/shell.sh tmp/sandbox/ref_shell.sh
+  cp $FRESH_PATH/build/shell.sh $SANDBOX_PATH/ref_shell.sh
 
   echo invalid >> $FRESH_RCFILE
   runFresh fails
 
   assertTrue 'file exists' '[ -f "$FRESH_PATH/build/shell.sh" ]'
-  diff -U2 tmp/sandbox/ref_shell.sh $FRESH_PATH/build/shell.sh
+  diff -U2 $SANDBOX_PATH/ref_shell.sh $FRESH_PATH/build/shell.sh
   assertTrue 'original content exists' $?
 }
 
@@ -87,9 +87,9 @@ it_clones_github_repos() {
 
   runFresh
 
-  assertFileMatches tmp/sandbox/git.log <<EOF
+  assertFileMatches $SANDBOX_PATH/git.log <<EOF
 cd $(pwd)
-git clone http://github.com/repo/name tmp/sandbox/fresh/source/repo/name
+git clone http://github.com/repo/name $SANDBOX_PATH/fresh/source/repo/name
 EOF
   assertFileMatches $FRESH_PATH/source/repo/name/file <<EOF
 test data
@@ -104,7 +104,7 @@ it_does_not_clone_existing_repos() {
 
   runFresh
 
-  assertFalse 'did not run git' '[ -f tmp/sandbox/git.log ]'
+  assertFalse 'did not run git' '[ -f $SANDBOX_PATH/git.log ]'
 }
 
 it_builds_shell_files_from_cloned_repos() {
@@ -270,9 +270,9 @@ test_parse_fresh_dsl_args() {
     echo FILE_NAME="$FILE_NAME"
     echo MODE="$MODE"
     echo MODE_ARG="$MODE_ARG"
-  ) > tmp/sandbox/test_parse_fresh_dsl_args.log 2>&1
-  echo EXIT_STATUS=$? >> tmp/sandbox/test_parse_fresh_dsl_args.log
-  assertFileMatches tmp/sandbox/test_parse_fresh_dsl_args.log
+  ) > $SANDBOX_PATH/test_parse_fresh_dsl_args.log 2>&1
+  echo EXIT_STATUS=$? >> $SANDBOX_PATH/test_parse_fresh_dsl_args.log
+  assertFileMatches $SANDBOX_PATH/test_parse_fresh_dsl_args.log
 }
 
 it_parses_fresh_dsl_args() {
