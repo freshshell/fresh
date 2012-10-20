@@ -149,6 +149,11 @@ if [ -z "$__FRESH_TEST_MODE" ]; then
   case "$1" in
     help|--help)
       cat <<EOF
+Keep your dot files fresh.
+
+The following commands will install/update configuration files
+as specified in your ${FRESH_RCFILE/#$HOME/~} file.
+
 usage: fresh <command>
 
 Available commands:
