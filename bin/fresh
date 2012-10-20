@@ -18,6 +18,8 @@ fresh_install() {
   # move output into place
   [ ! -e "$FRESH_PATH/build" ] || rm -rf "$FRESH_PATH/build"
   mv "$FRESH_PATH/build.new" "$FRESH_PATH/build"
+
+  echo Your dot files are now fresh.
 }
 
 # freshrc DSL
@@ -164,7 +166,6 @@ EOF
       ;;
     install|'')
       fresh_install
-      echo Your dot files are now fresh.
       ;;
     update)
       fresh_update
