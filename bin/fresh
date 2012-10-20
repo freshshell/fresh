@@ -135,10 +135,9 @@ function parse_fresh_dsl_args() {
 
 fresh_update() {
   find $FRESH_PATH/source -type d -name '.git' | sort | while read DIR; do
-    (
-      cd "$(dirname "$DIR")"
-      git pull --rebase
-    )
+    cd "$(dirname "$DIR")"
+    git pull --rebase
+    cd -
   done
 }
 

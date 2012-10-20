@@ -279,8 +279,9 @@ it_does_not_run_build_if_update_fails() {
   mkdir -p $FRESH_LOCAL
   echo "alias gs='git status'" >> $FRESH_LOCAL/aliases
 
-  mkdir -p $FRESH_PATH/source/repo/name/.git
-  touch $FRESH_PATH/source/repo/name/.git/failure
+  mkdir -p $FRESH_PATH/source/repo/name1/.git
+  mkdir -p $FRESH_PATH/source/repo/name2/.git
+  touch $FRESH_PATH/source/repo/name1/.git/failure
   stubGit
 
   assertFalse 'fails to update' "bin/fresh update"
