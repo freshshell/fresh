@@ -137,7 +137,7 @@ fresh_update() {
   find $FRESH_PATH/source -type d -name '.git' | sort | while read DIR; do
     cd "$(dirname "$DIR")"
     git pull --rebase
-    cd -
+    cd - > /dev/null
   done
 }
 
