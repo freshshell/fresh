@@ -44,7 +44,7 @@ stubGit() {
 echo cd "$(pwd)" >> tmp/sandbox/git.log
 echo git "\$@" >> tmp/sandbox/git.log
 case "\$1" in
-  *)
+  clone)
     mkdir "\$3"
     echo test data > "\$3/file"
     ;;
