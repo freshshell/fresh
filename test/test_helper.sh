@@ -41,7 +41,8 @@ stubGit() {
   mkdir -p tmp/sandbox/bin
   cat > tmp/sandbox/bin/git <<EOF
 #!/bin/bash -e
-echo "\$@" >> tmp/sandbox/git.log
+echo cd "$(pwd)" >> tmp/sandbox/git.log
+echo git "\$@" >> tmp/sandbox/git.log
 case "\$1" in
   *)
     mkdir "\$3"

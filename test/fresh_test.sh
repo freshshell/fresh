@@ -88,7 +88,8 @@ it_clones_github_repos() {
   runFresh
 
   assertFileMatches tmp/sandbox/git.log <<EOF
-clone http://github.com/repo/name tmp/sandbox/fresh/source/repo/name
+cd $(pwd)
+git clone http://github.com/repo/name tmp/sandbox/fresh/source/repo/name
 EOF
   assertFileMatches $FRESH_PATH/source/repo/name/file <<EOF
 test data
