@@ -260,6 +260,33 @@ bar
 EOF
 }
 
+it_updates_fresh_files() {
+  mkdir -p $FRESH_PATH/source/repo/name/.git
+  mkdir -p $FRESH_PATH/source/other_repo/other_name/.git
+  stubGit
+
+  assertTrue 'successfully updates' "bin/fresh update"
+  assertFileMatches $SANDBOX_PATH/git.log <<EOF
+cd $FRESH_PATH/source/other_repo/other_name
+git pull --rebase
+cd $FRESH_PATH/source/repo/name
+git pull --rebase
+EOF
+}
+
+it_does_not_run_build_if_update_fails() {
+  echo fresh aliases >> $FRESH_RCFILE
+  mkdir -p $FRESH_LOCAL
+  echo "alias gs='git status'" >> $FRESH_LOCAL/aliases
+
+  mkdir -p $FRESH_PATH/source/repo/name/.git
+  touch $FRESH_PATH/source/repo/name/.git/failure
+  stubGit
+
+  assertFalse 'fails to update' "bin/fresh update"
+  assertTrue 'output does not exist' '[ ! -f "$FRESH_PATH/build/shell.sh" ]'
+}
+
 test_parse_fresh_dsl_args() {
   (
     set -e

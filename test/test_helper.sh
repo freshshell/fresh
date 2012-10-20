@@ -47,6 +47,11 @@ case "\$1" in
     mkdir "\$3"
     echo test data > "\$3/file"
     ;;
+  pull)
+    if [ -e .git/failure ]; then
+      exit 1
+    fi
+    ;;
 esac
 EOF
   chmod +x $SANDBOX_PATH/bin/git

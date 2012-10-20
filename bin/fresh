@@ -131,6 +131,15 @@ function parse_fresh_dsl_args() {
   fi
 }
 
+fresh_update() {
+  find $FRESH_PATH/source -type d -name '.git' | sort | while read DIR; do
+    (
+      cd "$(dirname "$DIR")"
+      git pull --rebase
+    )
+  done
+}
+
 if [ -z "$__FRESH_TEST_MODE" ]; then
   if [ -n "$2" ]; then
     echo "Invalid arguments" >&2
@@ -144,12 +153,17 @@ usage: fresh <command>
 
 Available commands:
     install  Build shell configuration and relevant symlinks (default)
+    update   Update from source repos and rebuild
     help     Show this help
 EOF
       ;;
     install|'')
       fresh_install
       echo Your dot files are now fresh.
+      ;;
+    update)
+      fresh_update
+      fresh_install
       ;;
     *)
       echo "Unknown option: $1" >&2
