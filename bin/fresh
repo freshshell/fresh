@@ -142,6 +142,10 @@ fresh_update() {
   done
 }
 
+fresh_edit() {
+  "${EDITOR:-vi}" "$FRESH_RCFILE"
+}
+
 if [ -z "$__FRESH_TEST_MODE" ]; then
   if [ -n "$2" ]; then
     echo "Invalid arguments" >&2
@@ -161,6 +165,7 @@ usage: fresh <command>
 Available commands:
     install  Build shell configuration and relevant symlinks (default)
     update   Update from source repos and rebuild
+    edit     Open freshrc for editing
     help     Show this help
 EOF
       ;;
@@ -170,6 +175,9 @@ EOF
     update)
       fresh_update
       fresh_install
+      ;;
+    edit)
+      fresh_edit
       ;;
     *)
       echo "Unknown option: $1" >&2
