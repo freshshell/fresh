@@ -12,7 +12,7 @@ it_builds_local_shell_files() {
   runFresh
 
   assertFileMatches $FRESH_PATH/build/shell.sh <<EOF
-export PATH="~/bin:\$PATH"
+export PATH="\$HOME/bin:\$PATH"
 alias gs='git status'
 alias gl='git log'
 alias rake='bundle exec rake'
@@ -30,7 +30,7 @@ it_builds_local_shell_files_with_spaces() {
   runFresh
 
   assertFileMatches $FRESH_PATH/build/shell.sh <<EOF
-export PATH="~/bin:\$PATH"
+export PATH="\$HOME/bin:\$PATH"
 SPACE
 EOF
 }
@@ -46,7 +46,7 @@ it_builds_local_shell_files_with_globbing() {
   runFresh
 
   assertFileMatches $FRESH_PATH/build/shell.sh <<EOF
-export PATH="~/bin:\$PATH"
+export PATH="\$HOME/bin:\$PATH"
 file1
 file2
 EOF
@@ -57,7 +57,7 @@ it_creates_empty_output_with_no_rcfile() {
   runFresh
   assertTrue 'file exists after' '[ -f "$FRESH_PATH/build/shell.sh" ]'
   assertFileMatches $FRESH_PATH/build/shell.sh <<EOF
-export PATH="~/bin:\$PATH"
+export PATH="\$HOME/bin:\$PATH"
 EOF
 }
 
@@ -115,7 +115,7 @@ it_builds_shell_files_from_cloned_repos() {
   runFresh
 
   assertFileMatches $FRESH_PATH/build/shell.sh <<EOF
-export PATH="~/bin:\$PATH"
+export PATH="\$HOME/bin:\$PATH"
 remote content
 EOF
 }
@@ -135,7 +135,7 @@ it_builds_generic_files() {
   runFresh
 
   assertFileMatches $FRESH_PATH/build/shell.sh <<EOF
-export PATH="~/bin:\$PATH"
+export PATH="\$HOME/bin:\$PATH"
 EOF
   assertFileMatches $FRESH_PATH/build/tmux.conf <<EOF
 unbind C-b
