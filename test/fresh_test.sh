@@ -171,8 +171,9 @@ it_links_generic_files_to_destination() {
   echo 'fresh lib/pryrc.rb --file=~/.pryrc' >> $FRESH_RCFILE
   echo 'fresh .gitconfig --file' >> $FRESH_RCFILE
   echo 'fresh bclear.vim --file=~/.vim/colors/bclear.vim' >> $FRESH_RCFILE
+  echo 'fresh "with spaces" --file="~/a path/with spaces"' >> $FRESH_RCFILE
   mkdir -p $FRESH_LOCAL/lib
-  touch $FRESH_LOCAL/{lib/tmux.conf,lib/pryrc.rb,.gitconfig,bclear.vim}
+  touch $FRESH_LOCAL/{lib/tmux.conf,lib/pryrc.rb,.gitconfig,bclear.vim,with\ spaces}
 
   runFresh
 
@@ -180,6 +181,7 @@ it_links_generic_files_to_destination() {
   assertEquals "$(readlink ~/.pryrc)" "$FRESH_PATH/build/pryrc"
   assertEquals "$(readlink ~/.gitconfig)" "$FRESH_PATH/build/gitconfig"
   assertEquals "$(readlink ~/.vim/colors/bclear.vim)" "$FRESH_PATH/build/bclear.vim"
+  assertEquals "$(readlink ~/a\ path/with\ spaces)" "$FRESH_PATH/build/with spaces"
 }
 
 it_builds_bin_files() {
