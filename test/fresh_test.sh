@@ -170,14 +170,16 @@ it_links_generic_files_to_destination() {
   echo 'fresh lib/tmux.conf --file' >> $FRESH_RCFILE
   echo 'fresh lib/pryrc.rb --file=~/.pryrc' >> $FRESH_RCFILE
   echo 'fresh .gitconfig --file' >> $FRESH_RCFILE
+  echo 'fresh bclear.vim --file=~/.vim/colors/bclear.vim' >> $FRESH_RCFILE
   mkdir -p $FRESH_LOCAL/lib
-  touch $FRESH_LOCAL/{lib/tmux.conf,lib/pryrc.rb,.gitconfig}
+  touch $FRESH_LOCAL/{lib/tmux.conf,lib/pryrc.rb,.gitconfig,bclear.vim}
 
   runFresh
 
   assertEquals "$(readlink ~/.tmux.conf)" "$FRESH_PATH/build/tmux.conf"
   assertEquals "$(readlink ~/.pryrc)" "$FRESH_PATH/build/pryrc"
   assertEquals "$(readlink ~/.gitconfig)" "$FRESH_PATH/build/gitconfig"
+  assertEquals "$(readlink ~/.vim/colors/bclear.vim)" "$FRESH_PATH/build/bclear.vim"
 }
 
 it_builds_bin_files() {
@@ -218,13 +220,15 @@ it_builds_bin_files_with_globbing() {
 it_links_bin_files_to_destination() {
   echo 'fresh scripts/sedmv --bin' >> $FRESH_RCFILE
   echo 'fresh pidof.sh --bin=~/bin/pidof' >> $FRESH_RCFILE
+  echo 'fresh gemdiff --bin=~/bin/scripts/gemdiff' >> $FRESH_RCFILE
   mkdir -p $FRESH_LOCAL/scripts
-  touch $FRESH_LOCAL/{scripts/sedmv,pidof.sh}
+  touch $FRESH_LOCAL/{scripts/sedmv,pidof.sh,gemdiff}
 
   runFresh
 
   assertEquals "$(readlink ~/bin/sedmv)" "$FRESH_PATH/build/bin/sedmv"
   assertEquals "$(readlink ~/bin/pidof)" "$FRESH_PATH/build/bin/pidof"
+  assertEquals "$(readlink ~/bin/scripts/gemdiff)" "$FRESH_PATH/build/bin/gemdiff"
 }
 
 it_does_not_override_existing_links() {
