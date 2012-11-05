@@ -163,7 +163,7 @@ it_builds_generic_files_with_globbing() {
 
   assertTrue 'file1 exists' '[ -f $FRESH_PATH/build/file1 ]'
   assertTrue 'file2 exists' '[ -f $FRESH_PATH/build/file2 ]'
-  assertFalse 'other files do not exist' '[ -f $FRESH_BUILD/other ]'
+  assertFalse 'other files do not exist' '[ -f $FRESH_PATH/build/other ]'
 }
 
 it_links_generic_files_to_destination() {
@@ -216,7 +216,7 @@ it_builds_bin_files_with_globbing() {
 
   assertTrue 'file1 exists' '[ -f $FRESH_PATH/build/bin/file1 ]'
   assertTrue 'file2 exists' '[ -f $FRESH_PATH/build/bin/file2 ]'
-  assertFalse 'other files do not exist' '[ -f $FRESH_BUILD/bin/other ]'
+  assertFalse 'other files do not exist' '[ -f $FRESH_PATH/build/bin/other ]'
 }
 
 it_links_bin_files_to_destination() {
