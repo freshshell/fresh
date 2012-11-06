@@ -135,6 +135,13 @@ function parse_fresh_dsl_args() {
   fi
 }
 
+fresh_install_with_latest_binary() {
+  local FRESH_BIN="$FRESH_PATH/build/bin/fresh"
+  if [[ -x "$FRESH_BIN" ]]; then
+    "$FRESH_BIN" install
+  fi
+}
+
 fresh_update() {
   find $FRESH_PATH/source -type d -name '.git' | sort | while read DIR; do
     cd "$(dirname "$DIR")"
@@ -176,6 +183,7 @@ EOF
     update)
       fresh_update
       fresh_install
+      fresh_install_with_latest_binary
       ;;
     edit)
       fresh_edit

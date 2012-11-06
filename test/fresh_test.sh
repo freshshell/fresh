@@ -294,6 +294,18 @@ it_does_not_run_build_if_update_fails() {
   assertTrue 'output does not exist' '[ ! -f "$FRESH_PATH/build/shell.sh" ]'
 }
 
+it_builds_after_update_with_latest_binary() {
+  echo fresh bin/fresh --bin >> $FRESH_RCFILE
+  mkdir -p $FRESH_LOCAL/bin
+  echo "echo new >> \"$SANDBOX_PATH/fresh.log\"" >> $FRESH_LOCAL/bin/fresh
+
+  assertTrue 'successfully updates' "bin/fresh update"
+
+  assertFileMatches $SANDBOX_PATH/fresh.log <<EOF
+new
+EOF
+}
+
 test_parse_fresh_dsl_args() {
   (
     set -e
