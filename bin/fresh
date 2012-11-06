@@ -44,54 +44,66 @@ fresh() {
 
   case "${MODE:-shell}" in
     shell)
-      find "$SOURCE_DIR" -path "$SOURCE_DIR/$FILE_NAME" | sort | while read SOURCE_FILE
-      do
-        cat "$SOURCE_FILE" >> "$FRESH_PATH/build.new/shell.sh"
-      done
+      _fresh_shell
       ;;
     file)
-      find "$SOURCE_DIR" -path "$SOURCE_DIR/$FILE_NAME" | sort | while read SOURCE_FILE
-      do
-        if [ -n "$MODE_ARG" ]; then
-          DEST_NAME="$(basename "$MODE_ARG" | sed 's/^\.//')"
-          SYMLINK_PATH="$MODE_ARG"
-        else
-          DEST_NAME="$(basename "$SOURCE_FILE" | sed 's/^\.//')"
-          SYMLINK_PATH="~/.$DEST_NAME"
-        fi
-        cat "$SOURCE_FILE" >> "$FRESH_PATH/build.new/$DEST_NAME"
-        SYMLINK_PATH="$(eval echo "$SYMLINK_PATH")"
-        if ! [ -L "$SYMLINK_PATH" ]; then
-          mkdir -p "$(dirname "$SYMLINK_PATH")"
-          ln -s "$FRESH_PATH/build/$DEST_NAME" "$SYMLINK_PATH"
-        fi
-      done
+      _fresh_file
       ;;
     bin)
-      find "$SOURCE_DIR" -path "$SOURCE_DIR/$FILE_NAME" | sort | while read SOURCE_FILE
-      do
-        if [ -n "$MODE_ARG" ]; then
-          DEST_NAME="$(basename "$MODE_ARG")"
-          SYMLINK_PATH="$MODE_ARG"
-        else
-          DEST_NAME="$(basename "$SOURCE_FILE")"
-          SYMLINK_PATH="~/bin/$DEST_NAME"
-        fi
-        mkdir -p "$FRESH_PATH/build.new/bin" ~/bin
-        cat "$SOURCE_FILE" >> "$FRESH_PATH/build.new/bin/$DEST_NAME"
-        chmod +x "$FRESH_PATH/build.new/bin/$DEST_NAME"
-        SYMLINK_PATH="$(eval echo "$SYMLINK_PATH")"
-        if ! [ -L "$SYMLINK_PATH" ]; then
-          mkdir -p "$(dirname "$SYMLINK_PATH")"
-          ln -s "$FRESH_PATH/build/bin/$DEST_NAME" "$SYMLINK_PATH"
-        fi
-      done
+      _fresh_bin
       ;;
     *)
       echo "Unknown mode: $MODE" 2>&1
       exit 1
       ;;
   esac
+}
+
+_fresh_shell() {
+  find "$SOURCE_DIR" -path "$SOURCE_DIR/$FILE_NAME" | sort | while read SOURCE_FILE
+  do
+    cat "$SOURCE_FILE" >> "$FRESH_PATH/build.new/shell.sh"
+  done
+}
+
+_fresh_file() {
+  find "$SOURCE_DIR" -path "$SOURCE_DIR/$FILE_NAME" | sort | while read SOURCE_FILE
+  do
+    if [ -n "$MODE_ARG" ]; then
+      DEST_NAME="$(basename "$MODE_ARG" | sed 's/^\.//')"
+      SYMLINK_PATH="$MODE_ARG"
+    else
+      DEST_NAME="$(basename "$SOURCE_FILE" | sed 's/^\.//')"
+      SYMLINK_PATH="~/.$DEST_NAME"
+    fi
+    cat "$SOURCE_FILE" >> "$FRESH_PATH/build.new/$DEST_NAME"
+    SYMLINK_PATH="$(eval echo "$SYMLINK_PATH")"
+    if ! [ -L "$SYMLINK_PATH" ]; then
+      mkdir -p "$(dirname "$SYMLINK_PATH")"
+      ln -s "$FRESH_PATH/build/$DEST_NAME" "$SYMLINK_PATH"
+    fi
+  done
+}
+
+_fresh_bin() {
+  find "$SOURCE_DIR" -path "$SOURCE_DIR/$FILE_NAME" | sort | while read SOURCE_FILE
+  do
+    if [ -n "$MODE_ARG" ]; then
+      DEST_NAME="$(basename "$MODE_ARG")"
+      SYMLINK_PATH="$MODE_ARG"
+    else
+      DEST_NAME="$(basename "$SOURCE_FILE")"
+      SYMLINK_PATH="~/bin/$DEST_NAME"
+    fi
+    mkdir -p "$FRESH_PATH/build.new/bin" ~/bin
+    cat "$SOURCE_FILE" >> "$FRESH_PATH/build.new/bin/$DEST_NAME"
+    chmod +x "$FRESH_PATH/build.new/bin/$DEST_NAME"
+    SYMLINK_PATH="$(eval echo "$SYMLINK_PATH")"
+    if ! [ -L "$SYMLINK_PATH" ]; then
+      mkdir -p "$(dirname "$SYMLINK_PATH")"
+      ln -s "$FRESH_PATH/build/bin/$DEST_NAME" "$SYMLINK_PATH"
+    fi
+  done
 }
 
 function parse_fresh_dsl_args() {
