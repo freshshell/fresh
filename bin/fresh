@@ -26,6 +26,7 @@ fresh_install() {
 fresh() {
   parse_fresh_dsl_args "$@"
 
+  # clone or update source repo
   if [ -n "$REPO_NAME" ]; then
     local REPO_DIR="$FRESH_PATH/source/$REPO_NAME"
     mkdir -p "$(dirname "$REPO_DIR")"
@@ -37,6 +38,7 @@ fresh() {
     local SOURCE_DIR="$FRESH_LOCAL"
   fi
 
+  # check the source file exists
   if [[ $(find "$SOURCE_DIR" -path "$SOURCE_DIR/$FILE_NAME" | wc -l) -lt 1 ]]; then
     echo "Could not find \"$FILE_NAME\" source file." >&2
     exit 1
