@@ -17,6 +17,8 @@ alias gs='git status'
 alias gl='git log'
 alias rake='bundle exec rake'
 EOF
+
+  assertFalse 'not executable' '[ -x $FRESH_PATH/build/shell.sh ]'
 }
 
 it_builds_local_shell_files_with_spaces() {
@@ -149,6 +151,11 @@ EOF
 [color]
 ui = auto
 EOF
+
+  assertFalse 'not executable' '[ -x $FRESH_PATH/build/shell.sh ]'
+  assertFalse 'not executable' '[ -x $FRESH_PATH/build/tmux.conf ]'
+  assertFalse 'not executable' '[ -x $FRESH_PATH/build/pryrc ]'
+  assertFalse 'not executable' '[ -x $FRESH_PATH/build/gitconfig ]'
 }
 
 it_builds_generic_files_with_globbing() {
