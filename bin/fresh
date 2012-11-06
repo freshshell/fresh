@@ -168,7 +168,7 @@ fresh_edit() {
   "${EDITOR:-vi}" "$FRESH_RCFILE"
 }
 
-if [ -z "$__FRESH_TEST_MODE" ]; then
+main() {
   if [ -n "$2" ]; then
     echo "Invalid arguments" >&2
     exit 1
@@ -207,4 +207,8 @@ EOF
       exit 1
       ;;
   esac
+}
+
+if [ -z "$__FRESH_TEST_MODE" ]; then
+  main "$@"
 fi
