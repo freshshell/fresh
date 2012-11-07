@@ -4,21 +4,21 @@
 #
 #   bash -c "`curl -sL get.freshshell.com`"
 
-mkdir -p ~/.fresh/source/jasoncodes
+mkdir -p ~/.fresh/source/freshshell
 
-if [ -d ~/.fresh/source/jasoncodes/fresh ]; then
-  cd ~/.fresh/source/jasoncodes/fresh
+if [ -d ~/.fresh/source/freshshell/fresh ]; then
+  cd ~/.fresh/source/freshshell/fresh
   git pull --rebase
   cd -
 else
-  git clone https://github.com/jasoncodes/fresh ~/.fresh/source/jasoncodes/fresh
+  git clone https://github.com/freshshell/fresh ~/.fresh/source/freshshell/fresh
 fi
 
 if ! [ -e ~/.freshrc ]; then
-  echo 'fresh jasoncodes/fresh bin/fresh --bin' > ~/.freshrc
+  echo 'fresh freshshell/fresh bin/fresh --bin' > ~/.freshrc
 fi
 
-~/.fresh/source/jasoncodes/fresh/bin/fresh
+~/.fresh/source/freshshell/fresh/bin/fresh
 
 cat <<-MESSAGE
 
