@@ -2,7 +2,7 @@
 
 Keep your dot files fresh.
 
-[![Build Status](https://secure.travis-ci.org/jasoncodes/fresh.png)](http://travis-ci.org/jasoncodes/fresh)
+[![Build Status](https://secure.travis-ci.org/freshshell/fresh.png)](http://travis-ci.org/freshshell/fresh)
 
 ## Installation
 
