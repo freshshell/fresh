@@ -11,6 +11,7 @@ setUp() {
     rm -rf "$SANDBOX_PATH"
   fi
   mkdir -p "$SANDBOX_PATH"/{home,bin}
+  export FRESH_NO_BIN_CHECK=true
 }
 
 suite() {

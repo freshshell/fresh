@@ -15,6 +15,21 @@ fresh_install() {
     source "$FRESH_RCFILE"
   fi
 
+  # safety check to ensure the user doesn't lock themselves out
+  if [[ -z "$FRESH_NO_BIN_CHECK" ]] && [[ ! -x "$FRESH_PATH/build.new/bin/fresh" ]]; then
+    cat >&2 <<EOF
+Error: It looks you do not have fresh in your freshrc file.
+This could result in difficulties running \`fresh\` later.
+
+You probably want to add a line like the following using \`fresh edit\`:
+
+  fresh freshshell/fresh bin/fresh --bin
+
+To disable this error, add \`FRESH_NO_BIN_CHECK=true\` in your freshrc file.
+EOF
+    return 1
+  fi
+
   # output files should be read-only
   find "$FRESH_PATH/build.new" -type f -exec chmod -w {} \;
 

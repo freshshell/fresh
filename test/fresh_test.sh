@@ -322,6 +322,32 @@ new
 EOF
 }
 
+it_does_not_error_if_freshrc_has_bin_fresh() {
+  echo fresh bin/fresh --bin >> $FRESH_RCFILE
+  mkdir -p $FRESH_LOCAL/bin
+  touch $FRESH_LOCAL/bin/fresh
+
+  unset FRESH_NO_BIN_CHECK
+  runFresh
+}
+
+it_errors_if_freshrc_is_missing_bin_fresh() {
+  touch $FRESH_RCFILE
+
+  unset FRESH_NO_BIN_CHECK
+  bin/fresh > "$SANDBOX_PATH/fresh_out.log" 2> "$SANDBOX_PATH/fresh_err.log"
+  assertFalse 'returns non-zero' $?
+  assertFalse 'does not build' '[ -d $FRESH_PATH/build ]'
+  assertTrue 'mentions solution' 'grep -q "fresh freshshell/fresh bin/fresh --bin" $SANDBOX_PATH/fresh_err.log'
+}
+
+it_allows_bin_fresh_error_to_be_disabled() {
+  touch $FRESH_RCFILE
+
+  export FRESH_NO_BIN_CHECK=true
+  runFresh
+}
+
 test_parse_fresh_dsl_args() {
   (
     set -e
