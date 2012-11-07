@@ -15,7 +15,7 @@ bash -c "`curl -sL get.freshshell.com`"
 This will:
 
 * Create a `~/.fresh` directory.
-* Clone the latest version of fresh into `~/.fresh/source/jasoncodes/fresh`.
+* Clone the latest version of fresh into `~/.fresh/source/freshshell/fresh`.
 * Create a `~/.freshrc` file.
 
 You will need to manually add `source ~/.fresh/build/shell.sh` to your shell config.
@@ -25,7 +25,7 @@ You will need to manually add `source ~/.fresh/build/shell.sh` to your shell con
 An example `freshrc` file:
 
 ``` sh
-fresh jasoncodes/fresh bin/fresh --bin                # handles updating fresh
+fresh freshshell/fresh bin/fresh --bin                # handles updating fresh
 fresh jasoncodes/dotfiles 'aliases/*'                 # builds jasoncodes' aliases into ~/.fresh/build.sh
 fresh twe4ked/dotfiles aliases/git.sh                 # builds the aliases/git file into ~/.fresh/build/shell.sh
 fresh twe4ked/dotfiles config/ackrc --file            # links the config/ackrc file to ~/.ackrc
