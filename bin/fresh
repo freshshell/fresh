@@ -15,6 +15,9 @@ fresh_install() {
     source "$FRESH_RCFILE"
   fi
 
+  # output files should be read-only
+  find "$FRESH_PATH/build.new" -type f -exec chmod -w {} \;
+
   # move output into place
   [ ! -e "$FRESH_PATH/build" ] || rm -rf "$FRESH_PATH/build"
   mv "$FRESH_PATH/build.new" "$FRESH_PATH/build"

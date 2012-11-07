@@ -19,6 +19,7 @@ alias rake='bundle exec rake'
 EOF
 
   assertFalse 'not executable' '[ -x $FRESH_PATH/build/shell.sh ]'
+  assertFalse 'not writable' '[ -w $FRESH_PATH/build/shell.sh ]'
 }
 
 it_builds_local_shell_files_with_spaces() {
@@ -156,6 +157,11 @@ EOF
   assertFalse 'not executable' '[ -x $FRESH_PATH/build/tmux.conf ]'
   assertFalse 'not executable' '[ -x $FRESH_PATH/build/pryrc ]'
   assertFalse 'not executable' '[ -x $FRESH_PATH/build/gitconfig ]'
+
+  assertFalse 'not writable' '[ -w $FRESH_PATH/build/shell.sh ]'
+  assertFalse 'not writable' '[ -w $FRESH_PATH/build/tmux.conf ]'
+  assertFalse 'not writable' '[ -w $FRESH_PATH/build/pryrc ]'
+  assertFalse 'not writable' '[ -w $FRESH_PATH/build/gitconfig ]'
 }
 
 it_builds_generic_files_with_globbing() {
@@ -209,6 +215,9 @@ EOF
 
   assertTrue 'is executable' '[ -x $FRESH_PATH/build/bin/sedmv ]'
   assertTrue 'is executable' '[ -x $FRESH_PATH/build/bin/pidof ]'
+
+  assertFalse 'not writable' '[ -w $FRESH_PATH/build/bin/sedmv ]'
+  assertFalse 'not writable' '[ -w $FRESH_PATH/build/bin/pidof ]'
 }
 
 it_builds_bin_files_with_globbing() {
