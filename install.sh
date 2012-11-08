@@ -15,7 +15,19 @@ else
 fi
 
 if ! [ -e ~/.freshrc ]; then
-  echo 'fresh freshshell/fresh bin/fresh --bin' > ~/.freshrc
+  cat << 'EOF' > ~/.freshrc
+# freshshell.com
+#
+# Examples:
+#
+#   fresh twe4ked/dotfiles shell/functions.sh
+#   fresh jasoncodes/dotfiles aliases/rails.sh
+#   fresh jasoncodes/dotfiles tmux.conf --file
+#
+# See http://freshshell.com/readme for documentation.
+
+fresh freshshell/fresh bin/fresh --bin
+EOF
 fi
 
 ~/.fresh/source/freshshell/fresh/bin/fresh
