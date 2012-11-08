@@ -200,6 +200,8 @@ Keep your dot files fresh.
 The following commands will install/update configuration files
 as specified in your ${FRESH_RCFILE/#$HOME/~} file.
 
+See http://freshshell.com/readme for more documentation.
+
 usage: fresh <command>
 
 Available commands:
