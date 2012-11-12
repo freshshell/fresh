@@ -66,6 +66,16 @@ fresh example/dotfiles pry.rb --file=~/.pryrc
 Links the `config/ackrc` file from [twe4ked/dotfiles] to `~/.ackrc`
 and the `pry.rb` file from example/dotfiles to `~/.pryrc`.
 
+#### A single config file built from multiple sources
+
+``` sh
+fresh jasoncodes/dotfiles tmux.conf --file
+fresh twe4ked/dotfiles config/tmux.conf --file
+```
+
+Builds tmux configuration from both [jasoncodes/dotfiles] and [twe4ked/dotfiles]
+together into a single `~/.tmux.conf` output.
+
 ### Bin files
 
 ``` sh
