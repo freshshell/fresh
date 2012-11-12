@@ -185,6 +185,10 @@ pre code {
   padding: 0;
 }
 
+div.highlight pre a {
+  text-decoration: underline;
+}
+
 ul, ol, dl {
   margin-bottom: 20px;
 }
