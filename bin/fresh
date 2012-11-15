@@ -37,7 +37,10 @@ EOF
   [ ! -e "$FRESH_PATH/build" ] || rm -rf "$FRESH_PATH/build"
   mv "$FRESH_PATH/build.new" "$FRESH_PATH/build"
 
-  echo Your dot files are now fresh.
+  if [ ! "$1" == "--quiet" ];
+  then
+    echo Your dot files are now fresh.
+  fi
 }
 
 # freshrc DSL
@@ -222,7 +225,7 @@ EOF
       ;;
     update)
       fresh_update
-      fresh_install
+      fresh_install --quiet
       fresh_install_with_latest_binary
       ;;
     edit)
