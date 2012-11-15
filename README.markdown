@@ -24,6 +24,17 @@ This will:
 
 You will need to manually add `source ~/.fresh/build/shell.sh` to your shell config.
 
+### Manual steps
+
+Don't want to run our shell script? The installation is simple:
+
+``` sh
+git clone https://github.com/freshshell/fresh ~/.fresh/source/freshshell/fresh
+echo "fresh freshshell/fresh bin/fresh --bin" >> ~/.freshrc
+~/.fresh/source/freshshell/fresh/bin/fresh # run fresh
+# Add `source ~/.fresh/build/shell.sh` to your shell config.
+```
+
 ## Usage
 
 An example `freshrc` file:
