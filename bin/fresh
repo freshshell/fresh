@@ -176,10 +176,16 @@ fresh_install_with_latest_binary() {
 
 fresh_update() {
   find $FRESH_PATH/source -type d -name '.git' | sort | while read DIR; do
-    cd "$(dirname "$DIR")"
+    local DIR="$(dirname "$DIR")"
+    echo "Updating $(_repo_name_from_source_path "$DIR")"
+    cd "$DIR"
     git pull --rebase
     cd - > /dev/null
   done
+}
+
+_repo_name_from_source_path() {
+  echo "$1" | awk -F/ '{OFS="/"; print $(NF-1), $(NF-0)}'
 }
 
 fresh_edit() {
