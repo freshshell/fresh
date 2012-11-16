@@ -301,6 +301,17 @@ git pull --rebase
 EOF
 }
 
+it_shows_progress_when_updating() {
+  mkdir -p $FRESH_PATH/source/repo/name/.git
+  mkdir -p $FRESH_PATH/source/other_repo/other_name/.git
+  stubGit
+
+  bin/fresh update > "$SANDBOX_PATH/fresh_out.log" 2> "$SANDBOX_PATH/fresh_err.log"
+  assertTrue 'successfully updates' $?
+  assertTrue 'outputs "repo/name"' 'grep -qxF "* Updating repo/name" $SANDBOX_PATH/fresh_out.log'
+  assertTrue 'shows git output with prefix' 'grep -qxF "| stub git output" $SANDBOX_PATH/fresh_out.log'
+}
+
 it_does_not_run_build_if_update_fails() {
   echo fresh aliases >> $FRESH_RCFILE
   mkdir -p $FRESH_LOCAL

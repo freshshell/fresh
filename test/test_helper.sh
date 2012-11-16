@@ -41,6 +41,7 @@ runFresh() {
 stubGit() {
   cat > $SANDBOX_PATH/bin/git <<EOF
 #!/bin/bash -e
+echo stub git output
 echo cd "\$(pwd)" >> $SANDBOX_PATH/git.log
 echo git "\$@" >> $SANDBOX_PATH/git.log
 case "\$1" in

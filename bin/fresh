@@ -37,7 +37,10 @@ EOF
   [ ! -e "$FRESH_PATH/build" ] || rm -rf "$FRESH_PATH/build"
   mv "$FRESH_PATH/build.new" "$FRESH_PATH/build"
 
-  echo Your dot files are now fresh.
+  if [ ! "$1" == "--quiet" ];
+  then
+    echo Your dot files are now fresh.
+  fi
 }
 
 # freshrc DSL
@@ -176,10 +179,17 @@ fresh_install_with_latest_binary() {
 
 fresh_update() {
   find $FRESH_PATH/source -type d -name '.git' | sort | while read DIR; do
-    cd "$(dirname "$DIR")"
-    git pull --rebase
+    local DIR="$(dirname "$DIR")"
+    echo "* Updating $(_repo_name_from_source_path "$DIR")"
+    cd "$DIR"
+    git pull --rebase 2>&1 | sed 's/^/| /'
+    [ "${PIPESTATUS[0]}" -eq 0 ] || exit 1
     cd - > /dev/null
   done
+}
+
+_repo_name_from_source_path() {
+  echo "$1" | awk -F/ '{OFS="/"; print $(NF-1), $(NF-0)}'
 }
 
 fresh_edit() {
@@ -216,7 +226,7 @@ EOF
       ;;
     update)
       fresh_update
-      fresh_install
+      fresh_install --quiet
       fresh_install_with_latest_binary
       ;;
     edit)
