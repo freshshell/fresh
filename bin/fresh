@@ -180,9 +180,10 @@ fresh_install_with_latest_binary() {
 fresh_update() {
   find $FRESH_PATH/source -type d -name '.git' | sort | while read DIR; do
     local DIR="$(dirname "$DIR")"
-    echo "Updating $(_repo_name_from_source_path "$DIR")"
+    echo "* Updating $(_repo_name_from_source_path "$DIR")"
     cd "$DIR"
-    git pull --rebase
+    git pull --rebase 2>&1 | sed 's/^/| /'
+    [ "${PIPESTATUS[0]}" -eq 0 ] || exit 1
     cd - > /dev/null
   done
 }
