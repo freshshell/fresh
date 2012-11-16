@@ -398,6 +398,15 @@ test_parse_fresh_dsl_args() {
 }
 
 it_parses_fresh_dsl_args() {
+  test_parse_fresh_dsl_args aliases/git.sh <<EOF
+REPO_NAME=
+FILE_NAME=aliases/git.sh
+MODE=
+MODE_ARG=
+REF=
+EXIT_STATUS=0
+EOF
+
   test_parse_fresh_dsl_args twe4ked/dotfiles lib/tmux.conf --file=~/.tmux.conf <<EOF
 REPO_NAME=twe4ked/dotfiles
 FILE_NAME=lib/tmux.conf
