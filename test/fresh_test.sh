@@ -312,6 +312,23 @@ it_shows_progress_when_updating() {
   assertTrue 'shows git output with prefix' 'grep -qxF "| stub git output" $SANDBOX_PATH/fresh_out.log'
 }
 
+it_logs_update_output() {
+  mkdir -p $FRESH_PATH/source/repo/name/.git
+  mkdir -p $FRESH_PATH/source/other_repo/other_name/.git
+
+  stubGit
+  assertTrue 'successfully updates' "bin/fresh update"
+  assertTrue 'creates a log file' '[[ "$(find "$FRESH_PATH/logs" -type f | wc -l)" -eq 1 ]]'
+  assertTrue 'log file name' 'find "$FRESH_PATH/logs" -type f | egrep -q "/logs/update-\\d{4}-\\d{2}-\\d{2}-\\d{6}\\.log$"'
+
+  assertFileMatches $FRESH_PATH/logs/* <<EOF
+* Updating other_repo/other_name
+| stub git output
+* Updating repo/name
+| stub git output
+EOF
+}
+
 it_does_not_run_build_if_update_fails() {
   echo fresh aliases >> $FRESH_RCFILE
   mkdir -p $FRESH_LOCAL

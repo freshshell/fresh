@@ -178,11 +178,13 @@ fresh_install_with_latest_binary() {
 }
 
 fresh_update() {
+  mkdir -p "$FRESH_PATH/logs"
+  local LOG_FILE="$FRESH_PATH/logs/update-$(date +%Y-%m-%d-%H%M%S).log"
   find $FRESH_PATH/source -type d -name '.git' | sort | while read DIR; do
     local DIR="$(dirname "$DIR")"
-    echo "* Updating $(_repo_name_from_source_path "$DIR")"
+    echo "* Updating $(_repo_name_from_source_path "$DIR")" | tee -a "$LOG_FILE"
     cd "$DIR"
-    git pull --rebase 2>&1 | sed 's/^/| /'
+    git pull --rebase 2>&1 | sed 's/^/| /' | tee -a "$LOG_FILE"
     [ "${PIPESTATUS[0]}" -eq 0 ] || exit 1
     cd - > /dev/null
   done
