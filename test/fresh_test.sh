@@ -391,6 +391,7 @@ test_parse_fresh_dsl_args() {
     echo FILE_NAME="$FILE_NAME"
     echo MODE="$MODE"
     echo MODE_ARG="$MODE_ARG"
+    echo REF="$REF"
   ) > $SANDBOX_PATH/test_parse_fresh_dsl_args.log 2>&1
   echo EXIT_STATUS=$? >> $SANDBOX_PATH/test_parse_fresh_dsl_args.log
   assertFileMatches $SANDBOX_PATH/test_parse_fresh_dsl_args.log
@@ -402,6 +403,7 @@ REPO_NAME=twe4ked/dotfiles
 FILE_NAME=lib/tmux.conf
 MODE=file
 MODE_ARG=~/.tmux.conf
+REF=
 EXIT_STATUS=0
 EOF
 
@@ -410,6 +412,7 @@ REPO_NAME=jasoncodes/dotfiles
 FILE_NAME=.gitconfig
 MODE=file
 MODE_ARG=
+REF=
 EXIT_STATUS=0
 EOF
 
@@ -418,6 +421,7 @@ REPO_NAME=
 FILE_NAME=sedmv
 MODE=bin
 MODE_ARG=
+REF=
 EXIT_STATUS=0
 EOF
 
@@ -426,7 +430,22 @@ REPO_NAME=
 FILE_NAME=scripts/pidof.sh
 MODE=bin
 MODE_ARG=~/bin/pidof
+REF=
 EXIT_STATUS=0
+EOF
+
+  test_parse_fresh_dsl_args twe4ked/dotfiles lib/tmux.conf --file=~/.tmux.conf --ref=abc1237 <<EOF
+REPO_NAME=twe4ked/dotfiles
+FILE_NAME=lib/tmux.conf
+MODE=file
+MODE_ARG=~/.tmux.conf
+REF=abc1237
+EXIT_STATUS=0
+EOF
+
+  test_parse_fresh_dsl_args foo --file --ref <<EOF
+You must specify a Git reference.
+EXIT_STATUS=1
 EOF
 
   test_parse_fresh_dsl_args foo --file --bin <<EOF

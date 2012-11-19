@@ -134,6 +134,7 @@ function parse_fresh_dsl_args() {
   MODE_ARG=
   REPO_NAME=
   FILE_NAME=
+  REF=
   while [ $# -gt 0 ]
   do
     case "$1" in
@@ -144,6 +145,13 @@ function parse_fresh_dsl_args() {
         fi
         MODE="$(echo "$1" | sed -e 's/^--//' -e 's/=.*//')"
         MODE_ARG="$(echo "$1" | sed 's/^--[^=]*=*//')"
+        ;;
+      --ref)
+        echo "You must specify a Git reference." 2>&1
+        exit 1
+        ;;
+      --ref=*)
+        REF="$(echo "$1" | sed 's/^--[^=]*=*//')"
         ;;
       -*)
         echo "Unknown option: $1" >&2
