@@ -4,6 +4,8 @@ FRESH_RCFILE="${FRESH_RCFILE:-$HOME/.freshrc}"
 FRESH_PATH="${FRESH_PATH:-$HOME/.fresh}"
 FRESH_LOCAL="${FRESH_LOCAL:-$HOME/.dotfiles}"
 
+set -o pipefail
+
 fresh_install() {
   # create new output directory
   [ ! -e "$FRESH_PATH/build.new" ] || rm -rf "$FRESH_PATH/build.new"
