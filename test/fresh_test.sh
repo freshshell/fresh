@@ -319,7 +319,7 @@ it_logs_update_output() {
   stubGit
   assertTrue 'successfully updates' "bin/fresh update"
   assertTrue 'creates a log file' '[[ "$(find "$FRESH_PATH/logs" -type f | wc -l)" -eq 1 ]]'
-  assertTrue 'log file name' 'find "$FRESH_PATH/logs" -type f | egrep -q "/logs/update-\\d{4}-\\d{2}-\\d{2}-\\d{6}\\.log$"'
+  assertTrue 'log file name' 'find "$FRESH_PATH/logs" -type f | egrep -q "/logs/update-[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]{6}\\.log$"'
 
   assertFileMatches $FRESH_PATH/logs/* <<EOF
 * Updating other_repo/other_name
