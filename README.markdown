@@ -6,7 +6,7 @@ fresh is a tool to source shell configuration (aliases, functions, etc) from
 others into your own configuration files. We also support files such as ackrc
 and gitconfig. Think of it as Bundler for your dot files.
 
-[![Build Status](https://secure.travis-ci.org/freshshell/fresh.png)](http://travis-ci.org/freshshell/fresh)
+[![Build Status](https://secure.travis-ci.org/freshshell/fresh.png?branch=master)](http://travis-ci.org/freshshell/fresh)
 
 ## Installation
 
