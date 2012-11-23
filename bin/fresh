@@ -63,8 +63,12 @@ fresh() {
 
   # check the source file exists
   if [[ $(find "$SOURCE_DIR" -path "$SOURCE_DIR/$FILE_NAME" | wc -l) -lt 1 ]]; then
-    echo "Could not find \"$FILE_NAME\" source file." >&2
-    exit 1
+    # but not if we are locking to a git ref
+    # since we would be checking the working tree
+    if [[ ! -n "$REF" ]]; then
+      echo "Could not find \"$FILE_NAME\" source file." >&2
+      exit 1
+    fi
   fi
 
   case "${MODE:-shell}" in
@@ -84,15 +88,42 @@ fresh() {
   esac
 }
 
+_file_list() {
+  if [[ -n "$REF" ]]; then
+    cd "$SOURCE_DIR"
+    local MATCHED=0
+    while read PATH; do
+      if [[ "$PATH" == $FILE_NAME ]]; then
+        echo "$PATH"
+        MATCHED=1
+      fi
+    done < <(git ls-tree -r --name-only "$REF")
+    cd - > /dev/null
+    [[ "$MATCHED" == 1 ]]
+  else
+    find "$SOURCE_DIR" -path "$SOURCE_DIR/$FILE_NAME"
+  fi | sort
+}
+
+_source_file_contents() {
+  if [[ -n "$REF" ]]; then
+    cd "$SOURCE_DIR"
+    git show "$REF:$SOURCE_FILE"
+    cd - > /dev/null
+  else
+    cat "$SOURCE_FILE"
+  fi
+}
+
 _fresh_shell() {
-  find "$SOURCE_DIR" -path "$SOURCE_DIR/$FILE_NAME" | sort | while read SOURCE_FILE
+  _file_list | while read SOURCE_FILE
   do
-    cat "$SOURCE_FILE" >> "$FRESH_PATH/build.new/shell.sh"
+    _source_file_contents >> "$FRESH_PATH/build.new/shell.sh"
   done
 }
 
 _fresh_file() {
-  find "$SOURCE_DIR" -path "$SOURCE_DIR/$FILE_NAME" | sort | while read SOURCE_FILE
+  _file_list | while read SOURCE_FILE
   do
     if [ -n "$MODE_ARG" ]; then
       DEST_NAME="$(basename "$MODE_ARG" | sed 's/^\.//')"
@@ -101,7 +132,7 @@ _fresh_file() {
       DEST_NAME="$(basename "$SOURCE_FILE" | sed 's/^\.//')"
       SYMLINK_PATH="~/.$DEST_NAME"
     fi
-    cat "$SOURCE_FILE" >> "$FRESH_PATH/build.new/$DEST_NAME"
+    _source_file_contents >> "$FRESH_PATH/build.new/$DEST_NAME"
     SYMLINK_PATH="$(eval echo "$SYMLINK_PATH")"
     if ! [ -L "$SYMLINK_PATH" ]; then
       mkdir -p "$(dirname "$SYMLINK_PATH")"
@@ -111,7 +142,7 @@ _fresh_file() {
 }
 
 _fresh_bin() {
-  find "$SOURCE_DIR" -path "$SOURCE_DIR/$FILE_NAME" | sort | while read SOURCE_FILE
+  _file_list | while read SOURCE_FILE
   do
     if [ -n "$MODE_ARG" ]; then
       DEST_NAME="$(basename "$MODE_ARG")"
@@ -121,7 +152,7 @@ _fresh_bin() {
       SYMLINK_PATH="~/bin/$DEST_NAME"
     fi
     mkdir -p "$FRESH_PATH/build.new/bin" ~/bin
-    cat "$SOURCE_FILE" >> "$FRESH_PATH/build.new/bin/$DEST_NAME"
+    _source_file_contents >> "$FRESH_PATH/build.new/bin/$DEST_NAME"
     chmod +x "$FRESH_PATH/build.new/bin/$DEST_NAME"
     SYMLINK_PATH="$(eval echo "$SYMLINK_PATH")"
     if ! [ -L "$SYMLINK_PATH" ]; then

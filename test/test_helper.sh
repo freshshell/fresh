@@ -41,7 +41,6 @@ runFresh() {
 stubGit() {
   cat > $SANDBOX_PATH/bin/git <<EOF
 #!/bin/bash -e
-echo stub git output
 echo cd "\$(pwd)" >> $SANDBOX_PATH/git.log
 echo git "\$@" >> $SANDBOX_PATH/git.log
 case "\$1" in
@@ -50,9 +49,19 @@ case "\$1" in
     echo test data > "\$3/file"
     ;;
   pull)
+    echo stub git output
     if [ -e .git/failure ]; then
       exit 1
     fi
+    ;;
+  show)
+    echo test data for "\$2"
+    ;;
+  ls-tree)
+    echo aliases/git.sh
+    echo aliases/ruby.sh
+    echo ackrc
+    echo sedmv
     ;;
 esac
 EOF

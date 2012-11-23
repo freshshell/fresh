@@ -123,6 +123,60 @@ remote content
 EOF
 }
 
+it_builds_with_ref_locks() {
+  echo fresh repo/name 'aliases/*' --ref=abc1237 >> $FRESH_RCFILE
+  echo fresh repo/name ackrc --file --ref=1234567 >> $FRESH_RCFILE
+  echo fresh repo/name sedmv --bin --ref=abcdefg >> $FRESH_RCFILE
+  mkdir -p $FRESH_PATH/source/repo/name/aliases
+  # test with only one of aliases/* existing at HEAD
+  touch $FRESH_PATH/source/repo/name/aliases/git.sh
+  stubGit
+
+  runFresh
+
+  assertFileMatches $SANDBOX_PATH/git.log <<EOF
+cd $FRESH_PATH/source/repo/name
+git ls-tree -r --name-only abc1237
+cd $FRESH_PATH/source/repo/name
+git show abc1237:aliases/git.sh
+cd $FRESH_PATH/source/repo/name
+git show abc1237:aliases/ruby.sh
+cd $FRESH_PATH/source/repo/name
+git ls-tree -r --name-only 1234567
+cd $FRESH_PATH/source/repo/name
+git show 1234567:ackrc
+cd $FRESH_PATH/source/repo/name
+git ls-tree -r --name-only abcdefg
+cd $FRESH_PATH/source/repo/name
+git show abcdefg:sedmv
+EOF
+
+  assertFileMatches $FRESH_PATH/build/shell.sh <<EOF
+export PATH="\$HOME/bin:\$PATH"
+test data for abc1237:aliases/git.sh
+test data for abc1237:aliases/ruby.sh
+EOF
+  assertFileMatches $FRESH_PATH/build/ackrc <<EOF
+test data for 1234567:ackrc
+EOF
+  assertFileMatches $FRESH_PATH/build/bin/sedmv <<EOF
+test data for abcdefg:sedmv
+EOF
+}
+
+it_errors_if_source_file_missing_at_ref() {
+  echo fresh repo/name bad-file --ref=abc1237 >> $FRESH_RCFILE
+  mkdir -p $FRESH_PATH/source/repo/name
+  stubGit
+
+  runFresh fails
+
+  assertFileMatches $SANDBOX_PATH/git.log <<EOF
+cd $FRESH_PATH/source/repo/name
+git ls-tree -r --name-only abc1237
+EOF
+}
+
 it_builds_generic_files() {
   echo 'fresh lib/tmux.conf --file' >> $FRESH_RCFILE
   echo 'fresh lib/pryrc.rb --file=~/.pryrc' >> $FRESH_RCFILE
