@@ -40,11 +40,12 @@ echo "fresh freshshell/fresh bin/fresh --bin" >> ~/.freshrc
 An example `freshrc` file:
 
 ``` sh
-fresh freshshell/fresh bin/fresh --bin                # handles updating fresh
-fresh jasoncodes/dotfiles 'aliases/*'                 # builds jasoncodes' aliases into ~/.fresh/build.sh
-fresh twe4ked/dotfiles aliases/git.sh                 # builds the aliases/git file into ~/.fresh/build/shell.sh
-fresh twe4ked/dotfiles config/ackrc --file            # links the config/ackrc file to ~/.ackrc
-fresh jasoncodes/scripts gemdiff --bin=~/bin/gem-diff # links the gemdiff file to ~/bin/gem-diff
+fresh freshshell/fresh bin/fresh --bin                  # handles updating fresh
+fresh jasoncodes/dotfiles 'aliases/*'                   # builds jasoncodes' aliases into ~/.fresh/build.sh
+fresh twe4ked/dotfiles aliases/git.sh                   # builds the aliases/git file into ~/.fresh/build/shell.sh
+fresh twe4ked/dotfiles config/ackrc --file              # links the config/ackrc file to ~/.ackrc
+fresh jasoncodes/scripts gemdiff --bin=~/bin/gem-diff   # links the gemdiff file to ~/bin/gem-diff
+fresh twe4ked/dotfiles aliases/github.sh --ref=bea8134  # builds the aliases/github.sh file locked to the specified git ref
 ```
 
 Running `fresh` will then build your shell configuration and create any relevant symbolic links.
@@ -100,6 +101,15 @@ fresh jasoncodes/scripts gemdiff --bin=~/bin/gem-diff
 
 Links the `sedmv` file from [jasoncodes/scripts] to `~/bin/sedmv`
 and the `gemdiff` file from [jasoncodes/scripts] to `~/bin/gem-diff`.
+
+### Locking to specific Git references
+
+``` sh
+fresh twe4ked/dotfiles aliases/github.sh --ref=bea8134
+```
+
+Locks the aliases/github.sh file to a specific commit.
+You can use any Git reference, branches, commit hashes, tags, etc.
 
 ## Command line options
 
