@@ -108,8 +108,8 @@ and the `gemdiff` file from [jasoncodes/scripts] to `~/bin/gem-diff`.
 fresh twe4ked/dotfiles aliases/github.sh --ref=bea8134
 ```
 
-Locks the aliases/github.sh file to a specific commit.
-You can use any Git reference, branches, commit hashes, tags, etc.
+Locks the aliases/github.sh file to the specified commit.
+You can use any Git reference: branches, commit hashes, tags, etc.
 
 ## Command line options
 
