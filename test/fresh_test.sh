@@ -481,7 +481,7 @@ test_parse_fresh_dsl_args() {
     set -e
     __FRESH_TEST_MODE=1
     source bin/fresh
-    parse_fresh_dsl_args "$@"
+    parse_fresh_dsl_args "$@" > $SANDBOX_PATH/test_parse_fresh_dsl_args.out
     echo REPO_NAME="$REPO_NAME"
     echo FILE_NAME="$FILE_NAME"
     echo MODE="$MODE"
@@ -490,6 +490,7 @@ test_parse_fresh_dsl_args() {
     echo MARKER="$MARKER"
   ) > $SANDBOX_PATH/test_parse_fresh_dsl_args.log 2>&1
   echo EXIT_STATUS=$? >> $SANDBOX_PATH/test_parse_fresh_dsl_args.log
+  assertFileMatches $SANDBOX_PATH/test_parse_fresh_dsl_args.out < /dev/null
   assertFileMatches $SANDBOX_PATH/test_parse_fresh_dsl_args.log
 }
 

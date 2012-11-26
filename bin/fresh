@@ -198,14 +198,14 @@ function parse_fresh_dsl_args() {
     case "$1" in
       --file|--file=*|--bin|--bin=*)
         if [ -n "$MODE" ]; then
-          echo "Cannot have more than one mode." 2>&1
+          echo "Cannot have more than one mode." >&2
           exit 1
         fi
         MODE="$(echo "$1" | sed -e 's/^--//' -e 's/=.*//')"
         MODE_ARG="$(echo "$1" | sed 's/^--[^=]*=*//')"
         ;;
       --ref)
-        echo "You must specify a Git reference." 2>&1
+        echo "You must specify a Git reference." >&2
         exit 1
         ;;
       --ref=*)
