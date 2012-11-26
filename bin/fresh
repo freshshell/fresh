@@ -116,7 +116,7 @@ _source_file_contents() {
 }
 
 _file_marker() {
-  echo -n "# fresh:"
+  echo -n "$MARKER fresh:"
   if [[ -n "$REPO_NAME" ]]; then
     echo -n " $REPO_NAME"
   fi
@@ -131,7 +131,7 @@ _fresh_shell() {
   _file_list | while read SOURCE_FILE
   do
     echo >> "$FRESH_PATH/build.new/shell.sh"
-    _file_marker >> "$FRESH_PATH/build.new/shell.sh"
+    MARKER='#' _file_marker >> "$FRESH_PATH/build.new/shell.sh"
     echo >> "$FRESH_PATH/build.new/shell.sh"
     _source_file_contents >> "$FRESH_PATH/build.new/shell.sh"
   done
@@ -147,6 +147,15 @@ _fresh_file() {
       DEST_NAME="$(basename "$SOURCE_FILE" | sed 's/^\.//')"
       SYMLINK_PATH="~/.$DEST_NAME"
     fi
+
+    if [[ -n "$MARKER" ]]; then
+      if [[ -e "$FRESH_PATH/build.new/$DEST_NAME" ]]; then
+        echo >> "$FRESH_PATH/build.new/$DEST_NAME"
+      fi
+      _file_marker >> "$FRESH_PATH/build.new/$DEST_NAME"
+      echo >> "$FRESH_PATH/build.new/$DEST_NAME"
+    fi
+
     _source_file_contents >> "$FRESH_PATH/build.new/$DEST_NAME"
     SYMLINK_PATH="$(eval echo "$SYMLINK_PATH")"
     if ! [ -L "$SYMLINK_PATH" ]; then
@@ -183,6 +192,7 @@ function parse_fresh_dsl_args() {
   REPO_NAME=
   FILE_NAME=
   REF=
+  MARKER=
   while [ $# -gt 0 ]
   do
     case "$1" in
@@ -200,6 +210,21 @@ function parse_fresh_dsl_args() {
         ;;
       --ref=*)
         REF="$(echo "$1" | sed 's/^--[^=]*=*//')"
+        ;;
+      --marker|--marker=*)
+        if [[ "$MODE" != file ]]; then
+          echo "--marker is only valid with --file." >&2
+          exit 1
+        fi
+        if [[ "$1" == --marker ]]; then
+          MARKER='#'
+        else
+          MARKER="$(echo "$1" | sed 's/^--[^=]*=*//')"
+          if [[ -z "$MARKER" ]]; then
+            echo "Marker not specified." >&2
+            exit 1
+          fi
+        fi
         ;;
       -*)
         echo "Unknown option: $1" >&2

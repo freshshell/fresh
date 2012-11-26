@@ -203,9 +203,10 @@ EOF
 
 it_builds_generic_files() {
   echo 'fresh lib/tmux.conf --file' >> $FRESH_RCFILE
-  echo 'fresh lib/pryrc.rb --file=~/.pryrc' >> $FRESH_RCFILE
+  echo 'fresh lib/pryrc.rb --file=~/.pryrc --marker' >> $FRESH_RCFILE
   echo 'fresh config/git/colors --file=~/.gitconfig' >> $FRESH_RCFILE
   echo 'fresh config/git/rebase --file=~/.gitconfig' >> $FRESH_RCFILE
+  echo "fresh config/*.vim --file=~/.vimrc --marker='\"'" >> $FRESH_RCFILE
   mkdir -p $FRESH_LOCAL/{lib,config/git}
   echo unbind C-b >> $FRESH_LOCAL/lib/tmux.conf
   echo set -g prefix C-a >> $FRESH_LOCAL/lib/tmux.conf
@@ -215,6 +216,8 @@ it_builds_generic_files() {
   echo 'ui = auto' >> $FRESH_LOCAL/config/git/colors
   echo '[rebase]' >> $FRESH_LOCAL/config/git/rebase
   echo 'autosquash = true' >> $FRESH_LOCAL/config/git/rebase
+  echo 'map Y y$' >> $FRESH_LOCAL/config/mappings.vim
+  echo 'set hidden' >> $FRESH_LOCAL/config/global.vim
 
   runFresh
 
@@ -226,6 +229,8 @@ unbind C-b
 set -g prefix C-a
 EOF
   assertFileMatches $FRESH_PATH/build/pryrc <<EOF
+# fresh: lib/pryrc.rb
+
 Pry.config.color = true
 Pry.config.history.should_save = true
 EOF
@@ -236,15 +241,27 @@ ui = auto
 autosquash = true
 EOF
 
+  assertFileMatches $FRESH_PATH/build/vimrc <<EOF
+" fresh: config/global.vim
+
+set hidden
+
+" fresh: config/mappings.vim
+
+map Y y$
+EOF
+
   assertFalse 'not executable' '[ -x $FRESH_PATH/build/shell.sh ]'
   assertFalse 'not executable' '[ -x $FRESH_PATH/build/tmux.conf ]'
   assertFalse 'not executable' '[ -x $FRESH_PATH/build/pryrc ]'
   assertFalse 'not executable' '[ -x $FRESH_PATH/build/gitconfig ]'
+  assertFalse 'not executable' '[ -x $FRESH_PATH/build/vimrc ]'
 
   assertFalse 'not writable' '[ -w $FRESH_PATH/build/shell.sh ]'
   assertFalse 'not writable' '[ -w $FRESH_PATH/build/tmux.conf ]'
   assertFalse 'not writable' '[ -w $FRESH_PATH/build/pryrc ]'
   assertFalse 'not writable' '[ -w $FRESH_PATH/build/gitconfig ]'
+  assertFalse 'not writable' '[ -w $FRESH_PATH/build/vimrc ]'
 }
 
 it_builds_generic_files_with_globbing() {
@@ -470,6 +487,7 @@ test_parse_fresh_dsl_args() {
     echo MODE="$MODE"
     echo MODE_ARG="$MODE_ARG"
     echo REF="$REF"
+    echo MARKER="$MARKER"
   ) > $SANDBOX_PATH/test_parse_fresh_dsl_args.log 2>&1
   echo EXIT_STATUS=$? >> $SANDBOX_PATH/test_parse_fresh_dsl_args.log
   assertFileMatches $SANDBOX_PATH/test_parse_fresh_dsl_args.log
@@ -482,6 +500,7 @@ FILE_NAME=aliases/git.sh
 MODE=
 MODE_ARG=
 REF=
+MARKER=
 EXIT_STATUS=0
 EOF
 
@@ -491,6 +510,7 @@ FILE_NAME=lib/tmux.conf
 MODE=file
 MODE_ARG=~/.tmux.conf
 REF=
+MARKER=
 EXIT_STATUS=0
 EOF
 
@@ -500,6 +520,7 @@ FILE_NAME=.gitconfig
 MODE=file
 MODE_ARG=
 REF=
+MARKER=
 EXIT_STATUS=0
 EOF
 
@@ -509,6 +530,7 @@ FILE_NAME=sedmv
 MODE=bin
 MODE_ARG=
 REF=
+MARKER=
 EXIT_STATUS=0
 EOF
 
@@ -518,6 +540,7 @@ FILE_NAME=scripts/pidof.sh
 MODE=bin
 MODE_ARG=~/bin/pidof
 REF=
+MARKER=
 EXIT_STATUS=0
 EOF
 
@@ -527,7 +550,43 @@ FILE_NAME=lib/tmux.conf
 MODE=file
 MODE_ARG=~/.tmux.conf
 REF=abc1237
+MARKER=
 EXIT_STATUS=0
+EOF
+
+test_parse_fresh_dsl_args tmux.conf --file --marker <<EOF
+REPO_NAME=
+FILE_NAME=tmux.conf
+MODE=file
+MODE_ARG=
+REF=
+MARKER=#
+EXIT_STATUS=0
+EOF
+
+test_parse_fresh_dsl_args vimrc --file --marker='"' <<EOF
+REPO_NAME=
+FILE_NAME=vimrc
+MODE=file
+MODE_ARG=
+REF=
+MARKER="
+EXIT_STATUS=0
+EOF
+
+test_parse_fresh_dsl_args foo --file --marker= <<EOF
+Marker not specified.
+EXIT_STATUS=1
+EOF
+
+test_parse_fresh_dsl_args foo --bin --marker <<EOF
+--marker is only valid with --file.
+EXIT_STATUS=1
+EOF
+
+test_parse_fresh_dsl_args foo --marker=';' <<EOF
+--marker is only valid with --file.
+EXIT_STATUS=1
 EOF
 
   test_parse_fresh_dsl_args foo --file --ref <<EOF
