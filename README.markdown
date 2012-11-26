@@ -98,7 +98,7 @@ Shell files automatically include comments before each section.
 To add annotations to config files you can use the `--marker` option:
 
 ``` sh
-fresh twe4ked/dotfiles 'vim*' --file=~/.vimrc --marker='"'
+fresh twe4ked/dotfiles 'vim/*' --file=~/.vimrc --marker='"'
 fresh jasoncodes/dotfiles config/pryrc --file --marker
 ```
 
