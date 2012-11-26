@@ -13,8 +13,14 @@ it_builds_local_shell_files() {
 
   assertFileMatches $FRESH_PATH/build/shell.sh <<EOF
 export PATH="\$HOME/bin:\$PATH"
+
+# fresh: aliases/git
+
 alias gs='git status'
 alias gl='git log'
+
+# fresh: aliases/ruby
+
 alias rake='bundle exec rake'
 EOF
 
@@ -34,6 +40,9 @@ it_builds_local_shell_files_with_spaces() {
 
   assertFileMatches $FRESH_PATH/build/shell.sh <<EOF
 export PATH="\$HOME/bin:\$PATH"
+
+# fresh: aliases/foo bar
+
 SPACE
 EOF
 }
@@ -50,7 +59,13 @@ it_builds_local_shell_files_with_globbing() {
 
   assertFileMatches $FRESH_PATH/build/shell.sh <<EOF
 export PATH="\$HOME/bin:\$PATH"
+
+# fresh: aliases/file1
+
 file1
+
+# fresh: aliases/file2
+
 file2
 EOF
 }
@@ -119,6 +134,9 @@ it_builds_shell_files_from_cloned_repos() {
 
   assertFileMatches $FRESH_PATH/build/shell.sh <<EOF
 export PATH="\$HOME/bin:\$PATH"
+
+# fresh: repo/name file
+
 remote content
 EOF
 }
@@ -153,7 +171,13 @@ EOF
 
   assertFileMatches $FRESH_PATH/build/shell.sh <<EOF
 export PATH="\$HOME/bin:\$PATH"
+
+# fresh: repo/name aliases/git.sh @ abc1237
+
 test data for abc1237:aliases/git.sh
+
+# fresh: repo/name aliases/ruby.sh @ abc1237
+
 test data for abc1237:aliases/ruby.sh
 EOF
   assertFileMatches $FRESH_PATH/build/ackrc <<EOF

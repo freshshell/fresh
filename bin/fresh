@@ -115,9 +115,24 @@ _source_file_contents() {
   fi
 }
 
+_file_marker() {
+  echo -n "# fresh:"
+  if [[ -n "$REPO_NAME" ]]; then
+    echo -n " $REPO_NAME"
+  fi
+  echo -n " ${SOURCE_FILE#$SOURCE_DIR/}"
+  if [[ -n "$REF" ]]; then
+    echo -n " @ $REF"
+  fi
+  echo
+}
+
 _fresh_shell() {
   _file_list | while read SOURCE_FILE
   do
+    echo >> "$FRESH_PATH/build.new/shell.sh"
+    _file_marker >> "$FRESH_PATH/build.new/shell.sh"
+    echo >> "$FRESH_PATH/build.new/shell.sh"
     _source_file_contents >> "$FRESH_PATH/build.new/shell.sh"
   done
 }
