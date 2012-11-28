@@ -1,4 +1,5 @@
 mkdir -p tmp/sandbox
+export ORIG_PATH="$(pwd)"
 export SANDBOX_PATH="$(CDPATH= cd tmp/sandbox && pwd)"
 export PATH="$SANDBOX_PATH/bin:$PATH"
 export HOME="$SANDBOX_PATH/home"
@@ -11,7 +12,13 @@ setUp() {
     rm -rf "$SANDBOX_PATH"
   fi
   mkdir -p "$SANDBOX_PATH"/{home,bin}
+  ln -s "$ORIG_PATH/bin/fresh" "$SANDBOX_PATH/bin/"
   export FRESH_NO_BIN_CHECK=true
+  cd "$SANDBOX_PATH"
+}
+
+tearDown() {
+  cd "$ORIG_PATH"
 }
 
 suite() {
