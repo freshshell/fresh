@@ -102,6 +102,23 @@ fresh twe4ked/dotfiles 'vim/*' --file=~/.vimrc --marker='"'
 fresh jasoncodes/dotfiles config/pryrc --file --marker
 ```
 
+#### Building files without symlinking
+
+Some tools/libraries (e.g. zsh plugins) require specific directory structures.
+These can be built within the build directory (`~/.fresh/build`) by specifying
+a relative path on `--file`:
+
+``` sh
+fresh zsh-users/zsh-syntax-highlighting zsh-syntax-highlighting.zsh --file=vendor/zsh-syntax-highlighting.zsh
+fresh zsh-users/zsh-syntax-highlighting highlighters/main/main-highlighter.zsh --file=vendor/highlighters/main/main-highlighter.zsh
+```
+
+These files can then be sourced from your main shell config with:
+
+``` sh
+source ~/.fresh/build/vendor/zsh-syntax-highlighting.zsh
+```
+
 ### Bin files
 
 ``` sh

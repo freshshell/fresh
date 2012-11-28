@@ -141,12 +141,23 @@ _fresh_file() {
   _file_list | while read SOURCE_FILE
   do
     if [ -n "$MODE_ARG" ]; then
-      DEST_NAME="$(basename "$MODE_ARG" | sed 's/^\.//')"
-      SYMLINK_PATH="$MODE_ARG"
+      if echo "$MODE_ARG" | grep -q '^[~/]'; then
+        DEST_NAME="$(basename "$MODE_ARG" | sed 's/^\.//')"
+        SYMLINK_PATH="$MODE_ARG"
+      else
+        if echo "$MODE_ARG" | grep -q '^\.\.'; then
+          echo "Relative paths must be inside build dir." >&2
+          exit 1
+        fi
+        DEST_NAME="$MODE_ARG"
+        SYMLINK_PATH=""
+      fi
     else
       DEST_NAME="$(basename "$SOURCE_FILE" | sed 's/^\.//')"
       SYMLINK_PATH="~/.$DEST_NAME"
     fi
+
+    mkdir -p "$(dirname "$FRESH_PATH/build.new/$DEST_NAME")"
 
     if [[ -n "$MARKER" ]]; then
       if [[ -e "$FRESH_PATH/build.new/$DEST_NAME" ]]; then
@@ -157,10 +168,13 @@ _fresh_file() {
     fi
 
     _source_file_contents >> "$FRESH_PATH/build.new/$DEST_NAME"
-    SYMLINK_PATH="$(eval echo "$SYMLINK_PATH")"
-    if ! [ -L "$SYMLINK_PATH" ]; then
-      mkdir -p "$(dirname "$SYMLINK_PATH")"
-      ln -s "$FRESH_PATH/build/$DEST_NAME" "$SYMLINK_PATH"
+
+    if [[ -n "$SYMLINK_PATH" ]]; then
+      SYMLINK_PATH="$(eval echo "$SYMLINK_PATH")"
+      if ! [ -L "$SYMLINK_PATH" ]; then
+        mkdir -p "$(dirname "$SYMLINK_PATH")"
+        ln -s "$FRESH_PATH/build/$DEST_NAME" "$SYMLINK_PATH"
+      fi
     fi
   done
 }
@@ -169,8 +183,13 @@ _fresh_bin() {
   _file_list | while read SOURCE_FILE
   do
     if [ -n "$MODE_ARG" ]; then
-      DEST_NAME="$(basename "$MODE_ARG")"
-      SYMLINK_PATH="$MODE_ARG"
+      if echo "$MODE_ARG" | grep -q '^[~/]'; then
+        DEST_NAME="$(basename "$MODE_ARG")"
+        SYMLINK_PATH="$MODE_ARG"
+      else
+        echo "--bin file paths cannot be relative." >&2
+        exit 1
+      fi
     else
       DEST_NAME="$(basename "$SOURCE_FILE")"
       SYMLINK_PATH="~/bin/$DEST_NAME"

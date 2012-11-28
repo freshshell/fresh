@@ -297,6 +297,25 @@ it_links_generic_files_to_destination() {
   assertEquals "$(readlink ~/a\ path/with\ spaces)" "$FRESH_PATH/build/with spaces"
 }
 
+it_does_not_link_generic_files_with_relative_paths() {
+  echo 'fresh foo-bar.zsh --file=vendor/foo/bar.zsh' >> $FRESH_RCFILE
+  mkdir -p $FRESH_LOCAL
+  touch $FRESH_LOCAL/foo-bar.zsh
+
+  runFresh
+
+  assertTrue 'file exists in build' '[ -f $FRESH_PATH/build/vendor/foo/bar.zsh ]'
+  assertEquals "" "$(readlink vendor/foo/bar.zsh)"
+}
+
+it_does_not_allow_relative_paths_above_build_dir() {
+  echo 'fresh foo-bar.zsh --file=../foo/bar.zsh' >> $FRESH_RCFILE
+  mkdir -p $FRESH_LOCAL
+  touch $FRESH_LOCAL/foo-bar.zsh
+
+  runFresh fails
+}
+
 it_builds_bin_files() {
   echo 'fresh scripts/sedmv --bin' >> $FRESH_RCFILE
   echo 'fresh pidof.sh --bin=~/bin/pidof' >> $FRESH_RCFILE
@@ -347,6 +366,17 @@ it_links_bin_files_to_destination() {
   assertEquals "$(readlink ~/bin/sedmv)" "$FRESH_PATH/build/bin/sedmv"
   assertEquals "$(readlink ~/bin/pidof)" "$FRESH_PATH/build/bin/pidof"
   assertEquals "$(readlink ~/bin/scripts/gemdiff)" "$FRESH_PATH/build/bin/gemdiff"
+}
+
+it_errors_when_linking_bin_files_with_relative_paths() {
+  mkdir -p $FRESH_LOCAL
+  touch $FRESH_LOCAL/foobar
+
+  echo 'fresh foobar --bin=foobar' > $FRESH_RCFILE
+  runFresh fails
+
+  echo 'fresh foobar --bin=../foobar' > $FRESH_RCFILE
+  runFresh fails
 }
 
 it_does_not_override_existing_links() {
