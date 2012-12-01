@@ -178,4 +178,4 @@ MIT
 [twe4ked/dotfiles]: https://github.com/twe4ked/dotfiles
 [jasoncodes]: https://github.com/jasoncodes
 [twe4ked]: https://github.com/twe4ked
-[directory]: https://github.com/freshshell/wiki/Directory
+[directory]: https://github.com/freshshell/fresh/wiki/Directory
