@@ -303,7 +303,7 @@ fresh_search() {
   DIRECTORY="$(curl -sS http://api.freshshell.com/directory)"
   if [[ "$#" -gt 0 ]]; then
     for TERM in "$@"; do
-      DIRECTORY="$(echo "$DIRECTORY" | grep -F "$TERM")"
+      DIRECTORY="$(echo "$DIRECTORY" | grep -F "$TERM" || true)"
     done
 
     if [[ -n "$DIRECTORY" ]]; then
