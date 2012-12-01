@@ -300,7 +300,7 @@ fresh_edit() {
 
 fresh_search() {
   shift
-  DIRECTORY="$(curl -s http://api.freshshell.com/directory)"
+  DIRECTORY="$(curl -sS http://api.freshshell.com/directory)"
   if [[ "$#" -gt 0 ]]; then
     for TERM in "$@"; do
       DIRECTORY="$(echo "$DIRECTORY" | grep -F "$TERM")"
