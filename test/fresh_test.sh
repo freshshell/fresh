@@ -641,4 +641,74 @@ EXIT_STATUS=1
 EOF
 }
 
+it_searches_directory_for_keywords() {
+  stubCurl "foo" "bar baz"
+  bin/fresh search foo bar > $SANDBOX_PATH/out.log 2> $SANDBOX_PATH/err.log
+  assertTrue 'successfully executes' $?
+  assertFileMatches $SANDBOX_PATH/out.log <<EOF
+foo
+bar baz
+EOF
+  assertFileMatches $SANDBOX_PATH/err.log <<EOF
+EOF
+  assertFileMatches $SANDBOX_PATH/curl.log <<EOF
+curl
+-sS
+http://api.freshshell.com/directory
+--get
+--data-urlencode
+q=foo bar
+EOF
+}
+
+it_shows_error_if_no_search_query_given() {
+  stubCurl
+  bin/fresh search > $SANDBOX_PATH/out.log 2> $SANDBOX_PATH/err.log
+  assertFalse 'returns error' $?
+  assertFileMatches $SANDBOX_PATH/out.log <<EOF
+EOF
+  assertFileMatches $SANDBOX_PATH/err.log <<EOF
+No search query given.
+EOF
+  assertFalse 'curl was not invoked' '[ -e "$SANDBOX_PATH/curl.log" ]'
+}
+
+it_shows_error_if_search_has_no_results() {
+  stubCurl
+  bin/fresh search crap > $SANDBOX_PATH/out.log 2> $SANDBOX_PATH/err.log
+  assertFalse 'returns error' $?
+  assertFileMatches $SANDBOX_PATH/out.log <<EOF
+EOF
+  assertFileMatches $SANDBOX_PATH/err.log <<EOF
+No results.
+EOF
+  assertFileMatches $SANDBOX_PATH/curl.log <<EOF
+curl
+-sS
+http://api.freshshell.com/directory
+--get
+--data-urlencode
+q=crap
+EOF
+}
+
+it_shows_error_if_search_api_call_fails() {
+  stubCurl --fail "Could not connect."
+  bin/fresh search blah > $SANDBOX_PATH/out.log 2> $SANDBOX_PATH/err.log
+  assertFalse 'returns error' $?
+  assertFileMatches $SANDBOX_PATH/out.log <<EOF
+EOF
+  assertFileMatches $SANDBOX_PATH/err.log <<EOF
+Could not connect.
+EOF
+  assertFileMatches $SANDBOX_PATH/curl.log <<EOF
+curl
+-sS
+http://api.freshshell.com/directory
+--get
+--data-urlencode
+q=blah
+EOF
+}
+
 source test/test_helper.sh
