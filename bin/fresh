@@ -332,10 +332,11 @@ See http://freshshell.com/readme for more documentation.
 usage: fresh <command>
 
 Available commands:
-    install  Build shell configuration and relevant symlinks (default)
-    update   Update from source repos and rebuild
-    edit     Open freshrc for editing
-    help     Show this help
+    install         Build shell configuration and relevant symlinks (default)
+    update          Update from source repos and rebuild
+    search <query>  Search the fresh directory
+    edit            Open freshrc for editing
+    help            Show this help
 EOF
       ;;
     install|'')
