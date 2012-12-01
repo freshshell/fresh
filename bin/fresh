@@ -362,10 +362,6 @@ EOF
       fresh_search "$@"
       ;;
     *)
-      if [ -n "$2" ]; then
-        echo "Invalid arguments" >&2
-        exit 1
-      fi
       echo "Unknown option: $1" >&2
       exit 1
       ;;
