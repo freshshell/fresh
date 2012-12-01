@@ -298,12 +298,27 @@ fresh_edit() {
   "${EDITOR:-vi}" "$FRESH_RCFILE"
 }
 
-main() {
-  if [ -n "$2" ]; then
-    echo "Invalid arguments" >&2
+fresh_search() {
+  shift
+  DIRECTORY="$(curl http://api.freshshell.com/directory -s)"
+  if [[ "$#" -gt 0 ]]; then
+    for TERM in "$@"; do
+      DIRECTORY="$(echo "$DIRECTORY" | grep -F "$TERM")"
+    done
+
+    if [[ -n "$DIRECTORY" ]]; then
+      echo "$DIRECTORY"
+    else
+      echo "No results." >&2
+      exit 1
+    fi
+  else
+    echo "No search argument given." >&2
     exit 1
   fi
+}
 
+main() {
   case "$1" in
     help|--help)
       cat <<EOF
@@ -324,17 +339,36 @@ Available commands:
 EOF
       ;;
     install|'')
+      if [ -n "$2" ]; then
+        echo "Invalid arguments" >&2
+        exit 1
+      fi
       fresh_install
       ;;
     update)
+      if [ -n "$2" ]; then
+        echo "Invalid arguments" >&2
+        exit 1
+      fi
       fresh_update
       fresh_install --quiet
       fresh_install_with_latest_binary
       ;;
     edit)
+      if [ -n "$2" ]; then
+        echo "Invalid arguments" >&2
+        exit 1
+      fi
       fresh_edit
       ;;
+    search)
+      fresh_search "$@"
+      ;;
     *)
+      if [ -n "$2" ]; then
+        echo "Invalid arguments" >&2
+        exit 1
+      fi
       echo "Unknown option: $1" >&2
       exit 1
       ;;
