@@ -299,7 +299,6 @@ fresh_edit() {
 }
 
 fresh_search() {
-  shift
   if [[ "$#" -gt 0 ]]; then
     RESULTS="$(curl -sS http://api.freshshell.com/directory --get --data-urlencode q="$*")"
     if [[ -n "$RESULTS" ]]; then
@@ -359,6 +358,7 @@ EOF
       fresh_edit
       ;;
     search)
+      shift
       fresh_search "$@"
       ;;
     *)
