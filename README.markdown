@@ -149,6 +149,18 @@ symlinks.
 
 Running `fresh update` will update sources from GitHub repositories and run `fresh install`.
 
+### Search
+
+You can search our [fresh directory][directory] using `fresh search`.
+Feel free to add your own fresh lines to the wiki page!
+
+Try:
+
+``` sh
+fresh search twe4ked
+fresh search jasoncodes
+```
+
 ### Edit
 
 Running `fresh edit` will open your `~/.freshrc` in your default `$EDITOR`.
@@ -166,3 +178,4 @@ MIT
 [twe4ked/dotfiles]: https://github.com/twe4ked/dotfiles
 [jasoncodes]: https://github.com/jasoncodes
 [twe4ked]: https://github.com/twe4ked
+[directory]: https://github.com/freshshell/fresh/wiki/Directory

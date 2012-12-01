@@ -298,12 +298,22 @@ fresh_edit() {
   "${EDITOR:-vi}" "$FRESH_RCFILE"
 }
 
-main() {
-  if [ -n "$2" ]; then
-    echo "Invalid arguments" >&2
+fresh_search() {
+  if [[ "$#" -gt 0 ]]; then
+    RESULTS="$(curl -sS http://api.freshshell.com/directory --get --data-urlencode q="$*")"
+    if [[ -n "$RESULTS" ]]; then
+      echo "$RESULTS"
+    else
+      echo "No results." >&2
+      exit 1
+    fi
+  else
+    echo "No search query given." >&2
     exit 1
   fi
+}
 
+main() {
   case "$1" in
     help|--help)
       cat <<EOF
@@ -317,22 +327,39 @@ See http://freshshell.com/readme for more documentation.
 usage: fresh <command>
 
 Available commands:
-    install  Build shell configuration and relevant symlinks (default)
-    update   Update from source repos and rebuild
-    edit     Open freshrc for editing
-    help     Show this help
+    install         Build shell configuration and relevant symlinks (default)
+    update          Update from source repos and rebuild
+    search <query>  Search the fresh directory
+    edit            Open freshrc for editing
+    help            Show this help
 EOF
       ;;
     install|'')
+      if [ -n "$2" ]; then
+        echo "Invalid arguments" >&2
+        exit 1
+      fi
       fresh_install
       ;;
     update)
+      if [ -n "$2" ]; then
+        echo "Invalid arguments" >&2
+        exit 1
+      fi
       fresh_update
       fresh_install --quiet
       fresh_install_with_latest_binary
       ;;
     edit)
+      if [ -n "$2" ]; then
+        echo "Invalid arguments" >&2
+        exit 1
+      fi
       fresh_edit
+      ;;
+    search)
+      shift
+      fresh_search "$@"
       ;;
     *)
       echo "Unknown option: $1" >&2
