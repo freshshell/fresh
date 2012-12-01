@@ -308,7 +308,7 @@ fresh_search() {
       exit 1
     fi
   else
-    echo "No search argument given." >&2
+    echo "No search query given." >&2
     exit 1
   fi
 }
