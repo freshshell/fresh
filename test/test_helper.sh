@@ -56,7 +56,11 @@ case "\$1" in
     echo test data > "\$3/file"
     ;;
   pull)
-    echo stub git output
+    if [ -e .git/output ]; then
+      cat .git/output
+    else
+      echo Current branch master is up to date.
+    fi
     if [ -e .git/failure ]; then
       exit 1
     fi

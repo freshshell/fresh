@@ -434,7 +434,7 @@ it_shows_progress_when_updating() {
   bin/fresh update > "$SANDBOX_PATH/fresh_out.log" 2> "$SANDBOX_PATH/fresh_err.log"
   assertTrue 'successfully updates' $?
   assertTrue 'outputs "repo/name"' 'grep -qxF "* Updating repo/name" $SANDBOX_PATH/fresh_out.log'
-  assertTrue 'shows git output with prefix' 'grep -qxF "| stub git output" $SANDBOX_PATH/fresh_out.log'
+  assertTrue 'shows git output with prefix' 'grep -qxF "| Current branch master is up to date." $SANDBOX_PATH/fresh_out.log'
 }
 
 it_logs_update_output() {
@@ -448,9 +448,9 @@ it_logs_update_output() {
 
   assertFileMatches $FRESH_PATH/logs/* <<EOF
 * Updating other_repo/other_name
-| stub git output
+| Current branch master is up to date.
 * Updating repo/name
-| stub git output
+| Current branch master is up to date.
 EOF
 }
 
