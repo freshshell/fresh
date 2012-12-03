@@ -313,17 +313,8 @@ fresh_search() {
   fi
 }
 
-_prevent_invalid_arguments() {
-  if [ -n "$2" ]; then
-    echo "Invalid arguments" >&2
-    exit 1
-  fi
-}
-
-main() {
-  case "$1" in
-    help|--help)
-      cat <<EOF
+fresh_help() {
+cat <<EOF
 Keep your dot files fresh.
 
 The following commands will install/update configuration files
@@ -340,6 +331,19 @@ Available commands:
     edit            Open freshrc for editing
     help            Show this help
 EOF
+}
+
+_prevent_invalid_arguments() {
+  if [ -n "$2" ]; then
+    echo "Invalid arguments" >&2
+    exit 1
+  fi
+}
+
+main() {
+  case "$1" in
+    help|--help)
+      fresh_help
       ;;
     install|'')
       _prevent_invalid_arguments "$@"
