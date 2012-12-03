@@ -278,14 +278,19 @@ fresh_install_with_latest_binary() {
 }
 
 fresh_update() {
+  local GIT_OUTPUT_FILE="$(mktemp)"
   mkdir -p "$FRESH_PATH/logs"
   local LOG_FILE="$FRESH_PATH/logs/update-$(date +%Y-%m-%d-%H%M%S).log"
   find $FRESH_PATH/source -type d -name '.git' | sort | while read DIR; do
     local DIR="$(dirname "$DIR")"
-    echo "* Updating $(_repo_name_from_source_path "$DIR")" | tee -a "$LOG_FILE"
+    local REPO_NAME="$(_repo_name_from_source_path "$DIR")"
+    echo "* Updating $REPO_NAME" | tee -a "$LOG_FILE"
     cd "$DIR"
-    git pull --rebase 2>&1 | sed 's/^/| /' | tee -a "$LOG_FILE"
-    [ "${PIPESTATUS[0]}" -eq 0 ] || exit 1
+    git pull --rebase 2>&1 | tee "$GIT_OUTPUT_FILE" | sed 's/^/| /' | tee -a "$LOG_FILE"
+    perl -n -e'/^ {2,}([0-9a-f]{7,})\.\.([0-9a-f]{7,}) / && print "| <https://github.com/'"$REPO_NAME"'/compare/$1...$2>\n"' "$GIT_OUTPUT_FILE" | tee -a "$LOG_FILE"
+    local GIT_RESULT="${PIPESTATUS[0]}"
+    rm "$GIT_OUTPUT_FILE"
+    [ "$GIT_RESULT" -eq 0 ] || exit 1
     cd - > /dev/null
   done
 }

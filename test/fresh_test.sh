@@ -438,6 +438,23 @@ it_shows_progress_when_updating() {
   assertFalse 'does not output to stderr' '[ -s $SANDBOX_PATH/err.log ]'
 }
 
+it_shows_a_github_compare_url_when_updating() {
+  stubGit
+
+  mkdir -p $FRESH_PATH/source/jasoncodes/dotfiles/.git
+  cat > $FRESH_PATH/source/jasoncodes/dotfiles/.git/output <<EOF
+From http://github.com/jasoncodes/dotfiles
+   47ad84c..57b8b2b  master     -> origin/master
+First, rewinding head to replay your work on top of it...
+Fast-forwarded master to 57b8b2ba7482884169a187d46be63fb8f8f4146b.
+EOF
+
+  bin/fresh update > "$SANDBOX_PATH/fresh_out.log" 2> "$SANDBOX_PATH/fresh_err.log"
+  assertTrue 'successfully updates' $?
+  assertTrue 'shows GitHub compare URL' 'grep -qF "https://github.com/jasoncodes/dotfiles/compare/47ad84c...57b8b2b" $SANDBOX_PATH/fresh_out.log'
+  assertFalse 'does not output to stderr' '[ -s $SANDBOX_PATH/err.log ]'
+}
+
 it_logs_update_output() {
   mkdir -p $FRESH_PATH/source/repo/name/.git
   mkdir -p $FRESH_PATH/source/other_repo/other_name/.git
