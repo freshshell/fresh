@@ -435,6 +435,7 @@ it_shows_progress_when_updating() {
   assertTrue 'successfully updates' $?
   assertTrue 'outputs "repo/name"' 'grep -qxF "* Updating repo/name" $SANDBOX_PATH/fresh_out.log'
   assertTrue 'shows git output with prefix' 'grep -qxF "| Current branch master is up to date." $SANDBOX_PATH/fresh_out.log'
+  assertFalse 'does not output to stderr' '[ -s $SANDBOX_PATH/err.log ]'
 }
 
 it_logs_update_output() {
