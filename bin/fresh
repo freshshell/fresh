@@ -278,7 +278,7 @@ fresh_install_with_latest_binary() {
 }
 
 fresh_update() {
-  local GIT_OUTPUT_FILE="$(mktemp)"
+  local GIT_OUTPUT_FILE="$(mktemp "${TMPDIR:-/tmp}/fresh.XXXXXX")"
   mkdir -p "$FRESH_PATH/logs"
   local LOG_FILE="$FRESH_PATH/logs/update-$(date +%Y-%m-%d-%H%M%S).log"
   find $FRESH_PATH/source -type d -name '.git' | sort | while read DIR; do
