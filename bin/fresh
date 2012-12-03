@@ -313,6 +313,13 @@ fresh_search() {
   fi
 }
 
+_prevent_invalid_arguments() {
+  if [ -n "$2" ]; then
+    echo "Invalid arguments" >&2
+    exit 1
+  fi
+}
+
 main() {
   case "$1" in
     help|--help)
@@ -335,26 +342,17 @@ Available commands:
 EOF
       ;;
     install|'')
-      if [ -n "$2" ]; then
-        echo "Invalid arguments" >&2
-        exit 1
-      fi
+      _prevent_invalid_arguments "$@"
       fresh_install
       ;;
     update)
-      if [ -n "$2" ]; then
-        echo "Invalid arguments" >&2
-        exit 1
-      fi
+      _prevent_invalid_arguments "$@"
       fresh_update
       fresh_install --quiet
       fresh_install_with_latest_binary
       ;;
     edit)
-      if [ -n "$2" ]; then
-        echo "Invalid arguments" >&2
-        exit 1
-      fi
+      _prevent_invalid_arguments "$@"
       fresh_edit
       ;;
     search)
