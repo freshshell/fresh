@@ -66,8 +66,7 @@ fresh() {
     # but not if we are locking to a git ref
     # since we would be checking the working tree
     if [[ ! -n "$REF" ]]; then
-      echo "Could not find \"$FILE_NAME\" source file." >&2
-      exit 1
+      _fatal_error "Could not find \"$FILE_NAME\" source file."
     fi
   fi
 
@@ -82,8 +81,7 @@ fresh() {
       _fresh_bin
       ;;
     *)
-      echo "Unknown mode: $MODE" 2>&1
-      exit 1
+      _fatal_error "Unknown mode: $MODE"
       ;;
   esac
 }
@@ -146,8 +144,7 @@ _fresh_file() {
         SYMLINK_PATH="$MODE_ARG"
       else
         if echo "$MODE_ARG" | grep -q '^\.\.'; then
-          echo "Relative paths must be inside build dir." >&2
-          exit 1
+          _fatal_error "Relative paths must be inside build dir."
         fi
         DEST_NAME="$MODE_ARG"
         SYMLINK_PATH=""
@@ -187,8 +184,7 @@ _fresh_bin() {
         DEST_NAME="$(basename "$MODE_ARG")"
         SYMLINK_PATH="$MODE_ARG"
       else
-        echo "--bin file paths cannot be relative." >&2
-        exit 1
+        _fatal_error "--bin file paths cannot be relative."
       fi
     else
       DEST_NAME="$(basename "$SOURCE_FILE")"
@@ -217,43 +213,37 @@ function parse_fresh_dsl_args() {
     case "$1" in
       --file|--file=*|--bin|--bin=*)
         if [ -n "$MODE" ]; then
-          echo "Cannot have more than one mode." >&2
-          exit 1
+          _fatal_error "Cannot have more than one mode."
         fi
         MODE="$(echo "$1" | sed -e 's/^--//' -e 's/=.*//')"
         MODE_ARG="$(echo "$1" | sed 's/^--[^=]*=*//')"
         ;;
       --ref)
-        echo "You must specify a Git reference." >&2
-        exit 1
+        _fatal_error "You must specify a Git reference."
         ;;
       --ref=*)
         REF="$(echo "$1" | sed 's/^--[^=]*=*//')"
         ;;
       --marker|--marker=*)
         if [[ "$MODE" != file ]]; then
-          echo "--marker is only valid with --file." >&2
-          exit 1
+          _fatal_error "--marker is only valid with --file."
         fi
         if [[ "$1" == --marker ]]; then
           MARKER='#'
         else
           MARKER="$(echo "$1" | sed 's/^--[^=]*=*//')"
           if [[ -z "$MARKER" ]]; then
-            echo "Marker not specified." >&2
-            exit 1
+            _fatal_error "Marker not specified."
           fi
         fi
         ;;
       -*)
-        echo "Unknown option: $1" >&2
-        exit 1
+        _fatal_error "Unknown option: $1"
         ;;
       *)
         if [ -n "$FILE_NAME" ]; then
           if [ -n "$REPO_NAME" ]; then
-            echo "Expected 1 or 2 args." >&2
-            exit 1
+            _fatal_error "Expected 1 or 2 args."
           fi
           REPO_NAME="$FILE_NAME"
           FILE_NAME="$1"
@@ -265,8 +255,7 @@ function parse_fresh_dsl_args() {
     shift
   done
   if [ -z "$FILE_NAME" ]; then
-    echo "Filename is required" >&2
-    exit 1
+    _fatal_error "Filename is required"
   fi
 }
 
@@ -290,7 +279,9 @@ fresh_update() {
     perl -n -e'/^ {2,}([0-9a-f]{7,})\.\.([0-9a-f]{7,}) / && print "| <https://github.com/'"$REPO_NAME"'/compare/$1...$2>\n"' "$GIT_OUTPUT_FILE" | tee -a "$LOG_FILE"
     local GIT_RESULT="${PIPESTATUS[0]}"
     rm "$GIT_OUTPUT_FILE"
-    [ "$GIT_RESULT" -eq 0 ] || exit 1
+    if [ "$GIT_RESULT" -ne 0 ]; then
+      _fatal_error "Update failed."
+    fi
     cd - > /dev/null
   done
 }
@@ -309,12 +300,10 @@ fresh_search() {
     if [[ -n "$RESULTS" ]]; then
       echo "$RESULTS"
     else
-      echo "No results." >&2
-      exit 1
+      _fatal_error "No results."
     fi
   else
-    echo "No search query given." >&2
-    exit 1
+    _fatal_error "No search query given."
   fi
 }
 
@@ -338,10 +327,14 @@ Available commands:
 EOF
 }
 
+_fatal_error() {
+  echo "$1" >&2
+  exit 1
+}
+
 _prevent_invalid_arguments() {
   if [ -n "$2" ]; then
-    echo "Invalid arguments" >&2
-    exit 1
+    _fatal_error "Invalid arguments"
   fi
 }
 
@@ -369,8 +362,7 @@ main() {
       fresh_search "$@"
       ;;
     *)
-      echo "Unknown option: $1" >&2
-      exit 1
+      _fatal_error "Unknown option: $1"
       ;;
   esac
 }
