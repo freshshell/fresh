@@ -542,6 +542,8 @@ test_parse_fresh_dsl_args() {
   assertFileMatches $SANDBOX_PATH/test_parse_fresh_dsl_args.log
 }
 
+ERROR_PREFIX=$'\033[4;31mError\033[0m:'
+
 it_parses_fresh_dsl_args() {
   test_parse_fresh_dsl_args aliases/git.sh <<EOF
 REPO_NAME=
@@ -624,37 +626,37 @@ EXIT_STATUS=0
 EOF
 
 test_parse_fresh_dsl_args foo --file --marker= <<EOF
-Marker not specified.
+$ERROR_PREFIX Marker not specified.
 EXIT_STATUS=1
 EOF
 
 test_parse_fresh_dsl_args foo --bin --marker <<EOF
---marker is only valid with --file.
+$ERROR_PREFIX --marker is only valid with --file.
 EXIT_STATUS=1
 EOF
 
 test_parse_fresh_dsl_args foo --marker=';' <<EOF
---marker is only valid with --file.
+$ERROR_PREFIX --marker is only valid with --file.
 EXIT_STATUS=1
 EOF
 
   test_parse_fresh_dsl_args foo --file --ref <<EOF
-You must specify a Git reference.
+$ERROR_PREFIX You must specify a Git reference.
 EXIT_STATUS=1
 EOF
 
   test_parse_fresh_dsl_args foo --file --bin <<EOF
-Cannot have more than one mode.
+$ERROR_PREFIX Cannot have more than one mode.
 EXIT_STATUS=1
 EOF
 
   test_parse_fresh_dsl_args <<EOF
-Filename is required
+$ERROR_PREFIX Filename is required
 EXIT_STATUS=1
 EOF
 
   test_parse_fresh_dsl_args foo bar baz <<EOF
-Expected 1 or 2 args.
+$ERROR_PREFIX Expected 1 or 2 args.
 EXIT_STATUS=1
 EOF
 }
@@ -686,7 +688,7 @@ it_shows_error_if_no_search_query_given() {
   assertFileMatches $SANDBOX_PATH/out.log <<EOF
 EOF
   assertFileMatches $SANDBOX_PATH/err.log <<EOF
-No search query given.
+$ERROR_PREFIX No search query given.
 EOF
   assertFalse 'curl was not invoked' '[ -e "$SANDBOX_PATH/curl.log" ]'
 }
@@ -698,7 +700,7 @@ it_shows_error_if_search_has_no_results() {
   assertFileMatches $SANDBOX_PATH/out.log <<EOF
 EOF
   assertFileMatches $SANDBOX_PATH/err.log <<EOF
-No results.
+$ERROR_PREFIX No results.
 EOF
   assertFileMatches $SANDBOX_PATH/curl.log <<EOF
 curl
