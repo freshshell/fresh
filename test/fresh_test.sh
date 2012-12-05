@@ -423,10 +423,13 @@ it_shows_source_of_errors() {
   assertFileMatches $SANDBOX_PATH/fresh_err.log <<EOF
 $ERROR_PREFIX Could not find "bad-file" source file.
 $FRESH_RCFILE:1: fresh bad-file
+
+You may need to run \`fresh update\` if you're adding a new line,
+or the file you're referencing may have moved or been deleted.
 EOF
 
   mkdir -p $FRESH_LOCAL
-  echo 'fresh some-file --blah' > $FRESH_RCFILE
+  echo 'fresh repo/name some-file --blah' > $FRESH_RCFILE
 
   bin/fresh > "$SANDBOX_PATH/fresh_out.log" 2> "$SANDBOX_PATH/fresh_err.log"
   assertFalse 'returns non-zero' $?
@@ -434,7 +437,11 @@ EOF
 
   assertFileMatches $SANDBOX_PATH/fresh_err.log <<EOF
 $ERROR_PREFIX Unknown option: --blah
-$FRESH_RCFILE:1: fresh some-file --blah
+$FRESH_RCFILE:1: fresh repo/name some-file --blah
+
+You may need to run \`fresh update\` if you're adding a new line,
+or the file you're referencing may have moved or been deleted.
+Have a look at the repo: <https://github.com/repo/name>
 EOF
 
   echo 'source ~/.freshrc.local' > $FRESH_RCFILE
@@ -452,6 +459,9 @@ EOF
   assertFileMatches $SANDBOX_PATH/fresh_err.log <<EOF
 $ERROR_PREFIX Could not find "pry.rb" source file.
 ~/.freshrc.local:3: fresh pry.rb --file=~/.pryrc # ruby
+
+You may need to run \`fresh update\` if you're adding a new line,
+or the file you're referencing may have moved or been deleted.
 EOF
 }
 

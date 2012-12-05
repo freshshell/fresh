@@ -331,7 +331,15 @@ _fatal_error() {
   if [[ "$IN_RC_FILE" == 1 ]]; then
     local DISPLAY_RC_FILE="${RC_FILE/#$HOME/~}"
     local RC_CONTENT="$(head -$RC_LINE "$RC_FILE" | tail -1)"
-    echo "$DISPLAY_RC_FILE:$RC_LINE: $RC_CONTENT" >&2
+    cat >&2 <<EOF
+$DISPLAY_RC_FILE:$RC_LINE: $RC_CONTENT
+
+You may need to run \`fresh update\` if you're adding a new line,
+or the file you're referencing may have moved or been deleted.
+EOF
+    if [[ -n "$REPO_NAME" ]]; then
+      echo "Have a look at the repo: <https://github.com/"$REPO_NAME">" >&2
+    fi
   fi
   exit 1
 }
