@@ -7,6 +7,8 @@ export FRESH_RCFILE="$SANDBOX_PATH/freshrc"
 export FRESH_PATH="$SANDBOX_PATH/fresh"
 export FRESH_LOCAL="$SANDBOX_PATH/dotfiles"
 
+ERROR_PREFIX=$'\033[4;31mError\033[0m:'
+
 setUp() {
   if [[ -e "$SANDBOX_PATH" ]]; then
     rm -rf "$SANDBOX_PATH"

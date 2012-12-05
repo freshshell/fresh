@@ -542,8 +542,6 @@ test_parse_fresh_dsl_args() {
   assertFileMatches $SANDBOX_PATH/test_parse_fresh_dsl_args.log
 }
 
-ERROR_PREFIX=$'\033[4;31mError\033[0m:'
-
 it_parses_fresh_dsl_args() {
   test_parse_fresh_dsl_args aliases/git.sh <<EOF
 REPO_NAME=
