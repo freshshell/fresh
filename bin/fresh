@@ -45,8 +45,8 @@ To disable this error, add \`FRESH_NO_BIN_CHECK=true\` in your freshrc file."
 
 # freshrc DSL
 fresh() {
-  parse_fresh_dsl_args "$@"
   read RC_LINE _ RC_FILE <<< "$(caller 0)"
+  parse_fresh_dsl_args "$@"
 
   # clone or update source repo
   if [ -n "$REPO_NAME" ]; then

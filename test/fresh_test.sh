@@ -425,6 +425,18 @@ $ERROR_PREFIX Could not find "bad-file" source file.
 $FRESH_RCFILE:1: fresh bad-file
 EOF
 
+  mkdir -p $FRESH_LOCAL
+  echo 'fresh some-file --blah' > $FRESH_RCFILE
+
+  bin/fresh > "$SANDBOX_PATH/fresh_out.log" 2> "$SANDBOX_PATH/fresh_err.log"
+  assertFalse 'returns non-zero' $?
+  assertFalse 'does not output to stdout' '[ -s $SANDBOX_PATH/fresh_out.log ]'
+
+  assertFileMatches $SANDBOX_PATH/fresh_err.log <<EOF
+$ERROR_PREFIX Unknown option: --blah
+$FRESH_RCFILE:1: fresh some-file --blah
+EOF
+
   echo 'source ~/.freshrc.local' > $FRESH_RCFILE
 cat > $SANDBOX_PATH/home/.freshrc.local <<EOF
 # local customisations
