@@ -412,6 +412,37 @@ bar
 EOF
 }
 
+it_shows_source_of_errors() {
+  mkdir -p $FRESH_LOCAL
+  echo 'fresh bad-file' > $FRESH_RCFILE
+
+  bin/fresh > "$SANDBOX_PATH/fresh_out.log" 2> "$SANDBOX_PATH/fresh_err.log"
+  assertFalse 'returns non-zero' $?
+  assertFalse 'does not output to stdout' '[ -s $SANDBOX_PATH/fresh_out.log ]'
+
+  assertFileMatches $SANDBOX_PATH/fresh_err.log <<EOF
+$ERROR_PREFIX Could not find "bad-file" source file.
+$FRESH_RCFILE:1: fresh bad-file
+EOF
+
+  echo 'source ~/.freshrc.local' > $FRESH_RCFILE
+cat > $SANDBOX_PATH/home/.freshrc.local <<EOF
+# local customisations
+
+fresh pry.rb --file=~/.pryrc # ruby
+fresh some-other-file
+EOF
+
+  bin/fresh > "$SANDBOX_PATH/fresh_out.log" 2> "$SANDBOX_PATH/fresh_err.log"
+  assertFalse 'returns non-zero' $?
+  assertFalse 'does not output to stdout' '[ -s $SANDBOX_PATH/fresh_out.log ]'
+
+  assertFileMatches $SANDBOX_PATH/fresh_err.log <<EOF
+$ERROR_PREFIX Could not find "pry.rb" source file.
+~/.freshrc.local:3: fresh pry.rb --file=~/.pryrc # ruby
+EOF
+}
+
 it_updates_fresh_files() {
   mkdir -p $FRESH_PATH/source/repo/name/.git
   mkdir -p $FRESH_PATH/source/other_repo/other_name/.git

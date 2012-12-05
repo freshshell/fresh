@@ -14,7 +14,9 @@ fresh_install() {
 
   # load the freshrc file
   if [ -e "$FRESH_RCFILE" ]; then
+    IN_RC_FILE=1
     source "$FRESH_RCFILE"
+    IN_RC_FILE=0
   fi
 
   # safety check to ensure the user doesn't lock themselves out
@@ -44,6 +46,7 @@ To disable this error, add \`FRESH_NO_BIN_CHECK=true\` in your freshrc file."
 # freshrc DSL
 fresh() {
   parse_fresh_dsl_args "$@"
+  read RC_LINE _ RC_FILE <<< "$(caller 0)"
 
   # clone or update source repo
   if [ -n "$REPO_NAME" ]; then
@@ -325,6 +328,11 @@ EOF
 
 _fatal_error() {
   echo $'\033[4;31mError\033[0m:' "$1" >&2
+  if [[ "$IN_RC_FILE" == 1 ]]; then
+    local DISPLAY_RC_FILE="${RC_FILE/#$HOME/~}"
+    local RC_CONTENT="$(head -$RC_LINE "$RC_FILE" | tail -1)"
+    echo "$DISPLAY_RC_FILE:$RC_LINE: $RC_CONTENT" >&2
+  fi
   exit 1
 }
 
