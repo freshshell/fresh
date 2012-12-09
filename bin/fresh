@@ -153,17 +153,7 @@ _fresh_file() {
       SYMLINK_PATH="~/.$DEST_NAME"
     fi
 
-    mkdir -p "$(dirname "$FRESH_PATH/build.new/$DEST_NAME")"
-
-    if [[ -n "$MARKER" ]]; then
-      if [[ -e "$FRESH_PATH/build.new/$DEST_NAME" ]]; then
-        echo >> "$FRESH_PATH/build.new/$DEST_NAME"
-      fi
-      _file_marker >> "$FRESH_PATH/build.new/$DEST_NAME"
-      echo >> "$FRESH_PATH/build.new/$DEST_NAME"
-    fi
-
-    _source_file_contents >> "$FRESH_PATH/build.new/$DEST_NAME"
+    _fresh_output
 
     if [[ -n "$SYMLINK_PATH" ]]; then
       SYMLINK_PATH="$(eval echo "$SYMLINK_PATH")"
@@ -193,9 +183,10 @@ _fresh_bin() {
       DEST_NAME="bin/$(basename "$SOURCE_FILE")"
       SYMLINK_PATH="~/$DEST_NAME"
     fi
-    mkdir -p "$FRESH_PATH/build.new/bin" ~/bin
-    _source_file_contents >> "$FRESH_PATH/build.new/$DEST_NAME"
+
+    _fresh_output
     chmod +x "$FRESH_PATH/build.new/$DEST_NAME"
+
     SYMLINK_PATH="$(eval echo "$SYMLINK_PATH")"
     if ! [ -L "$SYMLINK_PATH" ]; then
       mkdir -p "$(dirname "$SYMLINK_PATH")"
@@ -206,6 +197,20 @@ _fresh_bin() {
       fi
     fi
   done
+}
+
+_fresh_output() {
+  mkdir -p "$(dirname "$FRESH_PATH/build.new/$DEST_NAME")"
+
+  if [[ -n "$MARKER" ]]; then
+    if [[ -e "$FRESH_PATH/build.new/$DEST_NAME" ]]; then
+      echo >> "$FRESH_PATH/build.new/$DEST_NAME"
+    fi
+    _file_marker >> "$FRESH_PATH/build.new/$DEST_NAME"
+    echo >> "$FRESH_PATH/build.new/$DEST_NAME"
+  fi
+
+  _source_file_contents >> "$FRESH_PATH/build.new/$DEST_NAME"
 }
 
 function parse_fresh_dsl_args() {
