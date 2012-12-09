@@ -379,18 +379,48 @@ it_errors_when_linking_bin_files_with_relative_paths() {
   runFresh fails
 }
 
-it_does_not_override_existing_links() {
+it_errors_if_existing_symlink_for_file_does_not_point_a_fresh_path() {
   echo fresh pryrc --file >> $FRESH_RCFILE
-  echo fresh sedmv --bin >> $FRESH_RCFILE
-  mkdir -p $FRESH_LOCAL ~/bin
-  touch $FRESH_LOCAL/{pryrc,sedmv}
+  mkdir -p $FRESH_LOCAL
+  touch $FRESH_LOCAL/pryrc
   ln -s /dev/null ~/.pryrc
+
+  bin/fresh > "$SANDBOX_PATH/out.log" 2> "$SANDBOX_PATH/err.log"
+
+  assertFileMatches $SANDBOX_PATH/err.log <<EOF
+$ERROR_PREFIX $HOME/.pryrc already exists (pointing to /dev/null)
+$FRESH_RCFILE:1: fresh pryrc --file
+
+You may need to run \`fresh update\` if you're adding a new line,
+or the file you're referencing may have moved or been deleted.
+EOF
+
+  assertFileMatches $SANDBOX_PATH/out.log <<EOF
+EOF
+
+  assertEquals "$(readlink ~/.pryrc)" /dev/null
+}
+
+it_errors_if_existing_symlink_for_bin_does_not_point_a_fresh_path() {
+  echo fresh bin/sedmv --bin >> $FRESH_RCFILE
+  mkdir -p $FRESH_LOCAL/bin ~/bin
+  touch $FRESH_LOCAL/bin/sedmv
   ln -s /dev/null ~/bin/sedmv
 
-  runFresh
+  bin/fresh > "$SANDBOX_PATH/out.log" 2> "$SANDBOX_PATH/err.log"
 
-  assertEquals "$(readlink ~/.pryrc)" "/dev/null"
-  assertEquals "$(readlink ~/bin/sedmv)" "/dev/null"
+  assertFileMatches $SANDBOX_PATH/err.log <<EOF
+$ERROR_PREFIX $HOME/bin/sedmv already exists (pointing to /dev/null)
+$FRESH_RCFILE:1: fresh bin/sedmv --bin
+
+You may need to run \`fresh update\` if you're adding a new line,
+or the file you're referencing may have moved or been deleted.
+EOF
+
+  assertFileMatches $SANDBOX_PATH/out.log <<EOF
+EOF
+
+  assertEquals "$(readlink ~/bin/sedmv)" /dev/null
 }
 
 it_errors_if_link_destination_is_a_file() {
