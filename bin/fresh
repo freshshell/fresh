@@ -154,18 +154,7 @@ _fresh_file() {
     fi
 
     _fresh_output
-
-    if [[ -n "$SYMLINK_PATH" ]]; then
-      SYMLINK_PATH="$(eval echo "$SYMLINK_PATH")"
-      if ! [ -L "$SYMLINK_PATH" ]; then
-        mkdir -p "$(dirname "$SYMLINK_PATH")"
-        ln -s "$FRESH_PATH/build/$DEST_NAME" "$SYMLINK_PATH"
-      else
-        if [[ "$(readlink "$SYMLINK_PATH")" != "$FRESH_PATH/build/$DEST_NAME" ]]; then
-          _fatal_error "$SYMLINK_PATH already exists (pointing to $(readlink "$SYMLINK_PATH"))"
-        fi
-      fi
-    fi
+    _fresh_symlink
   done
 }
 
@@ -186,16 +175,7 @@ _fresh_bin() {
 
     _fresh_output
     chmod +x "$FRESH_PATH/build.new/$DEST_NAME"
-
-    SYMLINK_PATH="$(eval echo "$SYMLINK_PATH")"
-    if ! [ -L "$SYMLINK_PATH" ]; then
-      mkdir -p "$(dirname "$SYMLINK_PATH")"
-      ln -s "$FRESH_PATH/build/$DEST_NAME" "$SYMLINK_PATH"
-    else
-      if [[ "$(readlink "$SYMLINK_PATH")" != "$FRESH_PATH/build/$DEST_NAME" ]]; then
-        _fatal_error "$SYMLINK_PATH already exists (pointing to $(readlink "$SYMLINK_PATH"))"
-      fi
-    fi
+    _fresh_symlink
   done
 }
 
@@ -211,6 +191,20 @@ _fresh_output() {
   fi
 
   _source_file_contents >> "$FRESH_PATH/build.new/$DEST_NAME"
+}
+
+_fresh_symlink() {
+  if [[ -n "$SYMLINK_PATH" ]]; then
+    SYMLINK_PATH="$(eval echo "$SYMLINK_PATH")"
+    if ! [ -L "$SYMLINK_PATH" ]; then
+      mkdir -p "$(dirname "$SYMLINK_PATH")"
+      ln -s "$FRESH_PATH/build/$DEST_NAME" "$SYMLINK_PATH"
+    else
+      if [[ "$(readlink "$SYMLINK_PATH")" != "$FRESH_PATH/build/$DEST_NAME" ]]; then
+        _fatal_error "$SYMLINK_PATH already exists (pointing to $(readlink "$SYMLINK_PATH"))"
+      fi
+    fi
+  fi
 }
 
 function parse_fresh_dsl_args() {
