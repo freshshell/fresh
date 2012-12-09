@@ -379,7 +379,7 @@ it_errors_when_linking_bin_files_with_relative_paths() {
   runFresh fails
 }
 
-it_errors_if_existing_symlink_for_file_does_not_point_a_fresh_path() {
+it_errors_if_existing_symlink_for_file_does_not_point_to_a_fresh_path() {
   echo fresh pryrc --file >> $FRESH_RCFILE
   mkdir -p $FRESH_LOCAL
   touch $FRESH_LOCAL/pryrc
@@ -401,7 +401,7 @@ EOF
   assertEquals "$(readlink ~/.pryrc)" /dev/null
 }
 
-it_errors_if_existing_symlink_for_bin_does_not_point_a_fresh_path() {
+it_errors_if_existing_symlink_for_bin_does_not_point_to_a_fresh_path() {
   echo fresh bin/sedmv --bin >> $FRESH_RCFILE
   mkdir -p $FRESH_LOCAL/bin ~/bin
   touch $FRESH_LOCAL/bin/sedmv
