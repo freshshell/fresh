@@ -423,6 +423,17 @@ EOF
   assertEquals "$(readlink ~/bin/sedmv)" /dev/null
 }
 
+it_does_not_error_for_symlinks_created_by_fresh() {
+  echo fresh pryrc --file >> $FRESH_RCFILE
+  echo fresh bin/sedmv --bin >> $FRESH_RCFILE
+  mkdir -p $FRESH_LOCAL/bin
+  touch $FRESH_LOCAL/pryrc
+  touch $FRESH_LOCAL/bin/sedmv
+
+  runFresh # build symlinks
+  runFresh # run fresh again to check symlinks
+}
+
 it_errors_if_link_destination_is_a_file() {
   mkdir -p $FRESH_LOCAL ~/bin
   touch $FRESH_LOCAL/{gitconfig,sedmv}

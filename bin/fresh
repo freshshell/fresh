@@ -201,7 +201,7 @@ _fresh_bin() {
       mkdir -p "$(dirname "$SYMLINK_PATH")"
       ln -s "$FRESH_PATH/build/bin/$DEST_NAME" "$SYMLINK_PATH"
     else
-      if [[ "$(readlink "$SYMLINK_PATH")" != "$FRESH_PATH/build/$DEST_NAME" ]]; then
+      if [[ "$(readlink "$SYMLINK_PATH")" != "$FRESH_PATH/build/bin/$DEST_NAME" ]]; then
         _fatal_error "$SYMLINK_PATH already exists (pointing to $(readlink "$SYMLINK_PATH"))"
       fi
     fi
