@@ -152,6 +152,13 @@ symlinks.
 
 Running `fresh update` will update sources from GitHub repositories and run `fresh install`.
 
+You can also optionally supply a GitHub username or username/repo:
+
+``` sh
+fresh update jasoncodes       # update all jasoncodes' repos
+fresh update twe4ked/dotfiles # update twe4ked's dotfiles
+```
+
 ### Search
 
 You can search our [fresh directory][directory] using `fresh search`.
