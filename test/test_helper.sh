@@ -7,6 +7,9 @@ export FRESH_RCFILE="$SANDBOX_PATH/freshrc"
 export FRESH_PATH="$SANDBOX_PATH/fresh"
 export FRESH_LOCAL="$SANDBOX_PATH/dotfiles"
 
+TEST_NAME="$1"
+shift
+
 ERROR_PREFIX=$'\033[4;31mError\033[0m:'
 
 setUp() {
@@ -25,7 +28,9 @@ tearDown() {
 
 suite() {
   for test_name in `grep '^it_' $0 | cut -d '(' -f 1`; do
-    suite_addTest $test_name
+    if [[ -z "$TEST_NAME" ]] || echo "$test_name" | grep -q "$TEST_NAME"; then
+      suite_addTest $test_name
+    fi
   done
 }
 
