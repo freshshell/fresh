@@ -273,12 +273,28 @@ fresh_install_with_latest_binary() {
 }
 
 fresh_update() {
+  if [[ $# -gt 1 ]]; then
+    _fatal_error "Invalid arguments.
+
+usage: fresh update <filter>
+
+    The filter can be either a GitHub username or username/repo."
+  fi
+
+  local FILTER="$1"
+  if [[ -z "$FILTER" ]]; then
+    FILTER="*"
+  elif ! echo "$FILTER" | grep -q /; then
+    FILTER="$FILTER/*"
+  fi
+
   local GIT_OUTPUT_FILE="$(mktemp "${TMPDIR:-/tmp}/fresh.XXXXXX")"
   mkdir -p "$FRESH_PATH/logs"
   local LOG_FILE="$FRESH_PATH/logs/update-$(date +%Y-%m-%d-%H%M%S).log"
   find $FRESH_PATH/source -type d -name '.git' | sort | while read DIR; do
     local DIR="$(dirname "$DIR")"
     local REPO_NAME="$(_repo_name_from_source_path "$DIR")"
+    [[ "$REPO_NAME" == $FILTER ]] || continue
     echo "* Updating $REPO_NAME" | tee -a "$LOG_FILE"
     cd "$DIR"
     git pull --rebase 2>&1 | tee "$GIT_OUTPUT_FILE" | sed 's/^/| /' | tee -a "$LOG_FILE"
@@ -322,14 +338,14 @@ as specified in your ${FRESH_RCFILE/#$HOME/~} file.
 
 See http://freshshell.com/readme for more documentation.
 
-usage: fresh <command>
+usage: fresh <command> [<args>]
 
 Available commands:
-    install         Build shell configuration and relevant symlinks (default)
-    update          Update from source repos and rebuild
-    search <query>  Search the fresh directory
-    edit            Open freshrc for editing
-    help            Show this help
+    install            Build shell configuration and relevant symlinks (default)
+    update [<filter>]  Update from source repos and rebuild
+    search <query>     Search the fresh directory
+    edit               Open freshrc for editing
+    help               Show this help
 EOF
 }
 
@@ -367,8 +383,8 @@ main() {
       fresh_install
       ;;
     update|up)
-      _prevent_invalid_arguments "$@"
-      fresh_update
+      shift
+      fresh_update "$@"
       fresh_install --quiet
       fresh_install_with_latest_binary
       ;;

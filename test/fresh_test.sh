@@ -520,6 +520,49 @@ git pull --rebase
 EOF
 }
 
+it_updates_fresh_files_for_a_specified_github_user() {
+  mkdir -p $FRESH_PATH/source/twe4ked/dotfiles/.git
+  mkdir -p $FRESH_PATH/source/twe4ked/scripts/.git
+  mkdir -p $FRESH_PATH/source/jasoncodes/dotfiles/.git
+  stubGit
+
+  assertTrue 'successfully updates' "bin/fresh update twe4ked"
+  assertFileMatches $SANDBOX_PATH/git.log <<EOF
+cd $FRESH_PATH/source/twe4ked/dotfiles
+git pull --rebase
+cd $FRESH_PATH/source/twe4ked/scripts
+git pull --rebase
+EOF
+}
+
+it_updates_fresh_files_for_a_specified_github_repo() {
+  mkdir -p $FRESH_PATH/source/twe4ked/dotfiles/.git
+  mkdir -p $FRESH_PATH/source/twe4ked/dotfiles-old/.git
+  mkdir -p $FRESH_PATH/source/twe4ked/scripts/.git
+  mkdir -p $FRESH_PATH/source/jasoncodes/dotfiles/.git
+  stubGit
+
+  assertTrue 'successfully updates' "bin/fresh update twe4ked/dotfiles"
+  assertFileMatches $SANDBOX_PATH/git.log <<EOF
+cd $FRESH_PATH/source/twe4ked/dotfiles
+git pull --rebase
+EOF
+}
+
+it_errors_if_more_than_one_argument_is_passed_to_update() {
+  mkdir -p $FRESH_PATH/source
+
+  bin/fresh update twe4ked dotfiles > "$SANDBOX_PATH/out.log" 2> "$SANDBOX_PATH/err.log"
+
+  assertFileMatches "$SANDBOX_PATH/err.log" <<EOF
+$ERROR_PREFIX Invalid arguments.
+
+usage: fresh update <filter>
+
+    The filter can be either a GitHub username or username/repo.
+EOF
+}
+
 it_shows_progress_when_updating() {
   mkdir -p $FRESH_PATH/source/repo/name/.git
   mkdir -p $FRESH_PATH/source/other_repo/other_name/.git
