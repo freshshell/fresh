@@ -366,7 +366,7 @@ main() {
       _prevent_invalid_arguments "$@"
       fresh_install
       ;;
-    update)
+    update|up)
       _prevent_invalid_arguments "$@"
       fresh_update
       fresh_install --quiet
