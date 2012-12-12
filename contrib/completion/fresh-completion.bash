@@ -6,8 +6,12 @@
 
 _fresh() {
   local cur=${COMP_WORDS[COMP_CWORD]}
-  local COMMANDS="install update search edit help"
-  COMPREPLY=( $( compgen -W "$COMMANDS" -- "$cur" ) )
+  if [[ $COMP_CWORD == 1 ]]; then
+    local WORDS="install update search edit help"
+  else
+    local WORDS=""
+  fi
+  COMPREPLY=( $( compgen -W "$WORDS" -- "$cur" ) )
 }
 
 complete -F _fresh fresh
