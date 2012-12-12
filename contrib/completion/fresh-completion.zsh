@@ -10,9 +10,13 @@
 #
 #   fpath=(~/.fresh/build/completion $fpath)
 
-_values 'fresh command' \
-  'install[Build shell configuration and relevant symlinks (default)]' \
-  'update[Update from source repos and rebuild]' \
-  'search[Search the fresh directory]' \
-  'edit[Open freshrc for editing]' \
-  'help[Show help]'
+case $CURRENT in
+  2)
+    _values 'fresh command' \
+      'install[Build shell configuration and relevant symlinks (default)]' \
+      'update[Update from source repos and rebuild]' \
+      'search[Search the fresh directory]' \
+      'edit[Open freshrc for editing]' \
+      'help[Show help]'
+    ;;
+esac
