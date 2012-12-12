@@ -1,0 +1,18 @@
+#compdef fresh
+
+# zsh completion wrapper for fresh
+#
+# The recommended way to install this script is to add the following fresh line:
+#
+#   fresh freshshell/fresh contrib/completion/fresh-completion.zsh --file=completion/_fresh
+#
+# You will also need to add the following line to your zsh config:
+#
+#   fpath=(~/.fresh/build/completion $fpath)
+
+_values 'fresh command' \
+  'install[Build shell configuration and relevant symlinks (default)]' \
+  'update[Update from source repos and rebuild]' \
+  'search[Search the fresh directory]' \
+  'edit[Open freshrc for editing]' \
+  'help[Show help]'
