@@ -8,6 +8,14 @@ _fresh() {
   local cur=${COMP_WORDS[COMP_CWORD]}
   if [[ $COMP_CWORD == 1 ]]; then
     local WORDS="install update search edit help"
+  elif [[ $COMP_CWORD == 2 ]] && [[ "${COMP_WORDS[1]}" =~ ^update$|^up$ ]]; then
+    local WORDS="$(
+      cd ~/.fresh/source
+      if ! [[ -d "$cur" ]]; then
+        find * -maxdepth 0 -type d | sort
+      fi
+      find * -maxdepth 1 -mindepth 1 -type d | sort
+    )"
   else
     local WORDS=""
   fi
