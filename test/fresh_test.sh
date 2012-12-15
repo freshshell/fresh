@@ -13,6 +13,7 @@ it_builds_local_shell_files() {
 
   assertFileMatches $FRESH_PATH/build/shell.sh <<EOF
 export PATH="\$HOME/bin:\$PATH"
+export FRESH_PATH="$FRESH_PATH"
 
 # fresh: aliases/git
 
@@ -40,6 +41,7 @@ it_builds_local_shell_files_with_spaces() {
 
   assertFileMatches $FRESH_PATH/build/shell.sh <<EOF
 export PATH="\$HOME/bin:\$PATH"
+export FRESH_PATH="$FRESH_PATH"
 
 # fresh: aliases/foo bar
 
@@ -59,6 +61,7 @@ it_builds_local_shell_files_with_globbing() {
 
   assertFileMatches $FRESH_PATH/build/shell.sh <<EOF
 export PATH="\$HOME/bin:\$PATH"
+export FRESH_PATH="$FRESH_PATH"
 
 # fresh: aliases/file1
 
@@ -76,6 +79,7 @@ it_creates_empty_output_with_no_rcfile() {
   assertTrue 'file exists after' '[ -f "$FRESH_PATH/build/shell.sh" ]'
   assertFileMatches $FRESH_PATH/build/shell.sh <<EOF
 export PATH="\$HOME/bin:\$PATH"
+export FRESH_PATH="$FRESH_PATH"
 EOF
 }
 
@@ -134,6 +138,7 @@ it_builds_shell_files_from_cloned_repos() {
 
   assertFileMatches $FRESH_PATH/build/shell.sh <<EOF
 export PATH="\$HOME/bin:\$PATH"
+export FRESH_PATH="$FRESH_PATH"
 
 # fresh: repo/name file
 
@@ -171,6 +176,7 @@ EOF
 
   assertFileMatches $FRESH_PATH/build/shell.sh <<EOF
 export PATH="\$HOME/bin:\$PATH"
+export FRESH_PATH="$FRESH_PATH"
 
 # fresh: repo/name aliases/git.sh @ abc1237
 
@@ -223,6 +229,7 @@ it_builds_generic_files() {
 
   assertFileMatches $FRESH_PATH/build/shell.sh <<EOF
 export PATH="\$HOME/bin:\$PATH"
+export FRESH_PATH="$FRESH_PATH"
 EOF
   assertFileMatches $FRESH_PATH/build/tmux.conf <<EOF
 unbind C-b

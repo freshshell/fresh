@@ -11,6 +11,7 @@ fresh_install() {
   [ ! -e "$FRESH_PATH/build.new" ] || rm -rf "$FRESH_PATH/build.new"
   mkdir -p "$FRESH_PATH/build.new"
   echo "export PATH=\"\$HOME/bin:\$PATH\"" >> "$FRESH_PATH/build.new/shell.sh"
+  echo "export FRESH_PATH=\"$FRESH_PATH\"" >> "$FRESH_PATH/build.new/shell.sh"
 
   # load the freshrc file
   if [ -e "$FRESH_RCFILE" ]; then
