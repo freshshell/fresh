@@ -19,4 +19,14 @@ case $CURRENT in
       'edit[Open freshrc for editing]' \
       'help[Show help]'
     ;;
+  3)
+    case "$words[2]" in
+      update|up)
+        _values 'fresh sources' $(
+          cd ~/.fresh/source
+          find * -maxdepth 1 -type d
+        )
+      ;;
+    esac
+    ;;
 esac
