@@ -23,7 +23,7 @@ case $CURRENT in
     case "$words[2]" in
       update|up)
         _values 'fresh sources' $(
-          cd ~/.fresh/source
+          cd "$FRESH_PATH/source"
           find * -maxdepth 1 -type d
         )
       ;;

@@ -10,7 +10,7 @@ _fresh() {
     local WORDS="install update search edit help"
   elif [[ $COMP_CWORD == 2 ]] && [[ "${COMP_WORDS[1]}" =~ ^update$|^up$ ]]; then
     local WORDS="$(
-      cd ~/.fresh/source
+      cd "$FRESH_PATH/source"
       if ! [[ -d "$cur" ]]; then
         find * -maxdepth 0 -type d | sort
       fi
