@@ -92,14 +92,21 @@ _file_list() {
     local MATCHED=0
     while read FILE_PATH; do
       if [[ "$FILE_PATH" == $FILE_NAME ]]; then
-        echo "$FILE_PATH"
-        MATCHED=1
+        if ! echo "${FILE_PATH#$FILE_NAME}" | grep -q /; then
+          echo "$FILE_PATH"
+          MATCHED=1
+        fi
       fi
     done < <(git ls-tree -r --name-only "$REF")
     cd "$OLDPWD"
     [[ "$MATCHED" == 1 ]]
   else
-    find "$SOURCE_DIR" -path "$SOURCE_DIR/$FILE_NAME"
+    local path_glob="$SOURCE_DIR/$FILE_NAME"
+    find "$SOURCE_DIR" -path "$path_glob" -type f | while read FILE_PATH; do
+      if ! echo "${FILE_PATH#$path_glob}" | grep -q /; then
+        echo "$FILE_PATH"
+      fi
+    done
   fi | sort
 }
 

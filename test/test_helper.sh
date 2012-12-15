@@ -80,6 +80,9 @@ case "\$1" in
     echo aliases/ruby.sh
     echo ackrc
     echo sedmv
+    echo recursive-test/foo
+    echo recursive-test/bar
+    echo recursive-test/abc/def
     ;;
 esac
 EOF
