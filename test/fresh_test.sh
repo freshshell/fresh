@@ -549,6 +549,16 @@ git pull --rebase
 EOF
 }
 
+it_errors_if_no_matching_sources_to_update() {
+  mkdir -p $FRESH_PATH/source
+
+  bin/fresh update foobar > "$SANDBOX_PATH/out.log" 2> "$SANDBOX_PATH/err.log"
+
+  assertFileMatches "$SANDBOX_PATH/err.log" <<EOF
+$ERROR_PREFIX No matching sources found.
+EOF
+}
+
 it_errors_if_more_than_one_argument_is_passed_to_update() {
   mkdir -p $FRESH_PATH/source
 
@@ -626,6 +636,10 @@ it_does_not_run_build_if_update_fails() {
 it_builds_after_update_with_latest_binary() {
   echo fresh bin/fresh --bin >> $FRESH_RCFILE
   mkdir -p $FRESH_LOCAL/bin $FRESH_PATH/source
+
+  mkdir -p $FRESH_PATH/source/freshshell/fresh/.git
+  stubGit
+
   echo "echo new >> \"$SANDBOX_PATH/fresh.log\"" >> $FRESH_LOCAL/bin/fresh
 
   assertTrue 'successfully updates' "bin/fresh update"
