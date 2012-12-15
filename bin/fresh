@@ -96,7 +96,7 @@ _file_list() {
         MATCHED=1
       fi
     done < <(git ls-tree -r --name-only "$REF")
-    cd - > /dev/null
+    cd "$OLDPWD"
     [[ "$MATCHED" == 1 ]]
   else
     find "$SOURCE_DIR" -path "$SOURCE_DIR/$FILE_NAME"
@@ -107,7 +107,7 @@ _source_file_contents() {
   if [[ -n "$REF" ]]; then
     cd "$SOURCE_DIR"
     git show "$REF:$SOURCE_FILE"
-    cd - > /dev/null
+    cd "$OLDPWD"
   else
     cat "$SOURCE_FILE"
   fi
@@ -307,7 +307,7 @@ usage: fresh update <filter>
     if [ "$GIT_RESULT" -ne 0 ]; then
       _fatal_error "Update failed."
     fi
-    cd - > /dev/null
+    cd "$OLDPWD"
   done < <(find $FRESH_PATH/source -type d -name '.git' | sort)
   if [[ "$MATCHED" == 0 ]]; then
     _fatal_error "No matching sources found."
