@@ -9,7 +9,7 @@ mkdir -p ~/.fresh/source/freshshell
 if [ -d ~/.fresh/source/freshshell/fresh ]; then
   cd ~/.fresh/source/freshshell/fresh
   git pull --rebase
-  cd -
+  cd "$OLDPWD"
 else
   git clone https://github.com/freshshell/fresh ~/.fresh/source/freshshell/fresh
 fi
