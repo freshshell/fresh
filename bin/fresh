@@ -90,9 +90,9 @@ _file_list() {
   if [[ -n "$REF" ]]; then
     cd "$SOURCE_DIR"
     local MATCHED=0
-    while read PATH; do
-      if [[ "$PATH" == $FILE_NAME ]]; then
-        echo "$PATH"
+    while read FILE_PATH; do
+      if [[ "$FILE_PATH" == $FILE_NAME ]]; then
+        echo "$FILE_PATH"
         MATCHED=1
       fi
     done < <(git ls-tree -r --name-only "$REF")
