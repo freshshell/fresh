@@ -51,7 +51,7 @@ To disable this error, add \`FRESH_NO_BIN_CHECK=true\` in your freshrc file."
 # freshrc DSL
 _dsl_install_fresh() {
   read RC_LINE _ RC_FILE <<< "$(caller 1)"
-  parse_fresh_dsl_args "$@"
+  _parse_fresh_dsl_args "$@"
 
   # clone or update source repo
   if [ -n "$REPO_NAME" ]; then
@@ -219,7 +219,7 @@ _fresh_symlink() {
   fi
 }
 
-function parse_fresh_dsl_args() {
+_parse_fresh_dsl_args() {
   MODE=
   MODE_ARG=
   REPO_NAME=
