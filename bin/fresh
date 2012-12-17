@@ -13,6 +13,10 @@ fresh_install() {
   echo "export PATH=\"\$HOME/bin:\$PATH\"" >> "$FRESH_PATH/build.new/shell.sh"
   echo "export FRESH_PATH=\"$FRESH_PATH\"" >> "$FRESH_PATH/build.new/shell.sh"
 
+  fresh() {
+    _dsl_install_fresh "$@"
+  }
+
   # load the freshrc file
   if [ -e "$FRESH_RCFILE" ]; then
     IN_RC_FILE=1
@@ -45,8 +49,8 @@ To disable this error, add \`FRESH_NO_BIN_CHECK=true\` in your freshrc file."
 }
 
 # freshrc DSL
-fresh() {
-  read RC_LINE _ RC_FILE <<< "$(caller 0)"
+_dsl_install_fresh() {
+  read RC_LINE _ RC_FILE <<< "$(caller 1)"
   parse_fresh_dsl_args "$@"
 
   # clone or update source repo
