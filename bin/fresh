@@ -13,18 +13,7 @@ fresh_install() {
   echo "export PATH=\"\$HOME/bin:\$PATH\"" >> "$FRESH_PATH/build.new/shell.sh"
   echo "export FRESH_PATH=\"$FRESH_PATH\"" >> "$FRESH_PATH/build.new/shell.sh"
 
-  fresh() {
-    _dsl_install_fresh "$@"
-  }
-
-  # load the freshrc file
-  if [ -e "$FRESH_RCFILE" ]; then
-    IN_RC_FILE=1
-    source "$FRESH_RCFILE"
-    IN_RC_FILE=0
-  fi
-
-  unset -f fresh
+  _run_dsl install
 
   # safety check to ensure the user doesn't lock themselves out
   if [[ -z "$FRESH_NO_BIN_CHECK" ]] && [[ ! -x "$FRESH_PATH/build.new/bin/fresh" ]]; then
@@ -50,9 +39,8 @@ To disable this error, add \`FRESH_NO_BIN_CHECK=true\` in your freshrc file."
   fi
 }
 
-# freshrc DSL
 _dsl_install_fresh() {
-  read RC_LINE _ RC_FILE <<< "$(caller 1)"
+  _set_dsl_caller
   _parse_fresh_dsl_args "$@"
 
   # clone or update source repo
@@ -219,6 +207,25 @@ _fresh_symlink() {
       fi
     fi
   fi
+}
+
+_run_dsl() {
+  # define DSL functions
+  eval "fresh() { _dsl_$1_fresh \"\$@\"; }"
+
+  # load the freshrc file
+  if [ -e "$FRESH_RCFILE" ]; then
+    IN_RC_FILE=1
+    source "$FRESH_RCFILE"
+    IN_RC_FILE=0
+  fi
+
+  # remove DSL functions
+  unset -f fresh
+}
+
+_set_dsl_caller() {
+  read RC_LINE _ RC_FILE <<< "$(caller 2)"
 }
 
 _parse_fresh_dsl_args() {
