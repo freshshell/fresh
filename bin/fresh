@@ -24,6 +24,8 @@ fresh_install() {
     IN_RC_FILE=0
   fi
 
+  unset -f fresh
+
   # safety check to ensure the user doesn't lock themselves out
   if [[ -z "$FRESH_NO_BIN_CHECK" ]] && [[ ! -x "$FRESH_PATH/build.new/bin/fresh" ]]; then
     _fatal_error "It looks you do not have fresh in your freshrc file. This could result
