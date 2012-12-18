@@ -355,6 +355,55 @@ fresh_search() {
   fi
 }
 
+fresh_clean() {
+  _fresh_clean_symlinks ~
+  _fresh_clean_symlinks ~/bin
+  _fresh_clean_repos
+}
+
+_fresh_clean_symlinks() {
+  local BASE="$1"
+  if [[ -e "$BASE" ]]; then
+    local path_glob="$FRESH_PATH/build/*"
+    find "$BASE" -maxdepth 1 -type l | while read SYMLINK; do
+      DEST="$(readlink "$SYMLINK")"
+      if [[ $DEST == $path_glob ]] && ! [[ -e "$DEST" ]]; then
+        echo "Removing ${SYMLINK/#$HOME/~}"
+        rm "$SYMLINK"
+      fi
+    done
+  fi
+}
+
+_fresh_clean_repos() {
+  if [[ -e "$FRESH_PATH/source" ]]; then
+    REPO_NAME_FILE="$(mktemp "${TMPDIR:-/tmp}/fresh.XXXXXXXX")"
+    trap '{ rm -f "$REPO_NAME_FILE"; }' EXIT
+
+    _run_dsl clean
+
+    find "$FRESH_PATH/source" -type d -name '.git' | sort | while read DIR; do
+      local DIR="$(dirname "$DIR")"
+      local REPO_NAME="$(_repo_name_from_source_path "$DIR")"
+
+      if ! echo "$REPO_NAME" | grep -qF -f "$REPO_NAME_FILE"; then
+        echo "Removing source $REPO_NAME"
+        rm -rf "$DIR"
+      fi
+    done
+
+    find "$FRESH_PATH/source" -mindepth 1 -maxdepth 1 -type d -empty -not -name '.*' -exec rmdir {} \;
+  fi
+}
+
+_dsl_clean_fresh() {
+  _set_dsl_caller
+  _parse_fresh_dsl_args "$@"
+  if [[ -n "$REPO_NAME" ]]; then
+    echo "$REPO_NAME" >> "$REPO_NAME_FILE"
+  fi
+}
+
 fresh_help() {
 cat <<EOF
 Keep your dot files fresh.
@@ -421,6 +470,10 @@ main() {
     search)
       shift
       fresh_search "$@"
+      ;;
+    clean)
+      _prevent_invalid_arguments "$@"
+      fresh_clean
       ;;
     *)
       _fatal_error "Unknown option: $1"
