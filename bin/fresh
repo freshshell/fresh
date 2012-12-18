@@ -418,6 +418,7 @@ usage: fresh <command> [<args>]
 Available commands:
     install            Build shell configuration and relevant symlinks (default)
     update [<filter>]  Update from source repos and rebuild
+    clean              Removes dead symlinks and source repos
     search <query>     Search the fresh directory
     edit               Open freshrc for editing
     help               Show this help

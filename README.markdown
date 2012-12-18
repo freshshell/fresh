@@ -159,6 +159,11 @@ fresh update jasoncodes       # update all jasoncodes' repos
 fresh update twe4ked/dotfiles # update twe4ked's dotfiles
 ```
 
+### Clean
+
+When you remove a source from your `~/.freshrc` or remove a `--file`/`--bin`
+line, you can use `fresh clean` to remove dead symlinks and source repos.
+
 ### Search
 
 You can search our [fresh directory][directory] using `fresh search`.

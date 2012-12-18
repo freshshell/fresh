@@ -15,6 +15,7 @@ case $CURRENT in
     _values 'fresh command' \
       'install[Build shell configuration and relevant symlinks (default)]' \
       'update[Update from source repos and rebuild]' \
+      'clean[Remove dead symlinks and source repos]' \
       'search[Search the fresh directory]' \
       'edit[Open freshrc for editing]' \
       'help[Show help]'
