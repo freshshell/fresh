@@ -43,26 +43,7 @@ _dsl_install_fresh() {
   _set_dsl_caller
   _parse_fresh_dsl_args "$@"
 
-  # clone or update source repo
-  if [ -n "$REPO_NAME" ]; then
-    local REPO_DIR="$FRESH_PATH/source/$REPO_NAME"
-    mkdir -p "$(dirname "$REPO_DIR")"
-    if ! [ -e "$REPO_DIR" ]; then
-      git clone "http://github.com/$REPO_NAME" "$REPO_DIR"
-    fi
-    local SOURCE_DIR="$REPO_DIR"
-  else
-    local SOURCE_DIR="$FRESH_LOCAL"
-  fi
-
-  # check the source file exists
-  if [[ $(find "$SOURCE_DIR" -path "$SOURCE_DIR/$FILE_NAME" | wc -l) -lt 1 ]]; then
-    # but not if we are locking to a git ref
-    # since we would be checking the working tree
-    if [[ ! -n "$REF" ]]; then
-      _fatal_error "Could not find \"$FILE_NAME\" source file."
-    fi
-  fi
+  _prepare_file_source
 
   case "${MODE:-shell}" in
     shell)
@@ -78,6 +59,29 @@ _dsl_install_fresh() {
       _fatal_error "Unknown mode: $MODE"
       ;;
   esac
+}
+
+_prepare_file_source() {
+  # clone or update source repo
+  if [ -n "$REPO_NAME" ]; then
+    local REPO_DIR="$FRESH_PATH/source/$REPO_NAME"
+    mkdir -p "$(dirname "$REPO_DIR")"
+    if ! [ -e "$REPO_DIR" ]; then
+      git clone "http://github.com/$REPO_NAME" "$REPO_DIR"
+    fi
+    SOURCE_DIR="$REPO_DIR"
+  else
+    SOURCE_DIR="$FRESH_LOCAL"
+  fi
+
+  # check the source file exists
+  if [[ $(find "$SOURCE_DIR" -path "$SOURCE_DIR/$FILE_NAME" | wc -l) -lt 1 ]]; then
+    # but not if we are locking to a git ref
+    # since we would be checking the working tree
+    if [[ ! -n "$REF" ]]; then
+      _fatal_error "Could not find \"$FILE_NAME\" source file."
+    fi
+  fi
 }
 
 _file_list() {
