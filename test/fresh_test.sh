@@ -708,7 +708,7 @@ it_allows_bin_fresh_error_to_be_disabled() {
   runFresh
 }
 
-test_parse_fresh_dsl_args() {
+assert_parse_fresh_dsl_args() {
   (
     set -e
     __FRESH_TEST_MODE=1
@@ -727,7 +727,7 @@ test_parse_fresh_dsl_args() {
 }
 
 it_parses_fresh_dsl_args() {
-  test_parse_fresh_dsl_args aliases/git.sh <<EOF
+  assert_parse_fresh_dsl_args aliases/git.sh <<EOF
 REPO_NAME=
 FILE_NAME=aliases/git.sh
 MODE=
@@ -737,7 +737,7 @@ MARKER=
 EXIT_STATUS=0
 EOF
 
-  test_parse_fresh_dsl_args twe4ked/dotfiles lib/tmux.conf --file=~/.tmux.conf <<EOF
+  assert_parse_fresh_dsl_args twe4ked/dotfiles lib/tmux.conf --file=~/.tmux.conf <<EOF
 REPO_NAME=twe4ked/dotfiles
 FILE_NAME=lib/tmux.conf
 MODE=file
@@ -747,7 +747,7 @@ MARKER=
 EXIT_STATUS=0
 EOF
 
-  test_parse_fresh_dsl_args jasoncodes/dotfiles .gitconfig --file <<EOF
+  assert_parse_fresh_dsl_args jasoncodes/dotfiles .gitconfig --file <<EOF
 REPO_NAME=jasoncodes/dotfiles
 FILE_NAME=.gitconfig
 MODE=file
@@ -757,7 +757,7 @@ MARKER=
 EXIT_STATUS=0
 EOF
 
-  test_parse_fresh_dsl_args sedmv --bin <<EOF
+  assert_parse_fresh_dsl_args sedmv --bin <<EOF
 REPO_NAME=
 FILE_NAME=sedmv
 MODE=bin
@@ -767,7 +767,7 @@ MARKER=
 EXIT_STATUS=0
 EOF
 
-  test_parse_fresh_dsl_args scripts/pidof.sh --bin=~/bin/pidof <<EOF
+  assert_parse_fresh_dsl_args scripts/pidof.sh --bin=~/bin/pidof <<EOF
 REPO_NAME=
 FILE_NAME=scripts/pidof.sh
 MODE=bin
@@ -777,7 +777,7 @@ MARKER=
 EXIT_STATUS=0
 EOF
 
-  test_parse_fresh_dsl_args twe4ked/dotfiles lib/tmux.conf --file=~/.tmux.conf --ref=abc1237 <<EOF
+  assert_parse_fresh_dsl_args twe4ked/dotfiles lib/tmux.conf --file=~/.tmux.conf --ref=abc1237 <<EOF
 REPO_NAME=twe4ked/dotfiles
 FILE_NAME=lib/tmux.conf
 MODE=file
@@ -787,7 +787,7 @@ MARKER=
 EXIT_STATUS=0
 EOF
 
-test_parse_fresh_dsl_args tmux.conf --file --marker <<EOF
+assert_parse_fresh_dsl_args tmux.conf --file --marker <<EOF
 REPO_NAME=
 FILE_NAME=tmux.conf
 MODE=file
@@ -797,7 +797,7 @@ MARKER=#
 EXIT_STATUS=0
 EOF
 
-test_parse_fresh_dsl_args vimrc --file --marker='"' <<EOF
+assert_parse_fresh_dsl_args vimrc --file --marker='"' <<EOF
 REPO_NAME=
 FILE_NAME=vimrc
 MODE=file
@@ -807,37 +807,37 @@ MARKER="
 EXIT_STATUS=0
 EOF
 
-test_parse_fresh_dsl_args foo --file --marker= <<EOF
+assert_parse_fresh_dsl_args foo --file --marker= <<EOF
 $ERROR_PREFIX Marker not specified.
 EXIT_STATUS=1
 EOF
 
-test_parse_fresh_dsl_args foo --bin --marker <<EOF
+assert_parse_fresh_dsl_args foo --bin --marker <<EOF
 $ERROR_PREFIX --marker is only valid with --file.
 EXIT_STATUS=1
 EOF
 
-test_parse_fresh_dsl_args foo --marker=';' <<EOF
+assert_parse_fresh_dsl_args foo --marker=';' <<EOF
 $ERROR_PREFIX --marker is only valid with --file.
 EXIT_STATUS=1
 EOF
 
-  test_parse_fresh_dsl_args foo --file --ref <<EOF
+  assert_parse_fresh_dsl_args foo --file --ref <<EOF
 $ERROR_PREFIX You must specify a Git reference.
 EXIT_STATUS=1
 EOF
 
-  test_parse_fresh_dsl_args foo --file --bin <<EOF
+  assert_parse_fresh_dsl_args foo --file --bin <<EOF
 $ERROR_PREFIX Cannot have more than one mode.
 EXIT_STATUS=1
 EOF
 
-  test_parse_fresh_dsl_args <<EOF
+  assert_parse_fresh_dsl_args <<EOF
 $ERROR_PREFIX Filename is required
 EXIT_STATUS=1
 EOF
 
-  test_parse_fresh_dsl_args foo bar baz <<EOF
+  assert_parse_fresh_dsl_args foo bar baz <<EOF
 $ERROR_PREFIX Expected 1 or 2 args.
 EXIT_STATUS=1
 EOF
