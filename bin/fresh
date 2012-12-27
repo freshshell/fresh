@@ -118,6 +118,29 @@ _source_file_contents() {
   fi
 }
 
+_source_file_url() {
+  if [[ -n "$REPO_NAME" ]]; then
+    if [[ -n "$REF" ]]; then
+      _github_blob_url "$REPO_NAME" "$REF" "$SOURCE_FILE"
+    else
+      local file="${SOURCE_FILE#$SOURCE_DIR/}"
+      cd "$SOURCE_DIR"
+      local ref="$(git log --pretty="%H" -n 1 -- "$file")"
+      cd "$OLDPWD"
+      _github_blob_url "$REPO_NAME" "$ref" "$file"
+    fi
+  else
+    echo "$SOURCE_FILE"
+  fi
+}
+
+_github_blob_url() {
+  local REPO_NAME="$1"
+  local REF="$2"
+  local BLOB_PATH="$3"
+  echo "https://github.com/$REPO_NAME/blob/$REF/$BLOB_PATH"
+}
+
 _file_marker() {
   echo -n "$MARKER fresh:"
   if [[ -n "$REPO_NAME" ]]; then
@@ -408,6 +431,34 @@ _dsl_clean_fresh() {
   fi
 }
 
+fresh_show() {
+  LINE_COUNT=0
+  _run_dsl show
+}
+
+_dsl_show_fresh() {
+  _set_dsl_caller
+  LINE_COUNT=$((LINE_COUNT + 1))
+
+  if [[ $LINE_COUNT -gt 1 ]]; then
+    echo
+  fi
+
+  echo -n fresh
+  for arg in "$@"; do
+    printf " %q" "$arg"
+  done
+  echo
+
+  _parse_fresh_dsl_args "$@"
+  _prepare_file_source
+
+  _file_list | while read SOURCE_FILE
+  do
+    echo "<$(_source_file_url)>"
+  done
+}
+
 fresh_help() {
 cat <<EOF
 Keep your dot files fresh.
@@ -425,6 +476,7 @@ Available commands:
     clean              Removes dead symlinks and source repos
     search <query>     Search the fresh directory
     edit               Open freshrc for editing
+    show               Show source references for freshrc lines
     help               Show this help
 EOF
 }
@@ -471,6 +523,10 @@ main() {
     edit)
       _prevent_invalid_arguments "$@"
       fresh_edit
+      ;;
+    show)
+      _prevent_invalid_arguments "$@"
+      fresh_show
       ;;
     search)
       shift

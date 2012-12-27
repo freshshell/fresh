@@ -963,4 +963,43 @@ EOF
 EOF
 }
 
+it_shows_sources_for_fresh_lines() {
+  echo 'fresh foo/bar aliases/*' >> $FRESH_RCFILE
+  echo 'fresh foo/bar sedmv --bin --ref=abc123' >> $FRESH_RCFILE
+  echo 'fresh local-file' >> $FRESH_RCFILE
+
+  mkdir -p $FRESH_PATH/source/foo/bar/aliases/
+  touch $FRESH_PATH/source/foo/bar/aliases/{git.sh,ruby.sh}
+  mkdir -p $FRESH_LOCAL
+  touch $FRESH_LOCAL/local-file
+
+  stubGit
+
+  bin/fresh show > "$SANDBOX_PATH/out.log" 2> "$SANDBOX_PATH/err.log"
+  assertTrue 'successfully cleans' $?
+
+  assertFileMatches $SANDBOX_PATH/git.log <<EOF
+cd $SANDBOX_PATH/fresh/source/foo/bar
+git log --pretty=%H -n 1 -- aliases/git.sh
+cd $SANDBOX_PATH/fresh/source/foo/bar
+git log --pretty=%H -n 1 -- aliases/ruby.sh
+cd $SANDBOX_PATH/fresh/source/foo/bar
+git ls-tree -r --name-only abc123
+EOF
+
+  assertFileMatches $SANDBOX_PATH/out.log <<EOF
+fresh foo/bar aliases/\\*
+<https://github.com/foo/bar/blob/1234567/aliases/git.sh>
+<https://github.com/foo/bar/blob/1234567/aliases/ruby.sh>
+
+fresh foo/bar sedmv --bin --ref=abc123
+<https://github.com/foo/bar/blob/abc123/sedmv>
+
+fresh local-file
+<$FRESH_LOCAL/local-file>
+EOF
+  assertFileMatches $SANDBOX_PATH/err.log <<EOF
+EOF
+}
+
 source test/test_helper.sh

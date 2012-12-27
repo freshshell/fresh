@@ -18,6 +18,7 @@ case $CURRENT in
       'clean[Remove dead symlinks and source repos]' \
       'search[Search the fresh directory]' \
       'edit[Open freshrc for editing]' \
+      'show[Show source references for freshrc lines]' \
       'help[Show help]'
     ;;
   3)

@@ -180,6 +180,11 @@ fresh search jasoncodes
 
 Running `fresh edit` will open your `~/.freshrc` in your default `$EDITOR`.
 
+### Show
+
+`fresh show` will output each line of your `~/.freshrc` along with
+every source file those lines match. Handy for auditing.
+
 ## Maintainers
 
 fresh is maintained by [jasoncodes] and [twe4ked].

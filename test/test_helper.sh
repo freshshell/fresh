@@ -84,6 +84,9 @@ case "\$1" in
     echo recursive-test/bar
     echo recursive-test/abc/def
     ;;
+  log)
+    echo 1234567
+    ;;
 esac
 EOF
   chmod +x $SANDBOX_PATH/bin/git
