@@ -6,6 +6,11 @@ FRESH_LOCAL="${FRESH_LOCAL:-$HOME/.dotfiles}"
 
 set -o pipefail
 
+_prefix_match() {
+  local glob="$2*"
+  [[ "$1" == $glob ]] && echo "$1" | awk 'index($0,x)==1' RS= x="$2" | grep -q '^'
+}
+
 fresh_install() {
   # create new output directory
   [ ! -e "$FRESH_PATH/build.new" ] || rm -rf "$FRESH_PATH/build.new"
