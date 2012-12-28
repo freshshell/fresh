@@ -349,6 +349,54 @@ it_does_not_allow_relative_paths_above_build_dir() {
   runFresh fails
 }
 
+it_builds_directories_of_generic_files() {
+  echo 'fresh foo --file=vendor/misc/foo/' >> $FRESH_RCFILE
+  echo 'fresh foo/bar --file=vendor/other/' >> $FRESH_RCFILE
+
+  mkdir -p $FRESH_LOCAL/{foo/bar,foobar}
+  touch $FRESH_LOCAL/foo/bar/file{1,2}
+  touch $FRESH_LOCAL/foo/file3
+  touch $FRESH_LOCAL/foobar/file{4,5}
+
+  runFresh
+
+  assertFileMatches <(cd $FRESH_PATH/build && find * -type f | sort) <<EOF
+shell.sh
+vendor/misc/foo/bar/file1
+vendor/misc/foo/bar/file2
+vendor/misc/foo/file3
+vendor/other/file1
+vendor/other/file2
+EOF
+}
+
+it_builds_directories_of_generic_files_with_ref() {
+  echo 'fresh repo/name recursive-test --ref=abc1237 --file=vendor/test/' >> $FRESH_RCFILE
+
+  mkdir -p $FRESH_PATH/source/repo/name
+  stubGit
+
+  runFresh
+
+  assertFileMatches $SANDBOX_PATH/git.log <<EOF
+cd $FRESH_PATH/source/repo/name
+git ls-tree -r --name-only abc1237
+cd $FRESH_PATH/source/repo/name
+git show abc1237:recursive-test/abc/def
+cd $FRESH_PATH/source/repo/name
+git show abc1237:recursive-test/bar
+cd $FRESH_PATH/source/repo/name
+git show abc1237:recursive-test/foo
+EOF
+
+  assertFileMatches <(cd $FRESH_PATH/build && find * -type f | sort) <<EOF
+shell.sh
+vendor/test/abc/def
+vendor/test/bar
+vendor/test/foo
+EOF
+}
+
 it_builds_bin_files() {
   echo 'fresh scripts/sedmv --bin' >> $FRESH_RCFILE
   echo 'fresh pidof.sh --bin=~/bin/pidof' >> $FRESH_RCFILE

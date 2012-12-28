@@ -113,7 +113,7 @@ a relative path on `--file`:
 
 ``` sh
 fresh zsh-users/zsh-syntax-highlighting zsh-syntax-highlighting.zsh --file=vendor/zsh-syntax-highlighting.zsh
-fresh zsh-users/zsh-syntax-highlighting highlighters/main/main-highlighter.zsh --file=vendor/highlighters/main/main-highlighter.zsh
+fresh zsh-users/zsh-syntax-highlighting highlighters --file=vendor/highlighters/
 ```
 
 These files can then be sourced from your main shell config with:
