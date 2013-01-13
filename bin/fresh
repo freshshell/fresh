@@ -180,25 +180,23 @@ _fresh_file() {
   _file_list | while read SOURCE_FILE
   do
     if [ -n "$MODE_ARG" ]; then
-      if echo "$MODE_ARG" | grep -q '^[~/]'; then
+      if echo "$MODE_ARG" | grep -q '/$'; then
+        if [[ -n "$REF" ]]; then
+          local base_path="$FILE_NAME/"
+        else
+          local base_path="$SOURCE_DIR/$FILE_NAME/"
+        fi
+        DEST_NAME="$MODE_ARG${SOURCE_FILE#$base_path}"
+        SYMLINK_PATH=""
+      elif echo "$MODE_ARG" | grep -q '^[~/]'; then
         DEST_NAME="$(basename "$MODE_ARG" | sed 's/^\.//')"
         SYMLINK_PATH="$MODE_ARG"
       else
         if echo "$MODE_ARG" | grep -q '^\.\.'; then
           _fatal_error "Relative paths must be inside build dir."
         fi
-        if echo "$MODE_ARG" | grep -q '/$'; then
-          if [[ -n "$REF" ]]; then
-            local base_path="$FILE_NAME/"
-          else
-            local base_path="$SOURCE_DIR/$FILE_NAME/"
-          fi
-          DEST_NAME="$MODE_ARG${SOURCE_FILE#$base_path}"
-          SYMLINK_PATH=""
-        else
-          DEST_NAME="$MODE_ARG"
-          SYMLINK_PATH=""
-        fi
+        DEST_NAME="$MODE_ARG"
+        SYMLINK_PATH=""
       fi
     else
       DEST_NAME="$(basename "$SOURCE_FILE" | sed 's/^\.//')"
