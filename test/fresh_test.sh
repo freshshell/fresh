@@ -397,6 +397,31 @@ vendor/test/foo
 EOF
 }
 
+it_links_directories_of_generic_files() {
+  echo 'fresh foo --file=~/.foo/' >> $FRESH_RCFILE
+  echo 'fresh foo/bar --file=~/.other/' >> $FRESH_RCFILE
+
+  mkdir -p $FRESH_LOCAL/{foo/bar,foobar}
+  touch $FRESH_LOCAL/foo/bar/file{1,2}
+  touch $FRESH_LOCAL/foo/file3
+  touch $FRESH_LOCAL/foobar/file{4,5}
+
+  runFresh
+
+  assertFileMatches <(cd $FRESH_PATH/build && find * -type f | sort) <<EOF
+foo/bar/file1
+foo/bar/file2
+foo/file3
+other/file1
+other/file2
+shell.sh
+EOF
+
+  assertEquals "$(readlink ~/.foo)" "$FRESH_PATH/build/foo"
+  assertEquals "$(readlink ~/.other)" "$FRESH_PATH/build/other"
+  assertTrue 'can traverse symlink' '[ -f ~/.other/file1 ]'
+}
+
 it_builds_bin_files() {
   echo 'fresh scripts/sedmv --bin' >> $FRESH_RCFILE
   echo 'fresh pidof.sh --bin=~/bin/pidof' >> $FRESH_RCFILE

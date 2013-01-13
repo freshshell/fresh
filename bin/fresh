@@ -180,28 +180,37 @@ _fresh_file() {
   _file_list | while read SOURCE_FILE
   do
     if [ -n "$MODE_ARG" ]; then
-      if echo "$MODE_ARG" | grep -q '^[~/]'; then
+      if echo "$MODE_ARG" | grep -q '/$'; then
+        if [[ -n "$REF" ]]; then
+          local base_path="$FILE_NAME/"
+        else
+          local base_path="$SOURCE_DIR/$FILE_NAME/"
+        fi
+        if echo "$MODE_ARG" | grep -q '^[~/]'; then
+          local dest_dir="$(basename "$MODE_ARG" | sed 's/^\.//')"
+          DEST_NAME="$dest_dir/${SOURCE_FILE#$base_path}"
+          SYMLINK_SOURCE="$dest_dir"
+          SYMLINK_PATH="${MODE_ARG/%\//}"
+        else
+          DEST_NAME="$MODE_ARG${SOURCE_FILE#$base_path}"
+          SYMLINK_SOURCE=""
+          SYMLINK_PATH=""
+        fi
+      elif echo "$MODE_ARG" | grep -q '^[~/]'; then
         DEST_NAME="$(basename "$MODE_ARG" | sed 's/^\.//')"
+        SYMLINK_SOURCE="$DEST_NAME"
         SYMLINK_PATH="$MODE_ARG"
       else
         if echo "$MODE_ARG" | grep -q '^\.\.'; then
           _fatal_error "Relative paths must be inside build dir."
         fi
-        if echo "$MODE_ARG" | grep -q '/$'; then
-          if [[ -n "$REF" ]]; then
-            local base_path="$FILE_NAME/"
-          else
-            local base_path="$SOURCE_DIR/$FILE_NAME/"
-          fi
-          DEST_NAME="$MODE_ARG${SOURCE_FILE#$base_path}"
-          SYMLINK_PATH=""
-        else
-          DEST_NAME="$MODE_ARG"
-          SYMLINK_PATH=""
-        fi
+        DEST_NAME="$MODE_ARG"
+        SYMLINK_SOURCE=""
+        SYMLINK_PATH=""
       fi
     else
       DEST_NAME="$(basename "$SOURCE_FILE" | sed 's/^\.//')"
+      SYMLINK_SOURCE="$DEST_NAME"
       SYMLINK_PATH="~/.$DEST_NAME"
     fi
 
@@ -216,12 +225,14 @@ _fresh_bin() {
     if [ -n "$MODE_ARG" ]; then
       if echo "$MODE_ARG" | grep -q '^[~/]'; then
         DEST_NAME="bin/$(basename "$MODE_ARG")"
+        SYMLINK_SOURCE="$DEST_NAME"
         SYMLINK_PATH="$MODE_ARG"
       else
         _fatal_error "--bin file paths cannot be relative."
       fi
     else
       DEST_NAME="bin/$(basename "$SOURCE_FILE")"
+      SYMLINK_SOURCE="$DEST_NAME"
       SYMLINK_PATH="~/$DEST_NAME"
     fi
 
@@ -246,13 +257,14 @@ _fresh_output() {
 }
 
 _fresh_symlink() {
-  if [[ -n "$SYMLINK_PATH" ]]; then
+  if [[ -n "$SYMLINK_SOURCE" ]] && [[ -n "$SYMLINK_PATH" ]]; then
+    SYMLINK_SOURCE="$FRESH_PATH/build/$SYMLINK_SOURCE"
     SYMLINK_PATH="$(eval echo "$SYMLINK_PATH")"
     if ! [ -L "$SYMLINK_PATH" ]; then
       mkdir -p "$(dirname "$SYMLINK_PATH")"
-      ln -s "$FRESH_PATH/build/$DEST_NAME" "$SYMLINK_PATH"
+      ln -s "$SYMLINK_SOURCE" "$SYMLINK_PATH"
     else
-      if [[ "$(readlink "$SYMLINK_PATH")" != "$FRESH_PATH/build/$DEST_NAME" ]]; then
+      if [[ "$(readlink "$SYMLINK_PATH")" != "$SYMLINK_SOURCE" ]]; then
         _fatal_error "$SYMLINK_PATH already exists (pointing to $(readlink "$SYMLINK_PATH"))"
       fi
     fi
