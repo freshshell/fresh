@@ -290,6 +290,12 @@ EOF
   assertFalse 'not executable' '[ -x $FRESH_PATH/build/gitconfig ]'
   assertFalse 'not executable' '[ -x $FRESH_PATH/build/vimrc ]'
 
+  assertFalse 'not world readable' '[ "$(find "$FRESH_PATH/build/shell.sh" -perm -004)" ]'
+  assertFalse 'not world readable' '[ "$(find "$FRESH_PATH/build/tmux.conf" -perm -004)" ]'
+  assertFalse 'not world readable' '[ "$(find "$FRESH_PATH/build/pryrc" -perm -004)" ]'
+  assertFalse 'not world readable' '[ "$(find "$FRESH_PATH/build/gitconfig" -perm -004)" ]'
+  assertFalse 'not world readable' '[ "$(find "$FRESH_PATH/build/vimrc" -perm -004)" ]'
+
   assertFalse 'not writable' '[ -w $FRESH_PATH/build/shell.sh ]'
   assertFalse 'not writable' '[ -w $FRESH_PATH/build/tmux.conf ]'
   assertFalse 'not writable' '[ -w $FRESH_PATH/build/pryrc ]'

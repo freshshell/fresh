@@ -13,6 +13,7 @@ _prefix_match() {
 
 fresh_install() {
   # create new output directory
+  umask 0077
   [ ! -e "$FRESH_PATH/build.new" ] || rm -rf "$FRESH_PATH/build.new"
   mkdir -p "$FRESH_PATH/build.new"
   echo "export PATH=\"\$HOME/bin:\$PATH\"" >> "$FRESH_PATH/build.new/shell.sh"
