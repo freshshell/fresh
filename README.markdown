@@ -105,6 +105,14 @@ fresh twe4ked/dotfiles 'vim/*' --file=~/.vimrc --marker='"'
 fresh jasoncodes/dotfiles config/pryrc --file --marker
 ```
 
+#### Sourcing whole directories of files
+
+Whole directories can be built and symlinked by including a trailing slash on the `--file` path:
+
+``` sh
+fresh mutt --file=~/.mutt/
+```
+
 #### Building files without symlinking
 
 Some tools/libraries (e.g. zsh plugins) require specific directory structures.
