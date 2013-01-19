@@ -36,8 +36,18 @@ To disable this error, add \`FRESH_NO_BIN_CHECK=true\` in your freshrc file."
   find "$FRESH_PATH/build.new" -type f -exec chmod -w {} \;
 
   # move output into place
-  [ ! -e "$FRESH_PATH/build" ] || rm -rf "$FRESH_PATH/build"
+  rm -rf "$FRESH_PATH/build.old"
+  if [[ -e "$FRESH_PATH/build" ]]; then
+    mv  "$FRESH_PATH/build" "$FRESH_PATH/build.old"
+  fi
   mv "$FRESH_PATH/build.new" "$FRESH_PATH/build"
+
+  # clean up old build
+  if [[ -e "$FRESH_PATH/build.old/bin/fresh" ]]; then
+    mv -f "$FRESH_PATH/build.old/bin/fresh" "$FRESH_PATH/.tmp.old-bin"
+    rm -f "$FRESH_PATH/.tmp.old-bin"
+  fi
+  rm -rf "$FRESH_PATH/build.old"
 
   if [ ! "$1" == "--quiet" ];
   then
