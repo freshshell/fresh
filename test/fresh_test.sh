@@ -329,11 +329,11 @@ it_links_generic_files_to_destination() {
 
   runFresh
 
-  assertEquals "$(readlink ~/.tmux.conf)" "$FRESH_PATH/build/tmux.conf"
-  assertEquals "$(readlink ~/.pryrc)" "$FRESH_PATH/build/pryrc"
-  assertEquals "$(readlink ~/.gitconfig)" "$FRESH_PATH/build/gitconfig"
-  assertEquals "$(readlink ~/.vim/colors/bclear.vim)" "$FRESH_PATH/build/bclear.vim"
-  assertEquals "$(readlink ~/a\ path/with\ spaces)" "$FRESH_PATH/build/with spaces"
+  assertEquals "$FRESH_PATH/build/tmux.conf" "$(readlink ~/.tmux.conf)"
+  assertEquals "$FRESH_PATH/build/pryrc" "$(readlink ~/.pryrc)"
+  assertEquals "$FRESH_PATH/build/gitconfig" "$(readlink ~/.gitconfig)"
+  assertEquals "$FRESH_PATH/build/bclear.vim" "$(readlink ~/.vim/colors/bclear.vim)"
+  assertEquals "$FRESH_PATH/build/with spaces" "$(readlink ~/a\ path/with\ spaces)"
 }
 
 it_does_not_link_generic_files_with_relative_paths() {
@@ -423,8 +423,8 @@ other/file2
 shell.sh
 EOF
 
-  assertEquals "$(readlink ~/.foo)" "$FRESH_PATH/build/foo"
-  assertEquals "$(readlink ~/.other)" "$FRESH_PATH/build/other"
+  assertEquals "$FRESH_PATH/build/foo" "$(readlink ~/.foo)"
+  assertEquals "$FRESH_PATH/build/other" "$(readlink ~/.other)"
   assertTrue 'can traverse symlink' '[ -f ~/.other/file1 ]'
 }
 
@@ -475,9 +475,9 @@ it_links_bin_files_to_destination() {
 
   runFresh
 
-  assertEquals "$(readlink ~/bin/sedmv)" "$FRESH_PATH/build/bin/sedmv"
-  assertEquals "$(readlink ~/bin/pidof)" "$FRESH_PATH/build/bin/pidof"
-  assertEquals "$(readlink ~/bin/scripts/gemdiff)" "$FRESH_PATH/build/bin/gemdiff"
+  assertEquals "$FRESH_PATH/build/bin/sedmv" "$(readlink ~/bin/sedmv)"
+  assertEquals "$FRESH_PATH/build/bin/pidof" "$(readlink ~/bin/pidof)"
+  assertEquals "$FRESH_PATH/build/bin/gemdiff" "$(readlink ~/bin/scripts/gemdiff)"
 }
 
 it_errors_when_linking_bin_files_with_relative_paths() {
@@ -510,7 +510,7 @@ EOF
   assertFileMatches $SANDBOX_PATH/out.log <<EOF
 EOF
 
-  assertEquals "$(readlink ~/.pryrc)" /dev/null
+  assertEquals /dev/null "$(readlink ~/.pryrc)"
 }
 
 it_errors_if_existing_symlink_for_bin_does_not_point_to_a_fresh_path() {
@@ -532,7 +532,7 @@ EOF
   assertFileMatches $SANDBOX_PATH/out.log <<EOF
 EOF
 
-  assertEquals "$(readlink ~/bin/sedmv)" /dev/null
+  assertEquals /dev/null "$(readlink ~/bin/sedmv)"
 }
 
 it_does_not_error_for_symlinks_created_by_fresh() {
