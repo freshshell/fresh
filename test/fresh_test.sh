@@ -118,6 +118,27 @@ test data
 EOF
 }
 
+it_clones_other_repos() {
+  echo fresh git://example.com/one/two.git file >> $FRESH_RCFILE
+  echo fresh http://example.com/foo file >> $FRESH_RCFILE
+  echo fresh https://example.com/bar file >> $FRESH_RCFILE
+  echo fresh git@test.example.com:baz.git file >> $FRESH_RCFILE
+  stubGit
+
+  runFresh
+
+  assertFileMatches $SANDBOX_PATH/git.log <<EOF
+cd $(pwd)
+git clone git://example.com/one/two.git $SANDBOX_PATH/fresh/source/example.com/one-two
+cd $(pwd)
+git clone http://example.com/foo $SANDBOX_PATH/fresh/source/example.com/foo
+cd $(pwd)
+git clone https://example.com/bar $SANDBOX_PATH/fresh/source/example.com/bar
+cd $(pwd)
+git clone git@test.example.com:baz.git $SANDBOX_PATH/fresh/source/test.example.com/baz
+EOF
+}
+
 it_does_not_clone_existing_repos() {
   echo fresh repo/name file >> $FRESH_RCFILE
   stubGit
@@ -129,7 +150,7 @@ it_does_not_clone_existing_repos() {
   assertFalse 'did not run git' '[ -f $SANDBOX_PATH/git.log ]'
 }
 
-it_builds_shell_files_from_cloned_repos() {
+it_builds_shell_files_from_cloned_github_repos() {
   echo fresh repo/name file >> $FRESH_RCFILE
   mkdir -p $FRESH_PATH/source/repo/name
   echo remote content > $FRESH_PATH/source/repo/name/file
@@ -141,6 +162,23 @@ export PATH="\$HOME/bin:\$PATH"
 export FRESH_PATH="$FRESH_PATH"
 
 # fresh: repo/name file
+
+remote content
+EOF
+}
+
+it_builds_shell_files_from_cloned_other_repos() {
+  echo fresh git://example.com/foobar.git file >> $FRESH_RCFILE
+  mkdir -p $FRESH_PATH/source/example.com/foobar
+  echo remote content > $FRESH_PATH/source/example.com/foobar/file
+
+  runFresh
+
+  assertFileMatches $FRESH_PATH/build/shell.sh <<EOF
+export PATH="\$HOME/bin:\$PATH"
+export FRESH_PATH="$FRESH_PATH"
+
+# fresh: git://example.com/foobar.git file
 
 remote content
 EOF
@@ -714,6 +752,21 @@ EOF
   assertFalse 'does not output to stderr' '[ -s $SANDBOX_PATH/err.log ]'
 }
 
+it_shows_no_url_when_updating_other_repos() {
+  stubGit
+
+  mkdir -p $FRESH_PATH/source/gitorious.org/willgit-mainline/.git
+  cat > $FRESH_PATH/source/gitorious.org/willgit-mainline/.git/output <<EOF
+From git://gitorious.org/willgit/mainline
+   67444ba..a2322a5  master     -> origin/master
+EOF
+
+  bin/fresh update > "$SANDBOX_PATH/fresh_out.log" 2> "$SANDBOX_PATH/fresh_err.log"
+  assertTrue 'successfully updates' $?
+  assertFalse 'does not output a compare URL' 'egrep -q "https?://" $SANDBOX_PATH/fresh_out.log'
+  assertFalse 'does not output to stderr' '[ -s $SANDBOX_PATH/err.log ]'
+}
+
 it_logs_update_output() {
   mkdir -p $FRESH_PATH/source/repo/name/.git
   mkdir -p $FRESH_PATH/source/other_repo/other_name/.git
@@ -1024,7 +1077,8 @@ EOF
 
 it_cleans_repositories_no_longer_referenced_by_freshrc() {
   echo 'fresh foo/bar file' >> $FRESH_RCFILE
-  mkdir -p $FRESH_PATH/source/{foo/bar,foo/baz,abc/def}/.git
+  echo 'fresh git://example.com/foobar.git file' >> $FRESH_RCFILE
+  mkdir -p $FRESH_PATH/source/{foo/bar,foo/baz,abc/def,example.com/foobar}/.git
 
   bin/fresh clean > "$SANDBOX_PATH/out.log" 2> "$SANDBOX_PATH/err.log"
   assertTrue 'successfully cleans' $?
@@ -1076,6 +1130,22 @@ fresh foo/bar sedmv --bin --ref=abc123
 
 fresh local-file
 <$FRESH_LOCAL/local-file>
+EOF
+  assertFileMatches $SANDBOX_PATH/err.log <<EOF
+EOF
+}
+
+it_shows_git_urls_for_non_github_repos() {
+  echo fresh git://example.com/one/two.git file >> $FRESH_RCFILE
+
+  stubGit
+
+  bin/fresh show > "$SANDBOX_PATH/out.log" 2> "$SANDBOX_PATH/err.log"
+  assertTrue 'successfully cleans' $?
+
+  assertFileMatches $SANDBOX_PATH/out.log <<EOF
+fresh git://example.com/one/two.git file
+<git://example.com/one/two.git>
 EOF
   assertFileMatches $SANDBOX_PATH/err.log <<EOF
 EOF

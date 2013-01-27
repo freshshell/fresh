@@ -53,14 +53,32 @@ fresh twe4ked/dotfiles aliases/github.sh --ref=bea8134  # builds the aliases/git
 
 Running `fresh` will then build your shell configuration and create any relevant symbolic links.
 
-### Local files
+### Sources
 
-If no repo is specified fresh will look for local files relative to `~/.dotfiles/`.
+#### Local files
+
+If source is specified, fresh will look for local files relative to `~/.dotfiles/`.
 
 For example the following fresh line will look for `~/.dotfiles/aliases/git.sh`.
 
 ``` sh
 fresh aliases/git.sh
+```
+
+#### GitHub repositories
+
+To source from a GitHub repository you can specify the username and repo name separated with a slash:
+
+``` sh
+fresh username/repo example.sh
+```
+
+#### Non-GitHub sources
+
+You can also source from non-GitHub repositories by specifying the full git clone URL:
+
+``` sh
+fresh git://example.com/path/to/repo.git example.sh
 ```
 
 ### Shell files

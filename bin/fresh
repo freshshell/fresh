@@ -77,13 +77,31 @@ _dsl_install_fresh() {
   esac
 }
 
+_repo_url() {
+  local REPO_NAME="$1"
+  if echo "$REPO_NAME" | grep -q :; then
+    echo "$REPO_NAME"
+  else
+    echo "https://github.com/$REPO_NAME"
+  fi
+}
+
+_repo_name() {
+  local REPO_NAME="$1"
+  if echo "$REPO_NAME" | grep -q :; then
+    REPO_NAME="$(echo "$REPO_NAME" | sed -e 's#^.*@##' -e 's#^.*://##' -e 's#:#/#' -e 's/\.git$//')"
+  fi
+  REPO_NAME="$(echo "$REPO_NAME" | cut -d/ -f1)/$(echo "$REPO_NAME" | cut -d/ -f2- | tr / -)"
+  echo "$REPO_NAME"
+}
+
 _prepare_file_source() {
   # clone or update source repo
   if [ -n "$REPO_NAME" ]; then
-    local REPO_DIR="$FRESH_PATH/source/$REPO_NAME"
+    local REPO_DIR="$FRESH_PATH/source/$(_repo_name "$REPO_NAME")"
     mkdir -p "$(dirname "$REPO_DIR")"
     if ! [ -e "$REPO_DIR" ]; then
-      git clone "https://github.com/$REPO_NAME" "$REPO_DIR"
+      git clone "$(_repo_url "$REPO_NAME")" "$REPO_DIR"
     fi
     SOURCE_DIR="$REPO_DIR"
   else
@@ -144,7 +162,9 @@ _source_file_contents() {
 
 _source_file_url() {
   if [[ -n "$REPO_NAME" ]]; then
-    if [[ -n "$REF" ]]; then
+    if echo "$REPO_NAME" | grep -q :; then
+      echo "$(_repo_url "$REPO_NAME")"
+    elif [[ -n "$REF" ]]; then
       _github_blob_url "$REPO_NAME" "$REF" "$SOURCE_FILE"
     else
       local file="${SOURCE_FILE#$SOURCE_DIR/}"
@@ -395,7 +415,9 @@ usage: fresh update <filter>
     cd "$DIR"
     git pull --rebase 2>&1 | tee "$GIT_OUTPUT_FILE" | sed 's/^/| /' | tee -a "$LOG_FILE"
     local GIT_RESULT="${PIPESTATUS[0]}"
-    perl -n -e'/^ {2,}([0-9a-f]{7,})\.\.([0-9a-f]{7,}) / && print "| <https://github.com/'"$REPO_NAME"'/compare/$1...$2>\n"' "$GIT_OUTPUT_FILE" | tee -a "$LOG_FILE"
+    if egrep -q '^From .*(://github.com/|git@github.com:)' "$GIT_OUTPUT_FILE"; then
+      perl -n -e'/^ {2,}([0-9a-f]{7,})\.\.([0-9a-f]{7,}) / && print "| <https://github.com/'"$REPO_NAME"'/compare/$1...$2>\n"' "$GIT_OUTPUT_FILE" | tee -a "$LOG_FILE"
+    fi
     rm "$GIT_OUTPUT_FILE"
     if [ "$GIT_RESULT" -ne 0 ]; then
       _fatal_error "Update failed."
@@ -473,7 +495,8 @@ _dsl_clean_fresh() {
   _set_dsl_caller
   _parse_fresh_dsl_args "$@"
   if [[ -n "$REPO_NAME" ]]; then
-    echo "$REPO_NAME" >> "$REPO_NAME_FILE"
+    local REPO_DIR="$(_repo_name "$REPO_NAME")"
+    echo "$REPO_DIR" >> "$REPO_NAME_FILE"
   fi
 }
 
@@ -539,7 +562,7 @@ You may need to run \`fresh update\` if you're adding a new line,
 or the file you're referencing may have moved or been deleted.
 EOF
     if [[ -n "$REPO_NAME" ]]; then
-      echo "Have a look at the repo: <https://github.com/$REPO_NAME>" >&2
+      echo "Have a look at the repo: <$(_repo_url "$REPO_NAME")>" >&2
     fi
   fi
   exit 1
