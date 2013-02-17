@@ -182,6 +182,8 @@ Try:
 ``` sh
 fresh search twe4ked
 fresh search jasoncodes
+# or
+fresh search ruby
 ```
 
 ### Edit
