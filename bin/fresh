@@ -137,6 +137,27 @@ _source_file_contents() {
     cd "$SOURCE_DIR"
     git show "$REF:$SOURCE_FILE"
     cd "$OLDPWD"
+  elif [[ -n "$FILTER" ]]; then
+    case "$FILTER" in
+      gpg)
+        if command -v gpg2 >/dev/null 2>&1; then
+          GPG="gpg2"
+        elif command -v gpg >/dev/null 2>&1; then
+          GPG="gpg"
+        else
+          _fatal_error "GnuPG could not be found in your PATH."
+        fi
+
+        $GPG --quiet --batch --no-tty --decrypt "$SOURCE_FILE"
+        ;;
+      *)
+        $FILTER "$SOURCE_FILE"
+
+        if [[ $? != 0 ]]; then
+          _fatal_error "$FILTER $SOURCE_FILE exited with status $?."
+        fi
+        ;;
+    esac
   else
     cat "$SOURCE_FILE"
   fi
@@ -173,6 +194,9 @@ _file_marker() {
   echo -n " ${SOURCE_FILE#$SOURCE_DIR/}"
   if [[ -n "$REF" ]]; then
     echo -n " @ $REF"
+  fi
+  if [[ -n "$FILTER" ]]; then
+    echo -n " # $FILTER"
   fi
   echo
 }
@@ -308,6 +332,7 @@ _parse_fresh_dsl_args() {
   FILE_NAME=
   REF=
   MARKER=
+  FILTER=
   while [ $# -gt 0 ]
   do
     case "$1" in
@@ -336,6 +361,12 @@ _parse_fresh_dsl_args() {
             _fatal_error "Marker not specified."
           fi
         fi
+        ;;
+      --filter=*)
+        FILTER="$(echo "$1" | sed 's/^--[^=]*=*//')"
+        ;;
+      --filter)
+        _fatal_error "You must specify a filter program."
         ;;
       -*)
         _fatal_error "Unknown option: $1"
