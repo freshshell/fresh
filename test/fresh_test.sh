@@ -799,6 +799,7 @@ assert_parse_fresh_dsl_args() {
     echo MODE_ARG="$MODE_ARG"
     echo REF="$REF"
     echo MARKER="$MARKER"
+    echo FILTER="$FILTER"
   ) > $SANDBOX_PATH/test_parse_fresh_dsl_args.log 2>&1
   echo EXIT_STATUS=$? >> $SANDBOX_PATH/test_parse_fresh_dsl_args.log
   assertFileMatches $SANDBOX_PATH/test_parse_fresh_dsl_args.out < /dev/null
@@ -813,6 +814,7 @@ MODE=
 MODE_ARG=
 REF=
 MARKER=
+FILTER=
 EXIT_STATUS=0
 EOF
 
@@ -823,6 +825,7 @@ MODE=file
 MODE_ARG=~/.tmux.conf
 REF=
 MARKER=
+FILTER=
 EXIT_STATUS=0
 EOF
 
@@ -833,6 +836,7 @@ MODE=file
 MODE_ARG=
 REF=
 MARKER=
+FILTER=
 EXIT_STATUS=0
 EOF
 
@@ -843,6 +847,7 @@ MODE=bin
 MODE_ARG=
 REF=
 MARKER=
+FILTER=
 EXIT_STATUS=0
 EOF
 
@@ -853,6 +858,7 @@ MODE=bin
 MODE_ARG=~/bin/pidof
 REF=
 MARKER=
+FILTER=
 EXIT_STATUS=0
 EOF
 
@@ -863,46 +869,65 @@ MODE=file
 MODE_ARG=~/.tmux.conf
 REF=abc1237
 MARKER=
+FILTER=
 EXIT_STATUS=0
 EOF
 
-assert_parse_fresh_dsl_args tmux.conf --file --marker <<EOF
+  assert_parse_fresh_dsl_args tmux.conf --file --marker <<EOF
 REPO_NAME=
 FILE_NAME=tmux.conf
 MODE=file
 MODE_ARG=
 REF=
 MARKER=#
+FILTER=
 EXIT_STATUS=0
 EOF
 
-assert_parse_fresh_dsl_args vimrc --file --marker='"' <<EOF
+  assert_parse_fresh_dsl_args vimrc --file --marker='"' <<EOF
 REPO_NAME=
 FILE_NAME=vimrc
 MODE=file
 MODE_ARG=
 REF=
 MARKER="
+FILTER=
 EXIT_STATUS=0
 EOF
 
-assert_parse_fresh_dsl_args foo --file --marker= <<EOF
+  assert_parse_fresh_dsl_args vimrc --file --filter='sed s/nmap/nnoremap/' <<EOF
+REPO_NAME=
+FILE_NAME=vimrc
+MODE=file
+MODE_ARG=
+REF=
+MARKER=
+FILTER=sed s/nmap/nnoremap/
+EXIT_STATUS=0
+EOF
+
+  assert_parse_fresh_dsl_args foo --file --marker= <<EOF
 $ERROR_PREFIX Marker not specified.
 EXIT_STATUS=1
 EOF
 
-assert_parse_fresh_dsl_args foo --bin --marker <<EOF
+  assert_parse_fresh_dsl_args foo --bin --marker <<EOF
 $ERROR_PREFIX --marker is only valid with --file.
 EXIT_STATUS=1
 EOF
 
-assert_parse_fresh_dsl_args foo --marker=';' <<EOF
+  assert_parse_fresh_dsl_args foo --marker=';' <<EOF
 $ERROR_PREFIX --marker is only valid with --file.
 EXIT_STATUS=1
 EOF
 
   assert_parse_fresh_dsl_args foo --file --ref <<EOF
 $ERROR_PREFIX You must specify a Git reference.
+EXIT_STATUS=1
+EOF
+
+  assert_parse_fresh_dsl_args foo --filter <<EOF
+$ERROR_PREFIX You must specify a filter program.
 EXIT_STATUS=1
 EOF
 
