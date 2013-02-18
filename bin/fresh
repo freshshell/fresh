@@ -394,8 +394,8 @@ usage: fresh update <filter>
     echo "* Updating $REPO_NAME" | tee -a "$LOG_FILE"
     cd "$DIR"
     git pull --rebase 2>&1 | tee "$GIT_OUTPUT_FILE" | sed 's/^/| /' | tee -a "$LOG_FILE"
-    perl -n -e'/^ {2,}([0-9a-f]{7,})\.\.([0-9a-f]{7,}) / && print "| <https://github.com/'"$REPO_NAME"'/compare/$1...$2>\n"' "$GIT_OUTPUT_FILE" | tee -a "$LOG_FILE"
     local GIT_RESULT="${PIPESTATUS[0]}"
+    perl -n -e'/^ {2,}([0-9a-f]{7,})\.\.([0-9a-f]{7,}) / && print "| <https://github.com/'"$REPO_NAME"'/compare/$1...$2>\n"' "$GIT_OUTPUT_FILE" | tee -a "$LOG_FILE"
     rm "$GIT_OUTPUT_FILE"
     if [ "$GIT_RESULT" -ne 0 ]; then
       _fatal_error "Update failed."
