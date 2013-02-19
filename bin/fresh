@@ -138,18 +138,7 @@ _source_file_contents() {
     git show "$REF:$SOURCE_FILE"
     cd "$OLDPWD"
   elif [[ -n "$FILTER" ]]; then
-    if echo "$FILTER" | grep -q :; then
-      IFS=":"
-
-      output="$(< $SOURCE_FILE)"
-      for filter in $FILTER; do
-        output=$(echo "$output" | $filter)
-      done
-
-      echo "$output"
-    else
-      $FILTER < "$SOURCE_FILE"
-    fi
+    eval "cat \"$SOURCE_FILE\" | $FILTER"
   else
     cat "$SOURCE_FILE"
   fi
