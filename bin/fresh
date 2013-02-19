@@ -218,7 +218,7 @@ _fresh_file() {
           local base_path="$SOURCE_DIR/$FILE_NAME/"
         fi
         if echo "$MODE_ARG" | grep -q '^[~/]'; then
-          local dest_dir="$(basename "$MODE_ARG" | sed 's/^\.//')"
+          local dest_dir="$(echo "$MODE_ARG" | sed -e 's/^~\///' -e 's/^\.//')"
           DEST_NAME="$dest_dir/${SOURCE_FILE#$base_path}"
           SYMLINK_SOURCE="$dest_dir"
           SYMLINK_PATH="${MODE_ARG/%\//}"
@@ -228,7 +228,7 @@ _fresh_file() {
           SYMLINK_PATH=""
         fi
       elif echo "$MODE_ARG" | grep -q '^[~/]'; then
-        DEST_NAME="$(basename "$MODE_ARG" | sed 's/^\.//')"
+        DEST_NAME="$(echo "$MODE_ARG" | sed -e 's/^~\///' -e 's/^\.//')"
         SYMLINK_SOURCE="$DEST_NAME"
         SYMLINK_PATH="$MODE_ARG"
       else
