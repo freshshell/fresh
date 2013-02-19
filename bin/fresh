@@ -138,25 +138,15 @@ _source_file_contents() {
     git show "$REF:$SOURCE_FILE"
     cd "$OLDPWD"
   elif [[ -n "$FILTER" ]]; then
-    case "$FILTER" in
-      gpg)
-        GPG_OPTIONS="--quiet --yes --batch --decrypt"
-        if command -v gpg2 >/dev/null 2>&1; then
-          gpg2 $GPG_OPTIONS < "$SOURCE_FILE"
-        elif command -v gpg >/dev/null 2>&1; then
-          gpg $GPG_OPTIONS < "$SOURCE_FILE"
-        else
-          _fatal_error "GnuPG could not be found in your PATH."
-        fi
-        ;;
-      *)
-        $FILTER < "$SOURCE_FILE"
+    if ! command -v "$FILTER" >/dev/null 2>&1; then
+      _fatal_error "$FILTER could not be found in your PATH."
+    fi
 
-        if [[ $? != 0 ]]; then
-          _fatal_error "$FILTER exited with status $? on $SOURCE_FILE"
-        fi
-        ;;
-    esac
+    $FILTER < "$SOURCE_FILE"
+
+    if [[ $? != 0 ]]; then
+      _fatal_error "$FILTER exited with status $? on $SOURCE_FILE"
+    fi
   else
     cat "$SOURCE_FILE"
   fi
