@@ -111,7 +111,7 @@ it_clones_github_repos() {
 
   assertFileMatches $SANDBOX_PATH/git.log <<EOF
 cd $(pwd)
-git clone http://github.com/repo/name $SANDBOX_PATH/fresh/source/repo/name
+git clone https://github.com/repo/name $SANDBOX_PATH/fresh/source/repo/name
 EOF
   assertFileMatches $FRESH_PATH/source/repo/name/file <<EOF
 test data
@@ -702,7 +702,7 @@ it_shows_a_github_compare_url_when_updating() {
 
   mkdir -p $FRESH_PATH/source/jasoncodes/dotfiles/.git
   cat > $FRESH_PATH/source/jasoncodes/dotfiles/.git/output <<EOF
-From http://github.com/jasoncodes/dotfiles
+From https://github.com/jasoncodes/dotfiles
    47ad84c..57b8b2b  master     -> origin/master
 First, rewinding head to replay your work on top of it...
 Fast-forwarded master to 57b8b2ba7482884169a187d46be63fb8f8f4146b.

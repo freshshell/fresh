@@ -83,7 +83,7 @@ _prepare_file_source() {
     local REPO_DIR="$FRESH_PATH/source/$REPO_NAME"
     mkdir -p "$(dirname "$REPO_DIR")"
     if ! [ -e "$REPO_DIR" ]; then
-      git clone "http://github.com/$REPO_NAME" "$REPO_DIR"
+      git clone "https://github.com/$REPO_NAME" "$REPO_DIR"
     fi
     SOURCE_DIR="$REPO_DIR"
   else
