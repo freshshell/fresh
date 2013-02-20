@@ -370,8 +370,8 @@ it_links_generic_files_to_destination() {
   assertEquals "$FRESH_PATH/build/tmux.conf" "$(readlink ~/.tmux.conf)"
   assertEquals "$FRESH_PATH/build/pryrc" "$(readlink ~/.pryrc)"
   assertEquals "$FRESH_PATH/build/gitconfig" "$(readlink ~/.gitconfig)"
-  assertEquals "$FRESH_PATH/build/vim/colors/bclear.vim" "$(readlink ~/.vim/colors/bclear.vim)"
-  assertEquals "$FRESH_PATH/build/a path/with spaces" "$(readlink ~/a\ path/with\ spaces)"
+  assertEquals "$FRESH_PATH/build/vim-colors-bclear.vim" "$(readlink ~/.vim/colors/bclear.vim)"
+  assertEquals "$FRESH_PATH/build/a-path-with-spaces" "$(readlink ~/a\ path/with\ spaces)"
 }
 
 it_builds_and_links_generic_files_with_same_basename() {
@@ -383,15 +383,15 @@ it_builds_and_links_generic_files_with_same_basename() {
 
   runFresh
 
-  assertFileMatches $FRESH_PATH/build/foo/file <<EOF
+  assertFileMatches $FRESH_PATH/build/foo-file <<EOF
 foo
 EOF
-  assertFileMatches $FRESH_PATH/build/bar/file <<EOF
+  assertFileMatches $FRESH_PATH/build/bar-file <<EOF
 bar
 EOF
 
-  assertEquals "$FRESH_PATH/build/foo/file" "$(readlink ~/.foo/file)"
-  assertEquals "$FRESH_PATH/build/bar/file" "$(readlink ~/.bar/file)"
+  assertEquals "$FRESH_PATH/build/foo-file" "$(readlink ~/.foo/file)"
+  assertEquals "$FRESH_PATH/build/bar-file" "$(readlink ~/.bar/file)"
 }
 
 it_does_not_link_generic_files_with_relative_paths() {
@@ -481,8 +481,8 @@ other/file2
 shell.sh
 EOF
 
-  assertEquals "$FRESH_PATH/build/foo/" "$(readlink ~/.foo)"
-  assertEquals "$FRESH_PATH/build/other/" "$(readlink ~/.other)"
+  assertEquals "$FRESH_PATH/build/foo" "$(readlink ~/.foo)"
+  assertEquals "$FRESH_PATH/build/other" "$(readlink ~/.other)"
   assertTrue 'can traverse symlink' '[ -f ~/.other/file1 ]'
 }
 
