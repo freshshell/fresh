@@ -416,7 +416,7 @@ usage: fresh update <filter>
     git pull --rebase 2>&1 | tee "$GIT_OUTPUT_FILE" | sed 's/^/| /' | tee -a "$LOG_FILE"
     local GIT_RESULT="${PIPESTATUS[0]}"
     if egrep -q '^From .*(://github.com/|git@github.com:)' "$GIT_OUTPUT_FILE"; then
-      perl -n -e'/^ {2,}([0-9a-f]{7,})\.\.([0-9a-f]{7,}) / && print "| <https://github.com/'"$REPO_NAME"'/compare/$1...$2>\n"' "$GIT_OUTPUT_FILE" | tee -a "$LOG_FILE"
+      perl -n -e'/^ {2,}([0-9a-f]{7,})\.\.([0-9a-f]{7,}) / && print "| <\033[1;34mhttps://github.com/'"$REPO_NAME"'/compare/$1...$2\033[0m>\n"' "$GIT_OUTPUT_FILE" | tee -a "$LOG_FILE"
     fi
     rm "$GIT_OUTPUT_FILE"
     if [ "$GIT_RESULT" -ne 0 ]; then
