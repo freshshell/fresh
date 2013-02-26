@@ -416,7 +416,7 @@ usage: fresh update <filter>
     git pull --rebase 2>&1 | tee "$GIT_OUTPUT_FILE" | sed 's/^/| /' | tee -a "$LOG_FILE"
     local GIT_RESULT="${PIPESTATUS[0]}"
     if egrep -q '^From .*(://github.com/|git@github.com:)' "$GIT_OUTPUT_FILE"; then
-      perl -n -e'/^ {2,}([0-9a-f]{7,})\.\.([0-9a-f]{7,}) / && print "| <\033[1;34mhttps://github.com/'"$REPO_NAME"'/compare/$1...$2\033[0m>\n"' "$GIT_OUTPUT_FILE" | tee -a "$LOG_FILE"
+      perl -n -e'/^ {2,}([0-9a-f]{7,})\.\.([0-9a-f]{7,}) / && print "| <'"$(_format_url "https://github.com/$REPO_NAME/compare/\$1...\$2")"'>\n"' "$GIT_OUTPUT_FILE" | tee -a "$LOG_FILE"
     fi
     rm "$GIT_OUTPUT_FILE"
     if [ "$GIT_RESULT" -ne 0 ]; then
@@ -524,7 +524,7 @@ _dsl_show_fresh() {
 
   _file_list | while read SOURCE_FILE
   do
-    echo "<$(_source_file_url)>"
+    echo "<$(_format_url "$(_source_file_url)")>"
   done
 }
 
@@ -562,10 +562,14 @@ You may need to run \`fresh update\` if you're adding a new line,
 or the file you're referencing may have moved or been deleted.
 EOF
     if [[ -n "$REPO_NAME" ]]; then
-      echo "Have a look at the repo: <$(_repo_url "$REPO_NAME")>" >&2
+      echo "Have a look at the repo: <$(_format_url "$(_repo_url "$REPO_NAME")")>" >&2
     fi
   fi
   exit 1
+}
+
+_format_url() {
+  echo $'\033[1;34m'"$1"$'\033[0m'
 }
 
 _prevent_invalid_arguments() {

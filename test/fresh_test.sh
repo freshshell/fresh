@@ -652,7 +652,7 @@ $FRESH_RCFILE:1: fresh repo/name some-file --blah
 
 You may need to run \`fresh update\` if you're adding a new line,
 or the file you're referencing may have moved or been deleted.
-Have a look at the repo: <https://github.com/repo/name>
+Have a look at the repo: <$(_format_url https://github.com/repo/name)>
 EOF
 
   echo 'source ~/.freshrc.local' > $FRESH_RCFILE
@@ -1142,14 +1142,14 @@ EOF
 
   assertFileMatches $SANDBOX_PATH/out.log <<EOF
 fresh foo/bar aliases/\\*
-<https://github.com/foo/bar/blob/1234567/aliases/git.sh>
-<https://github.com/foo/bar/blob/1234567/aliases/ruby.sh>
+<$(_format_url https://github.com/foo/bar/blob/1234567/aliases/git.sh)>
+<$(_format_url https://github.com/foo/bar/blob/1234567/aliases/ruby.sh)>
 
 fresh foo/bar sedmv --bin --ref=abc123
-<https://github.com/foo/bar/blob/abc123/sedmv>
+<$(_format_url https://github.com/foo/bar/blob/abc123/sedmv)>
 
 fresh local-file
-<$FRESH_LOCAL/local-file>
+<$(_format_url $FRESH_LOCAL/local-file)>
 EOF
   assertFileMatches $SANDBOX_PATH/err.log <<EOF
 EOF
@@ -1165,7 +1165,7 @@ it_shows_git_urls_for_non_github_repos() {
 
   assertFileMatches $SANDBOX_PATH/out.log <<EOF
 fresh git://example.com/one/two.git file
-<git://example.com/one/two.git>
+<$(_format_url git://example.com/one/two.git)>
 EOF
   assertFileMatches $SANDBOX_PATH/err.log <<EOF
 EOF

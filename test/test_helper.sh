@@ -114,4 +114,8 @@ fi
   chmod +x $SANDBOX_PATH/bin/curl
 }
 
+_format_url() {
+  echo $'\033[1;34m'"$1"$'\033[0m'
+}
+
 source test/support/shunit2
