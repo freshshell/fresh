@@ -40,7 +40,7 @@ echo "fresh freshshell/fresh bin/fresh --bin" >> ~/.freshrc
 
 ## Usage
 
-An example `freshrc` file:
+An example `~/.freshrc` file:
 
 ``` sh
 fresh freshshell/fresh bin/fresh --bin                                                     # handles updating fresh
