@@ -57,7 +57,7 @@ Running `fresh` will then build your shell configuration and create any relevant
 
 #### Local files
 
-If source is specified, fresh will look for local files relative to `~/.dotfiles/`.
+If no remote source is specified (`github_user/repo_name`), fresh will look for local files relative to `~/.dotfiles/`.
 
 For example the following fresh line will look for `~/.dotfiles/aliases/git.sh`.
 
