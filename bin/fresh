@@ -562,6 +562,34 @@ Available commands:
 EOF
 }
 
+_add_to_freshrc() {
+  echo "Add \`fresh $@\` to $(_freshrc_file) [Y/n]?"
+  read answer
+  case $answer in
+    [Yy]*)
+      echo "Adding \`fresh $@\` to $(_freshrc_file)..."
+      echo "fresh $@" >> $FRESH_RCFILE
+
+      _parse_fresh_dsl_args "$@"
+
+      echo "Update local cache of \`$REPO_NAME\` [Y/n]?"
+      read answer
+      case $answer in
+        [Yy]*)
+          # NOTE: fresh update won't work if the repo doesn't exist yet
+          fresh_update "$REPO_NAME"
+          ;;
+        *)
+          _note "You can run \`fresh update $REPO_NAME\`."
+          ;;
+      esac
+      ;;
+    *)
+      _note "Use \`fresh edit\` to manually edit your $(_freshrc_file)."
+      ;;
+  esac
+}
+
 _fatal_error() {
   echo $'\033[4;31mError\033[0m:' "$1" >&2
   if [[ "$IN_RC_FILE" == 1 ]]; then
@@ -578,6 +606,10 @@ EOF
     fi
   fi
   exit 1
+}
+
+_note() {
+  echo $'\033[1;33mNote\033[0m:' "$1" >&2
 }
 
 _format_url() {
@@ -626,7 +658,11 @@ main() {
       fresh_clean
       ;;
     *)
-      _fatal_error "Unknown option: $1"
+      if [[ "$1" == */* ]]; then
+        _add_to_freshrc "$@"
+      else
+        _fatal_error "Unknown option: $1"
+      fi
       ;;
   esac
 }
