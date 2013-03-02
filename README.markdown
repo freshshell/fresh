@@ -159,13 +159,13 @@ You can use any Git reference: branches, commit hashes, tags, etc.
 
 ### Filters
 
-Commands can be mangled using arbitrary filters, for example:
+[Filters][filters] allow you to run specified files through arbitrary commands at build time.
 
 ``` sh
-fresh neersighted/dotfiles config/notmuch-config.erb --file=~/.notmuch config --filter=erb
-fresh neersighted/dotfiles config/hub.asc --file=~/.config/hub --filter=gpg
 fresh neersighted/dotfiles config/muttrc.erb.asc --file=~/.muttrc --filter="gpg | erb"
 ```
+
+[filters]: https://github.com/freshshell/fresh/wiki/Filters
 
 ## Command line options
 
