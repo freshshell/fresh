@@ -545,7 +545,7 @@ cat <<EOF
 Keep your dot files fresh.
 
 The following commands will install/update configuration files
-as specified in your ${FRESH_RCFILE/#$HOME/~} file.
+as specified in your $(_freshrc_file) file.
 
 See http://freshshell.com/readme for more documentation.
 
@@ -588,6 +588,10 @@ _prevent_invalid_arguments() {
   if [ -n "$2" ]; then
     _fatal_error "Invalid arguments"
   fi
+}
+
+_freshrc_file() {
+  echo "${FRESH_RCFILE/#$HOME/~}"
 }
 
 main() {
