@@ -480,6 +480,23 @@ it_links_bin_files_to_destination() {
   assertEquals "$FRESH_PATH/build/bin/gemdiff" "$(readlink ~/bin/scripts/gemdiff)"
 }
 
+it_runs_filters_on_files() {
+  mkdir -p $FRESH_LOCAL
+  echo "foo other_username bar" > $FRESH_LOCAL/aliases
+  echo "fresh aliases --filter='sed s/other_username/my_username/ | tr _ -'" > $FRESH_RCFILE
+
+  runFresh
+
+  assertFileMatches $FRESH_PATH/build/shell.sh <<EOF
+export PATH="\$HOME/bin:\$PATH"
+export FRESH_PATH="$FRESH_PATH"
+
+# fresh: aliases # sed s/other_username/my_username/ | tr _ -
+
+foo my-username bar
+EOF
+}
+
 it_errors_when_linking_bin_files_with_relative_paths() {
   mkdir -p $FRESH_LOCAL
   touch $FRESH_LOCAL/foobar
