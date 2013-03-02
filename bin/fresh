@@ -590,8 +590,11 @@ _ask() {
     [Yy]*)
       ANSWER=yes
       ;;
-    *)
+    [Nn]*)
       ANSWER=no
+      ;;
+    *)
+      _ask "$1"
       ;;
   esac
 }
