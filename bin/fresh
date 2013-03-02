@@ -563,29 +563,35 @@ EOF
 }
 
 _add_to_freshrc() {
-  echo "Add \`fresh $@\` to $(_freshrc_file) [Y/n]?"
+  _ask "Add \`fresh $@\` to $(_freshrc_file) [Y/n]?"
+  if [ "$ANSWER" == yes ]; then
+    echo "Adding \`fresh $@\` to $(_freshrc_file)..."
+    echo "fresh $@" >> $FRESH_RCFILE
+
+    _parse_fresh_dsl_args "$@"
+
+    _ask "Update local cache of \`$REPO_NAME\` [Y/n]?"
+    if [ "$ANSWER" == yes ]; then
+      # NOTE: fresh update won't work if the repo doesn't exist yet
+      fresh_update "$REPO_NAME"
+    else
+      _note "You can run \`fresh update $REPO_NAME\`."
+    fi
+  else
+    _note "Use \`fresh edit\` to manually edit your $(_freshrc_file)."
+  fi
+}
+
+_ask() {
+  ANSWER=
+  echo "$1"
   read answer
   case $answer in
     [Yy]*)
-      echo "Adding \`fresh $@\` to $(_freshrc_file)..."
-      echo "fresh $@" >> $FRESH_RCFILE
-
-      _parse_fresh_dsl_args "$@"
-
-      echo "Update local cache of \`$REPO_NAME\` [Y/n]?"
-      read answer
-      case $answer in
-        [Yy]*)
-          # NOTE: fresh update won't work if the repo doesn't exist yet
-          fresh_update "$REPO_NAME"
-          ;;
-        *)
-          _note "You can run \`fresh update $REPO_NAME\`."
-          ;;
-      esac
+      ANSWER=yes
       ;;
     *)
-      _note "Use \`fresh edit\` to manually edit your $(_freshrc_file)."
+      ANSWER=no
       ;;
   esac
 }
