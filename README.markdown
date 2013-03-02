@@ -40,15 +40,23 @@ echo "fresh freshshell/fresh bin/fresh --bin" >> ~/.freshrc
 
 ## Usage
 
-An example `freshrc` file:
+An example `~/.freshrc` file:
 
 ``` sh
-fresh freshshell/fresh bin/fresh --bin                  # handles updating fresh
-fresh jasoncodes/dotfiles 'aliases/*'                   # builds jasoncodes' aliases into ~/.fresh/build.sh
-fresh twe4ked/dotfiles aliases/git.sh                   # builds the aliases/git file into ~/.fresh/build/shell.sh
-fresh twe4ked/dotfiles config/ackrc --file              # links the config/ackrc file to ~/.ackrc
-fresh jasoncodes/scripts gemdiff --bin=~/bin/gem-diff   # links the gemdiff file to ~/bin/gem-diff
-fresh twe4ked/dotfiles aliases/github.sh --ref=bea8134  # builds the aliases/github.sh file locked to the specified git ref
+# handles updating fresh
+fresh freshshell/fresh bin/fresh --bin
+# builds jasoncodes' aliases into ~/.fresh/build.sh
+fresh jasoncodes/dotfiles 'aliases/*'
+# builds the aliases/git file into ~/.fresh/build/shell.sh
+fresh twe4ked/dotfiles aliases/git.sh
+# links the config/ackrc file to ~/.ackrc
+fresh twe4ked/dotfiles config/ackrc --file
+# builds config/notmuch-config.erb with erb and links it to ~/.notmuch-config
+fresh neersighted/dotfiles config/notmuch-config.erb --file=~/.notmuch-config --filter=erb
+# links the gemdiff file to ~/bin/gem-diff
+fresh jasoncodes/scripts gemdiff --bin=~/bin/gem-diff
+# builds the aliases/github.sh file locked to the specified git ref
+fresh twe4ked/dotfiles aliases/github.sh --ref=bea8134
 ```
 
 Running `fresh` will then build your shell configuration and create any relevant symbolic links.
@@ -166,6 +174,16 @@ fresh twe4ked/dotfiles aliases/github.sh --ref=bea8134
 
 Locks the `aliases/github.sh` file to the specified commit.
 You can use any Git reference: branches, commit hashes, tags, etc.
+
+### Filters
+
+[Filters][filters] allow you to run specified files through arbitrary commands at build time.
+
+``` sh
+fresh neersighted/dotfiles config/muttrc.erb.asc --file=~/.muttrc --filter="gpg | erb"
+```
+
+[filters]: https://github.com/freshshell/fresh/wiki/Filters
 
 ## Command line options
 
