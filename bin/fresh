@@ -581,6 +581,8 @@ _add_to_freshrc() {
 }
 
 _escape() {
+  printf "%q" "$1"
+  shift
   for arg in "$@"; do
     printf " %q" "$arg"
   done
