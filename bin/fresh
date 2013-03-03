@@ -301,7 +301,11 @@ _fresh_symlink() {
       ln -s "$SYMLINK_SOURCE" "$SYMLINK_PATH"
     else
       if [[ "$(readlink "$SYMLINK_PATH")" != "$SYMLINK_SOURCE" ]]; then
-        _fatal_error "$SYMLINK_PATH already exists (pointing to $(readlink "$SYMLINK_PATH"))"
+        if [[ "$(readlink "$SYMLINK_PATH")" == "$FRESH_PATH"/build/* ]]; then
+          ln -sf "$SYMLINK_SOURCE" "$SYMLINK_PATH"
+        else
+          _fatal_error "$SYMLINK_PATH already exists (pointing to $(readlink "$SYMLINK_PATH"))"
+        fi
       fi
     fi
   fi
