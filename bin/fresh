@@ -584,7 +584,7 @@ _add_to_freshrc() {
 
 _ask() {
   ANSWER=
-  echo "$1"
+  echo -n "$1 "
   read answer
   case $answer in
     [Yy]*|"")
