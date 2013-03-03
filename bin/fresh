@@ -564,13 +564,17 @@ _add_to_freshrc() {
     _escape fresh "$@" >> "$FRESH_RCFILE"
 
     _parse_fresh_dsl_args "$@"
+    local REPO_DIR="$(_repo_name "$REPO_NAME")"
 
-    if _confirm "Update local cache of \`$REPO_NAME\` [Y/n]?"; then
-      # NOTE: fresh update won't work if the repo doesn't exist yet
-      fresh_update "$REPO_NAME"
-    else
-      _note "You can run \`fresh update $REPO_NAME\`."
+    if [[ -d "$FRESH_PATH/source/$REPO_DIR" ]]; then
+      if _confirm "Update local cache of \`$REPO_DIR\` [Y/n]?"; then
+        fresh_update "$REPO_DIR"
+      else
+        _note "You can run \`fresh update $REPO_DIR\`."
+      fi
     fi
+
+    fresh_install
   else
     _note "Use \`fresh edit\` to manually edit your $(_freshrc_file)."
   fi
