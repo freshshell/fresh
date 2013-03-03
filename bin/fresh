@@ -667,7 +667,7 @@ main() {
       fresh_clean
       ;;
     *)
-      if [[ "$1" == */* ]]; then
+      if [[ "$1" == */* ]] || [[ -e "$FRESH_LOCAL/$1" ]]; then
         _add_to_freshrc "$@"
       else
         _fatal_error "Unknown option: $1"
