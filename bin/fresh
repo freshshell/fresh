@@ -587,7 +587,7 @@ _ask() {
   echo "$1"
   read answer
   case $answer in
-    [Yy]*)
+    [Yy]*|"")
       ANSWER=yes
       ;;
     [Nn]*)
