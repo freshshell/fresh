@@ -525,11 +525,7 @@ _dsl_show_fresh() {
     echo
   fi
 
-  echo -n fresh
-  for arg in "$@"; do
-    printf " %q" "$arg"
-  done
-  echo
+  _escape fresh "$@"
 
   _parse_fresh_dsl_args "$@"
   _prepare_file_source
@@ -565,7 +561,7 @@ EOF
 _add_to_freshrc() {
   if _confirm "Add \`fresh $@\` to $(_freshrc_file) [Y/n]?"; then
     echo "Adding \`fresh $@\` to $(_freshrc_file)..."
-    echo "fresh $@" >> $FRESH_RCFILE
+    _escape fresh "$@" >> "$FRESH_RCFILE"
 
     _parse_fresh_dsl_args "$@"
 
@@ -578,6 +574,13 @@ _add_to_freshrc() {
   else
     _note "Use \`fresh edit\` to manually edit your $(_freshrc_file)."
   fi
+}
+
+_escape() {
+  for arg in "$@"; do
+    printf " %q" "$arg"
+  done
+  echo
 }
 
 _confirm() {
