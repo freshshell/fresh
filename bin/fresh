@@ -563,15 +563,13 @@ EOF
 }
 
 _add_to_freshrc() {
-  _ask "Add \`fresh $@\` to $(_freshrc_file) [Y/n]?"
-  if [ "$ANSWER" == yes ]; then
+  if _ask "Add \`fresh $@\` to $(_freshrc_file) [Y/n]?"; then
     echo "Adding \`fresh $@\` to $(_freshrc_file)..."
     echo "fresh $@" >> $FRESH_RCFILE
 
     _parse_fresh_dsl_args "$@"
 
-    _ask "Update local cache of \`$REPO_NAME\` [Y/n]?"
-    if [ "$ANSWER" == yes ]; then
+    if _ask "Update local cache of \`$REPO_NAME\` [Y/n]?"; then
       # NOTE: fresh update won't work if the repo doesn't exist yet
       fresh_update "$REPO_NAME"
     else
@@ -583,15 +581,14 @@ _add_to_freshrc() {
 }
 
 _ask() {
-  ANSWER=
   echo -n "$1 "
   read answer
   case $answer in
     [Yy]*|"")
-      ANSWER=yes
+      true
       ;;
     [Nn]*)
-      ANSWER=no
+      false
       ;;
     *)
       _ask "$1"
