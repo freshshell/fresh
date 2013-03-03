@@ -621,6 +621,16 @@ it_does_not_error_for_symlinks_created_by_fresh() {
   runFresh # run fresh again to check symlinks
 }
 
+it_replaces_old_symlinks_pointing_inside_the_fresh_build_directory() {
+  echo fresh pryrc --file >> $FRESH_RCFILE
+  mkdir -p $FRESH_PATH/build $FRESH_LOCAL
+  touch $FRESH_LOCAL/pryrc
+  ln -s $FRESH_PATH/build/pryrc-old-name ~/.pryrc
+
+  runFresh
+  assertEquals $FRESH_PATH/build/pryrc "$(readlink ~/.pryrc)"
+}
+
 it_errors_if_link_destination_is_a_file() {
   mkdir -p $FRESH_LOCAL ~/bin
   touch $FRESH_LOCAL/{gitconfig,sedmv}
