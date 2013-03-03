@@ -559,7 +559,7 @@ EOF
 }
 
 _add_to_freshrc() {
-  if _confirm "Add \`fresh $@\` to $(_freshrc_file) [Y/n]?"; then
+  if _confirm "Add \`fresh $@\` to $(_freshrc_file)"; then
     echo "Adding \`fresh $@\` to $(_freshrc_file)..."
     _escape fresh "$@" >> "$FRESH_RCFILE"
 
@@ -567,7 +567,7 @@ _add_to_freshrc() {
     local REPO_DIR="$(_repo_name "$REPO_NAME")"
 
     if [[ -d "$FRESH_PATH/source/$REPO_DIR" ]]; then
-      if _confirm "Update local cache of \`$REPO_DIR\` [Y/n]?"; then
+      if _confirm "Update local cache of $REPO_DIR"; then
         fresh_update "$REPO_DIR"
       else
         _note "You can run \`fresh update $REPO_DIR\`."
@@ -588,7 +588,7 @@ _escape() {
 }
 
 _confirm() {
-  echo -n "$1 "
+  echo -n "$1 [Y/n]? "
   read answer
   case $answer in
     [Yy]*|"")
