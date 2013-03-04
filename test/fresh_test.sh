@@ -1213,4 +1213,17 @@ EOF
 EOF
 }
 
+it_escapes_arguments() {
+  (
+    set -e
+    __FRESH_TEST_MODE=1
+    source bin/fresh
+    _escape foo 'bar baz' > $SANDBOX_PATH/escape.out
+  )
+  assertTrue 'successfully escapes' $?
+  assertFileMatches $SANDBOX_PATH/escape.out <<EOF
+foo bar\\ baz
+EOF
+}
+
 source test/test_helper.sh
