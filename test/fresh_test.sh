@@ -1226,4 +1226,48 @@ foo bar\\ baz
 EOF
 }
 
+it_confirms_query_positive() {
+  (
+    set -e
+    __FRESH_TEST_MODE=1
+    source bin/fresh
+    echo y | _confirm 'Test question' > $SANDBOX_PATH/confirm.out
+  )
+  assertTrue 'returns true' $?
+  echo -n 'Test question [Y/n]? ' | assertFileMatches $SANDBOX_PATH/confirm.out
+}
+
+it_confirms_query_negative() {
+  (
+    set -e
+    __FRESH_TEST_MODE=1
+    source bin/fresh
+    echo n | _confirm 'Test question' > $SANDBOX_PATH/confirm.out
+  )
+  assertFalse 'returns false' $?
+  echo -n 'Test question [Y/n]? ' | assertFileMatches $SANDBOX_PATH/confirm.out
+}
+
+it_confirms_query_default() {
+  (
+    set -e
+    __FRESH_TEST_MODE=1
+    source bin/fresh
+    echo | _confirm 'Test question' > $SANDBOX_PATH/confirm.out
+  )
+  assertTrue 'returns true' $?
+  echo -n 'Test question [Y/n]? ' | assertFileMatches $SANDBOX_PATH/confirm.out
+}
+
+it_confirms_query_invalid() {
+  (
+    set -e
+    __FRESH_TEST_MODE=1
+    source bin/fresh
+    echo -e "blah\ny" | _confirm 'Test question' > $SANDBOX_PATH/confirm.out
+  )
+  assertTrue 'returns true' $?
+  echo -n 'Test question [Y/n]? Test question [Y/n]? ' | assertFileMatches $SANDBOX_PATH/confirm.out
+}
+
 source test/test_helper.sh
