@@ -624,7 +624,7 @@ EOF
 }
 
 _note() {
-  echo $'\033[1;33mNote\033[0m:' "$1" >&2
+  echo $'\033[1;33mNote\033[0m:' "$1"
 }
 
 _format_url() {
