@@ -1270,4 +1270,111 @@ it_confirms_query_invalid() {
   echo -n 'Test question [Y/n]? Test question [Y/n]? ' | assertFileMatches $SANDBOX_PATH/confirm.out
 }
 
+it_adds_lines_to_freshrc_for_local_files() {
+  echo 'fresh existing' >> $FRESH_RCFILE
+  mkdir -p $FRESH_LOCAL
+  touch $FRESH_LOCAL/{existing,new}
+
+  yes | bin/fresh new > $SANDBOX_PATH/add.out 2> $SANDBOX_PATH/add.err
+  assertTrue 'successfully adds' $?
+
+  assertFileMatches $FRESH_RCFILE <<EOF
+fresh existing
+fresh new
+EOF
+  assertFileMatches $SANDBOX_PATH/add.out <<EOF
+Add \`fresh new\` to $FRESH_RCFILE [Y/n]? Adding \`fresh new\` to $FRESH_RCFILE...
+$(echo $'Your dot files are now \033[1;32mfresh\033[0m.')
+EOF
+  assertFileMatches $SANDBOX_PATH/add.err <<EOF
+EOF
+}
+
+it_adds_lines_to_freshrc_for_new_remotes() {
+  stubGit
+
+  yes | bin/fresh user/repo file > $SANDBOX_PATH/add.out 2> $SANDBOX_PATH/add.err
+  assertTrue 'successfully adds' $?
+
+  assertFileMatches $FRESH_RCFILE <<EOF
+fresh user/repo file
+EOF
+  assertFileMatches $SANDBOX_PATH/add.out <<EOF
+Add \`fresh user/repo file\` to $FRESH_RCFILE [Y/n]? Adding \`fresh user/repo file\` to $FRESH_RCFILE...
+$(echo $'Your dot files are now \033[1;32mfresh\033[0m.')
+EOF
+  assertFileMatches $SANDBOX_PATH/add.err <<EOF
+EOF
+  assertFileMatches $SANDBOX_PATH/git.log <<EOF
+cd $SANDBOX_PATH
+git clone https://github.com/user/repo $FRESH_PATH/source/user/repo
+EOF
+}
+
+it_adds_lines_to_freshrc_for_existing_remotes() {
+  mkdir -p $FRESH_PATH/source/user/repo/.git
+  touch $FRESH_PATH/source/user/repo/file
+
+  stubGit
+
+  yes | bin/fresh user/repo file > $SANDBOX_PATH/add.out 2> $SANDBOX_PATH/add.err
+  assertTrue 'successfully adds' $?
+
+  assertFileMatches $FRESH_RCFILE <<EOF
+fresh user/repo file
+EOF
+  assertFileMatches $SANDBOX_PATH/add.out <<EOF
+Add \`fresh user/repo file\` to $FRESH_RCFILE [Y/n]? Adding \`fresh user/repo file\` to $FRESH_RCFILE...
+Update local cache of user/repo [Y/n]? * Updating user/repo
+| Current branch master is up to date.
+$(echo $'Your dot files are now \033[1;32mfresh\033[0m.')
+EOF
+  assertFileMatches $SANDBOX_PATH/add.err <<EOF
+EOF
+  assertFileMatches $SANDBOX_PATH/git.log <<EOF
+cd $FRESH_PATH/source/user/repo
+git pull --rebase
+EOF
+}
+
+it_does_not_add_lines_to_freshrc_if_declined() {
+  echo 'fresh existing' >> $FRESH_RCFILE
+  mkdir -p $FRESH_LOCAL
+  touch $FRESH_LOCAL/{existing,new}
+
+  yes n | bin/fresh new > $SANDBOX_PATH/add.out 2> $SANDBOX_PATH/add.err
+  assertTrue 'successfully adds' $?
+
+  assertFileMatches $FRESH_RCFILE <<EOF
+fresh existing
+EOF
+  assertFileMatches $SANDBOX_PATH/add.out <<EOF
+Add \`fresh new\` to $FRESH_RCFILE [Y/n]? $(echo $'\033[1;33mNote\033[0m:') Use \`fresh edit\` to manually edit your $FRESH_RCFILE.
+EOF
+  assertFileMatches $SANDBOX_PATH/add.err <<EOF
+EOF
+}
+
+it_adds_lines_to_freshrc_without_updating_existing_repo_if_declined() {
+  mkdir -p $FRESH_PATH/source/user/repo/.git
+  touch $FRESH_PATH/source/user/repo/file
+
+  stubGit
+
+  (echo y; echo n) | bin/fresh user/repo file > $SANDBOX_PATH/add.out 2> $SANDBOX_PATH/add.err
+  assertTrue 'successfully adds' $?
+
+  assertFileMatches $FRESH_RCFILE <<EOF
+fresh user/repo file
+EOF
+  assertFileMatches $SANDBOX_PATH/add.out <<EOF
+Add \`fresh user/repo file\` to $FRESH_RCFILE [Y/n]? Adding \`fresh user/repo file\` to $FRESH_RCFILE...
+Update local cache of user/repo [Y/n]? $(echo $'\033[1;33mNote\033[0m:') You can run \`fresh update user/repo\`.
+$(echo $'Your dot files are now \033[1;32mfresh\033[0m.')
+EOF
+  assertFileMatches $SANDBOX_PATH/add.err <<EOF
+EOF
+  assertFalse 'did not run git' '[ -f $SANDBOX_PATH/git.log ]'
+}
+
 source test/test_helper.sh
