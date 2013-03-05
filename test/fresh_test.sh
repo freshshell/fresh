@@ -1273,17 +1273,17 @@ it_confirms_query_invalid() {
 it_adds_lines_to_freshrc_for_local_files() {
   echo 'fresh existing' >> $FRESH_RCFILE
   mkdir -p $FRESH_LOCAL
-  touch $FRESH_LOCAL/{existing,new}
+  touch $FRESH_LOCAL/{existing,new\ file}
 
-  yes | bin/fresh new > $SANDBOX_PATH/add.out 2> $SANDBOX_PATH/add.err
+  yes | bin/fresh 'new file' > $SANDBOX_PATH/add.out 2> $SANDBOX_PATH/add.err
   assertTrue 'successfully adds' $?
 
   assertFileMatches $FRESH_RCFILE <<EOF
 fresh existing
-fresh new
+fresh new\\ file
 EOF
   assertFileMatches $SANDBOX_PATH/add.out <<EOF
-Add \`fresh new\` to $FRESH_RCFILE [Y/n]? Adding \`fresh new\` to $FRESH_RCFILE...
+Add \`fresh new\\ file\` to $FRESH_RCFILE [Y/n]? Adding \`fresh new\\ file\` to $FRESH_RCFILE...
 $(echo $'Your dot files are now \033[1;32mfresh\033[0m.')
 EOF
   assertFileMatches $SANDBOX_PATH/add.err <<EOF

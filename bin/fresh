@@ -559,9 +559,10 @@ EOF
 }
 
 _add_to_freshrc() {
-  if _confirm "Add \`fresh $@\` to $(_freshrc_file)"; then
-    echo "Adding \`fresh $@\` to $(_freshrc_file)..."
-    _escape fresh "$@" >> "$FRESH_RCFILE"
+  LINE="$(_escape fresh "$@")"
+  if _confirm "Add \`$LINE\` to $(_freshrc_file)"; then
+    echo "Adding \`$LINE\` to $(_freshrc_file)..."
+    echo "$LINE" >> "$FRESH_RCFILE"
 
     _parse_fresh_dsl_args "$@"
     local REPO_DIR="$(_repo_name "$REPO_NAME")"
