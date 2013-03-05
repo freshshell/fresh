@@ -558,7 +558,7 @@ Available commands:
 EOF
 }
 
-_add_to_freshrc() {
+fresh_add() {
   LINE="$(_escape fresh "$@")"
   if _confirm "Add \`$LINE\` to $(_freshrc_file)"; then
     echo "Adding \`$LINE\` to $(_freshrc_file)..."
@@ -675,7 +675,7 @@ main() {
       ;;
     *)
       if [[ "$1" == */* ]] || [[ -e "$FRESH_LOCAL/$1" ]]; then
-        _add_to_freshrc "$@"
+        fresh_add "$@"
       else
         _fatal_error "Unknown option: $1"
       fi
