@@ -529,11 +529,7 @@ _dsl_show_fresh() {
     echo
   fi
 
-  echo -n fresh
-  for arg in "$@"; do
-    printf " %q" "$arg"
-  done
-  echo
+  _escape fresh "$@"
 
   _parse_fresh_dsl_args "$@"
   _prepare_file_source
@@ -549,7 +545,7 @@ cat <<EOF
 Keep your dot files fresh.
 
 The following commands will install/update configuration files
-as specified in your ${FRESH_RCFILE/#$HOME/~} file.
+as specified in your $(_freshrc_file) file.
 
 See http://freshshell.com/readme for more documentation.
 
@@ -564,6 +560,54 @@ Available commands:
     show               Show source references for freshrc lines
     help               Show this help
 EOF
+}
+
+fresh_add() {
+  LINE="$(_escape fresh "$@")"
+  if _confirm "Add \`$LINE\` to $(_freshrc_file)"; then
+    echo "Adding \`$LINE\` to $(_freshrc_file)..."
+    echo "$LINE" >> "$FRESH_RCFILE"
+
+    _parse_fresh_dsl_args "$@"
+    local REPO_DIR="$(_repo_name "$REPO_NAME")"
+
+    if [[ -d "$FRESH_PATH/source/$REPO_DIR" ]]; then
+      if _confirm "Update local cache of $REPO_DIR"; then
+        fresh_update "$REPO_DIR"
+      else
+        _note "You can run \`fresh update $REPO_DIR\`."
+      fi
+    fi
+
+    fresh_install
+  else
+    _note "Use \`fresh edit\` to manually edit your $(_freshrc_file)."
+  fi
+}
+
+_escape() {
+  printf "%q" "$1"
+  shift
+  for arg in "$@"; do
+    printf " %q" "$arg"
+  done
+  echo
+}
+
+_confirm() {
+  echo -n "$1 [Y/n]? "
+  read answer
+  case $answer in
+    [Yy]*|"")
+      true
+      ;;
+    [Nn]*)
+      false
+      ;;
+    *)
+      _confirm "$1"
+      ;;
+  esac
 }
 
 _fatal_error() {
@@ -584,6 +628,10 @@ EOF
   exit 1
 }
 
+_note() {
+  echo $'\033[1;33mNote\033[0m:' "$1"
+}
+
 _format_url() {
   echo $'\033[4;34m'"$1"$'\033[0m'
 }
@@ -592,6 +640,10 @@ _prevent_invalid_arguments() {
   if [ -n "$2" ]; then
     _fatal_error "Invalid arguments"
   fi
+}
+
+_freshrc_file() {
+  echo "${FRESH_RCFILE/#$HOME/~}"
 }
 
 main() {
@@ -626,7 +678,11 @@ main() {
       fresh_clean
       ;;
     *)
-      _fatal_error "Unknown option: $1"
+      if [[ "$1" == */* ]] || [[ -e "$FRESH_LOCAL/$1" ]]; then
+        fresh_add "$@"
+      else
+        _fatal_error "Unknown option: $1"
+      fi
       ;;
   esac
 }
