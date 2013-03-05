@@ -571,7 +571,7 @@ fresh_add() {
     _parse_fresh_dsl_args "$@"
     local REPO_DIR="$(_repo_name "$REPO_NAME")"
 
-    if [[ -d "$FRESH_PATH/source/$REPO_DIR" ]]; then
+    if [[ -n "$REPO_NAME" ]] && [[ -d "$FRESH_PATH/source/$REPO_DIR" ]]; then
       if _confirm "Update local cache of $REPO_DIR"; then
         fresh_update "$REPO_DIR"
       else

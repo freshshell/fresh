@@ -1281,6 +1281,9 @@ it_confirms_query_invalid() {
 }
 
 it_adds_lines_to_freshrc_for_local_files() {
+  mkdir -p $FRESH_PATH/source/user/repo/.git
+  touch $FRESH_PATH/source/user/repo/file
+
   echo 'fresh existing' >> $FRESH_RCFILE
   mkdir -p $FRESH_LOCAL
   touch $FRESH_LOCAL/{existing,new\ file}
