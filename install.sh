@@ -46,6 +46,9 @@ cat <<-MESSAGE
 |_| |_|  \___||___/_| |_|
 http://freshshell.com/
 
+MESSAGE
+if ! [ -L ~/.freshrc ]; then
+  cat <<-MESSAGE
 You're all ready to get fresh!
 
 Add \`$(echo $'\033[1;32msource ~/.fresh/build/shell.sh\033[0m')\` to your shell config.
@@ -54,3 +57,4 @@ Open a new shell, run \`fresh edit\` to start editing your .freshrc file
 then run \`fresh\` to update your shell.
 
 MESSAGE
+fi
