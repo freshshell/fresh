@@ -15,7 +15,10 @@ else
 fi
 
 if ! [ -e ~/.freshrc ]; then
-  cat << 'EOF' > ~/.freshrc
+  if [ -r ~/.dotfiles/freshrc ]; then
+    ln -s .dotfiles/freshrc ~/.freshrc
+  else
+    cat << 'EOF' > ~/.freshrc
 # freshshell.com
 #
 # Examples:
@@ -28,6 +31,7 @@ if ! [ -e ~/.freshrc ]; then
 
 fresh freshshell/fresh bin/fresh --bin
 EOF
+  fi
 fi
 
 ~/.fresh/source/freshshell/fresh/bin/fresh
