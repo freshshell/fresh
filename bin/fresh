@@ -832,10 +832,10 @@ main() {
       if [[ "$1" == */* ]] || [[ -e "$FRESH_LOCAL/$1" ]]; then
         fresh_add "$@"
       else
-        if [[ -e "$(which "fresh-$1")" ]]; then
-          BIN_NAME="$1"
+        BIN_NAME="fresh-$1"
+        if [[ -e "$(which "$BIN_NAME")" ]]; then
           shift
-          "fresh-$BIN_NAME" "$@"
+          "$BIN_NAME" "$@"
         else
           _fatal_error "Unknown option: $1"
         fi
