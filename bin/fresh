@@ -833,7 +833,7 @@ main() {
         fresh_add "$@"
       else
         BIN_NAME="fresh-$1"
-        if [[ -e "$(which "$BIN_NAME")" ]]; then
+        if which "$BIN_NAME" > /dev/null; then
           shift
           "$BIN_NAME" "$@"
         else
