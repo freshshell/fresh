@@ -832,7 +832,11 @@ main() {
       if [[ "$1" == */* ]] || [[ -e "$FRESH_LOCAL/$1" ]]; then
         fresh_add "$@"
       else
-        _fatal_error "Unknown option: $1"
+        if [[ -e "$(which "fresh-$1")" ]]; then
+          "fresh-$1"
+        else
+          _fatal_error "Unknown option: $1"
+        fi
       fi
       ;;
   esac
