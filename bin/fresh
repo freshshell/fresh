@@ -833,7 +833,9 @@ main() {
         fresh_add "$@"
       else
         if [[ -e "$(which "fresh-$1")" ]]; then
-          "fresh-$1"
+          BIN_NAME="$1"
+          shift
+          "fresh-$BIN_NAME" "$@"
         else
           _fatal_error "Unknown option: $1"
         fi
