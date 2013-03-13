@@ -14,6 +14,17 @@ else
   git clone https://github.com/freshshell/fresh ~/.fresh/source/freshshell/fresh
 fi
 
+FRESH_LOCAL="$HOME/.dotfiles"
+if [ -n "$FRESH_LOCAL_SOURCE" ] && ! [ -d "$FRESH_LOCAL" ]; then
+  if ! [[ "$FRESH_LOCAL_SOURCE" == */* ]]; then
+    echo 'FRESH_LOCAL_SOURCE must be in user/repo format.' >&2
+    exit 1
+  fi
+
+  git clone "https://github.com/$FRESH_LOCAL_SOURCE.git" "$FRESH_LOCAL"
+  git --git-dir="$FRESH_LOCAL/.git" remote set-url --push origin "git@github.com:$FRESH_LOCAL_SOURCE.git"
+fi
+
 if ! [ -e ~/.freshrc ]; then
   if [ -r ~/.dotfiles/freshrc ]; then
     ln -s .dotfiles/freshrc ~/.freshrc
