@@ -87,6 +87,9 @@ case "\$1" in
   log)
     echo 1234567
     ;;
+  config)
+    echo git@github.com:repo/name.git
+    ;;
 esac
 EOF
   chmod +x $SANDBOX_PATH/bin/git

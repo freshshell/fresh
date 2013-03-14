@@ -205,6 +205,34 @@ remote content
 EOF
 }
 
+it_warns_if_using_a_remote_source_that_is_your_local_dotfiles() {
+  echo fresh repo/name file1 >> $FRESH_RCFILE
+  echo fresh repo/name file2 >> $FRESH_RCFILE
+  mkdir -p $FRESH_LOCAL/.git $FRESH_PATH/source/repo/name/.git
+  touch $FRESH_PATH/source/repo/name/file{1,2}
+  stubGit
+
+  bin/fresh > "$SANDBOX_PATH/out.log" 2> "$SANDBOX_PATH/err.log"
+
+  assertFileMatches $SANDBOX_PATH/out.log <<EOF
+$(echo $'\033[1;33mNote\033[0m:') You seem to be sourcing your local files remotely.
+$FRESH_RCFILE:1: fresh repo/name file1
+
+You can remove "repo/name" when sourcing from your local dotfiles repo ($FRESH_LOCAL).
+Use \`fresh file\` instead of \`fresh repo/name file\`.
+
+To disable this warning, add \`FRESH_NO_LOCAL_CHECK=true\` in your freshrc file.
+
+$(echo $'Your dot files are now \033[1;32mfresh\033[0m.')
+EOF
+  assertFileMatches $SANDBOX_PATH/err.log <<EOF
+EOF
+  assertFileMatches $SANDBOX_PATH/git.log <<EOF
+cd $FRESH_LOCAL
+git config --get remote.origin.url
+EOF
+}
+
 it_builds_with_ref_locks() {
   echo fresh repo/name 'aliases/*' --ref=abc1237 >> $FRESH_RCFILE
   echo fresh repo/name ackrc --file --ref=1234567 >> $FRESH_RCFILE
