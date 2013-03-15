@@ -1390,4 +1390,33 @@ EOF
   assertFalse 'did not run git' '[ -f $SANDBOX_PATH/git.log ]'
 }
 
+it_applies_fresh_options_to_multiple_lines() {
+  echo "fresh-options --file=~/.vimrc --marker" >> $FRESH_RCFILE
+  echo "fresh mappings.vim" >> $FRESH_RCFILE
+  echo "fresh autocmds.vim" >> $FRESH_RCFILE
+  echo "fresh-options" >> $FRESH_RCFILE
+  echo "fresh zshrc --file" >> $FRESH_RCFILE
+
+  mkdir -p $FRESH_LOCAL
+  echo "mappings" >> $FRESH_LOCAL/mappings.vim
+  echo "autocmds" >> $FRESH_LOCAL/autocmds.vim
+  echo "zsh config" >> $FRESH_LOCAL/zshrc
+
+  runFresh
+
+  assertFileMatches $FRESH_PATH/build/vimrc <<EOF
+# fresh: mappings.vim
+
+mappings
+
+# fresh: autocmds.vim
+
+autocmds
+EOF
+
+  assertFileMatches $FRESH_PATH/build/zshrc <<EOF
+zsh config
+EOF
+}
+
 source test/test_helper.sh

@@ -314,6 +314,7 @@ _fresh_symlink() {
 _run_dsl() {
   # define DSL functions
   eval "fresh() { _dsl_$1_fresh \"\$@\"; }"
+  eval "fresh-options() { _dsl_fresh_options \"\$@\"; }"
 
   # load the freshrc file
   if [ -e "$FRESH_RCFILE" ]; then
@@ -324,20 +325,44 @@ _run_dsl() {
 
   # remove DSL functions
   unset -f fresh
+  unset -f fresh-options
 }
+
+_dsl_fresh_options() {
+  _set_dsl_caller
+
+  DEFAULT_MODE=
+  DEFAULT_MODE_ARG=
+  DEFAULT_REF=
+  DEFAULT_MARKER=
+  DEFAULT_FILTER=
+
+  if [[ $# -gt 0 ]]; then
+    # __FRESH_OPTIONS__ placeholder as _parse_fresh_dsl_args expects a filename
+    _parse_fresh_dsl_args __FRESH_OPTIONS__ "$@"
+
+    DEFAULT_MODE="$MODE"
+    DEFAULT_MODE_ARG="$MODE_ARG"
+    DEFAULT_REF="$REF"
+    DEFAULT_MARKER="$MARKER"
+    DEFAULT_FILTER="$FILTER"
+  fi
+}
+
 
 _set_dsl_caller() {
   read RC_LINE _ RC_FILE <<< "$(caller 2)"
 }
 
 _parse_fresh_dsl_args() {
-  MODE=
-  MODE_ARG=
-  REPO_NAME=
-  FILE_NAME=
-  REF=
-  MARKER=
-  FILTER=
+  MODE="$DEFAULT_MODE"
+  MODE_ARG="$DEFAULT_MODE_ARG"
+  REPO_NAME=""
+  FILE_NAME=""
+  REF="$DEFAULT_REF"
+  MARKER="$DEFAULT_MARKER"
+  FILTER="$DEFAULT_FILTER"
+
   while [ $# -gt 0 ]
   do
     case "$1" in
