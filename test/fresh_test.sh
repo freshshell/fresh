@@ -1391,7 +1391,7 @@ EOF
 }
 
 it_applies_fresh_options_to_multiple_lines() {
-  echo "fresh-options --file=~/.vimrc --marker" >> $FRESH_RCFILE
+  echo 'fresh-options --file=~/.vimrc --marker=\"' >> $FRESH_RCFILE
   echo "fresh mappings.vim --filter='tr a x'" >> $FRESH_RCFILE
   echo "fresh autocmds.vim" >> $FRESH_RCFILE
   echo "fresh-options" >> $FRESH_RCFILE
@@ -1405,11 +1405,11 @@ it_applies_fresh_options_to_multiple_lines() {
   runFresh
 
   assertFileMatches $FRESH_PATH/build/vimrc <<EOF
-# fresh: mappings.vim # tr a x
+" fresh: mappings.vim # tr a x
 
 mxppings
 
-# fresh: autocmds.vim
+" fresh: autocmds.vim
 
 autocmds
 EOF
