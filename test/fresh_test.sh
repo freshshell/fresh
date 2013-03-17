@@ -276,7 +276,7 @@ it_builds_generic_files() {
   echo 'fresh lib/pryrc.rb --file=~/.pryrc --marker' >> $FRESH_RCFILE
   echo 'fresh config/git/colors --file=~/.gitconfig' >> $FRESH_RCFILE
   echo 'fresh config/git/rebase --file=~/.gitconfig' >> $FRESH_RCFILE
-  echo "fresh config/*.vim --file=~/.vimrc --marker='\"'" >> $FRESH_RCFILE
+  echo 'fresh config/\*.vim --file=~/.vimrc --marker=\"' >> $FRESH_RCFILE
   mkdir -p $FRESH_LOCAL/{lib,config/git}
   echo unbind C-b >> $FRESH_LOCAL/lib/tmux.conf
   echo set -g prefix C-a >> $FRESH_LOCAL/lib/tmux.conf
