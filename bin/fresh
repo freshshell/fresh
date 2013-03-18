@@ -153,12 +153,18 @@ _file_list() {
 _source_file_contents() {
   if [[ -n "$REF" ]]; then
     cd "$SOURCE_DIR"
-    git show "$REF:$SOURCE_FILE"
+    if [[ -n "$FILTER" ]]; then
+      git show "$REF:$SOURCE_FILE" | eval "$FILTER"
+    else
+      git show "$REF:$SOURCE_FILE"
+    fi
     cd "$OLDPWD"
-  elif [[ -n "$FILTER" ]]; then
-    eval "cat \"$SOURCE_FILE\" | $FILTER"
   else
-    cat "$SOURCE_FILE"
+    if [[ -n "$FILTER" ]]; then
+      cat "$SOURCE_FILE" | eval "$FILTER"
+    else
+      cat "$SOURCE_FILE"
+    fi
   fi
 }
 
