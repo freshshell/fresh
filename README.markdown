@@ -185,6 +185,24 @@ fresh neersighted/dotfiles config/muttrc.erb.asc --file=~/.muttrc --filter="gpg 
 
 [filters]: https://github.com/freshshell/fresh/wiki/Filters
 
+### Option Blocks
+
+If you have a section of your `~/.freshrc` file where multiple lines need the same options
+you can use `fresh-options` to reduce duplication.
+
+``` sh
+# ~/.freshrc
+fresh-options --file=~/.vimrc --marker=\"
+  fresh twe4ked/dotfiles vim/vundle_before.vim
+  fresh vim/vundle.vim
+  fresh twe4ked/dotfiles vim/vundle_after.vim
+  fresh vim/mappings.vim
+fresh-options
+```
+
+`fresh-options` overrides any previous `fresh-options` calls.
+Passing no arguments resets back to the default.
+
 ## Command line options
 
 ### Install
