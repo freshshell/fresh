@@ -91,7 +91,11 @@ _repo_name() {
   if echo "$REPO_NAME" | grep -q :; then
     REPO_NAME="$(echo "$REPO_NAME" | sed -e 's#^.*@##' -e 's#^.*://##' -e 's#:#/#' -e 's/\.git$//')"
   fi
-  REPO_NAME="$(echo "$REPO_NAME" | cut -d/ -f1)/$(echo "$REPO_NAME" | cut -d/ -f2- | tr / -)"
+  if [[ "$REPO_NAME" == github.com/* ]]; then
+    REPO_NAME="$(echo "$REPO_NAME" | sed 's#^github\.com/##')"
+  else
+    REPO_NAME="$(echo "$REPO_NAME" | cut -d/ -f1)/$(echo "$REPO_NAME" | cut -d/ -f2- | tr / -)"
+  fi
   echo "$REPO_NAME"
 }
 

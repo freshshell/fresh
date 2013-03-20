@@ -139,6 +139,27 @@ git clone git@test.example.com:baz.git $SANDBOX_PATH/fresh/source/test.example.c
 EOF
 }
 
+it_clones_github_repos_with_full_urls() {
+  echo fresh git@github.com:ssh/test.git file >> $FRESH_RCFILE
+  echo fresh git://github.com/git/test.git file >> $FRESH_RCFILE
+  echo fresh http://github.com/http/test file >> $FRESH_RCFILE
+  echo fresh https://github.com/https/test file >> $FRESH_RCFILE
+  stubGit
+
+  runFresh
+
+  assertFileMatches $SANDBOX_PATH/git.log <<EOF
+cd $(pwd)
+git clone git@github.com:ssh/test.git $SANDBOX_PATH/fresh/source/ssh/test
+cd $(pwd)
+git clone git://github.com/git/test.git $SANDBOX_PATH/fresh/source/git/test
+cd $(pwd)
+git clone http://github.com/http/test $SANDBOX_PATH/fresh/source/http/test
+cd $(pwd)
+git clone https://github.com/https/test $SANDBOX_PATH/fresh/source/https/test
+EOF
+}
+
 it_does_not_clone_existing_repos() {
   echo fresh repo/name file >> $FRESH_RCFILE
   stubGit
