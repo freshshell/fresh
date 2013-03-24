@@ -83,6 +83,8 @@ case "\$1" in
     echo recursive-test/foo
     echo recursive-test/bar
     echo recursive-test/abc/def
+    echo hidden-test/foo
+    echo hidden-test/.bar
     ;;
   log)
     echo 1234567
