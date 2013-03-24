@@ -37,11 +37,23 @@ To disable this error, add \`FRESH_NO_BIN_CHECK=true\` in your freshrc file."
 
   # clean up any leftovers from previous runs
   rm -rf "$FRESH_PATH/build.old"
+  rm -f "$FRESH_PATH/.tmp.old-bin"
 
   # make room for the new build
   if [[ -e "$FRESH_PATH/build" ]]; then
+    # move the running fresh binary to a safe place
+    # (Windows doesn't let us rename dirs with open files)
+    if [[ -e "$FRESH_PATH/build/bin/fresh" ]]; then
+      mv -f "$FRESH_PATH/build/bin/fresh" "$FRESH_PATH/.tmp.old-bin"
+    fi
+
     # move the old build dir out of the way
     mv "$FRESH_PATH/build" "$FRESH_PATH/build.old"
+
+    # keep the old build dir in a usable state until the new one is in place
+    if [[ -e "$FRESH_PATH/build.old/bin/fresh" ]]; then
+      mv -f "$FRESH_PATH/.tmp.old-bin" "$FRESH_PATH/build.old/bin/fresh"
+    fi
   fi
 
   # move the new build into place
