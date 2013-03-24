@@ -38,7 +38,7 @@ To disable this error, add \`FRESH_NO_BIN_CHECK=true\` in your freshrc file."
   # move output into place
   rm -rf "$FRESH_PATH/build.old"
   if [[ -e "$FRESH_PATH/build" ]]; then
-    mv  "$FRESH_PATH/build" "$FRESH_PATH/build.old"
+    mv "$FRESH_PATH/build" "$FRESH_PATH/build.old"
   fi
   mv "$FRESH_PATH/build.new" "$FRESH_PATH/build"
 
