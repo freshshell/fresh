@@ -46,15 +46,15 @@ An example `~/.freshrc` file:
 # handles updating fresh
 fresh freshshell/fresh bin/fresh --bin
 # builds jasoncodes' aliases into ~/.fresh/build.sh
-fresh jasoncodes/dotfiles 'aliases/*'
-# builds the aliases/git file into ~/.fresh/build/shell.sh
-fresh twe4ked/dotfiles aliases/git.sh
+fresh jasoncodes/dotfiles shell/aliases/\*
+# builds the shell/aliases/git.sh file into ~/.fresh/build/shell.sh
+fresh twe4ked/dotfiles shell/aliases/git.sh
 # links the config/ackrc file to ~/.ackrc
 fresh twe4ked/dotfiles config/ackrc --file
 # builds config/notmuch-config.erb with erb and links it to ~/.notmuch-config
 fresh neersighted/dotfiles config/notmuch-config.erb --file=~/.notmuch-config --filter=erb
 # links the gemdiff file to ~/bin/gem-diff
-fresh jasoncodes/scripts gemdiff --bin=~/bin/gem-diff
+fresh jasoncodes/dotfiles bin/gemdiff --bin=~/bin/gem-diff
 # builds the aliases/github.sh file locked to the specified git ref
 fresh twe4ked/dotfiles aliases/github.sh --ref=bea8134
 ```
@@ -67,10 +67,10 @@ Running `fresh` will then build your shell configuration and create any relevant
 
 If no remote source is specified (`github_user/repo_name`), fresh will look for local files relative to `~/.dotfiles/`.
 
-For example the following fresh line will look for `~/.dotfiles/aliases/git.sh`.
+For example the following fresh line will look for `~/.dotfiles/shell/aliases/git.sh`.
 
 ``` sh
-fresh aliases/git.sh
+fresh shell/aliases/git.sh
 ```
 
 #### GitHub repositories
@@ -94,11 +94,11 @@ fresh git://example.com/path/to/repo.git example.sh
 With no options, fresh will join specified shell files together.
 
 ``` sh
-fresh twe4ked/dotfiles aliases/git.sh
-fresh jasoncodes/dotfiles 'aliases/*'
+fresh twe4ked/dotfiles shell/aliases/git.sh
+fresh jasoncodes/dotfiles shell/aliases/\*
 ```
 
-Joins the `aliases/git` file from [twe4ked/dotfiles] with the `aliases/*` files
+Joins the `shell/aliases/git.sh` file from [twe4ked/dotfiles] with the `shell/aliases/*` files
 from [jasoncodes/dotfiles] into `~/.fresh/build/shell.sh`.
 
 ### Config files
@@ -114,7 +114,7 @@ and the `pry.rb` file from example/dotfiles to `~/.pryrc`.
 #### A single config file built from multiple sources
 
 ``` sh
-fresh jasoncodes/dotfiles tmux.conf --file
+fresh jasoncodes/dotfiles config/tmux.conf --file
 fresh twe4ked/dotfiles config/tmux.conf --file
 ```
 
@@ -159,12 +159,12 @@ source ~/.fresh/build/vendor/zsh-syntax-highlighting.zsh
 ### Bin files
 
 ``` sh
-fresh jasoncodes/scripts sedmv --bin
-fresh jasoncodes/scripts gemdiff --bin=~/bin/gem-diff
+fresh jasoncodes/dotfiles bin/sedmv --bin
+fresh jasoncodes/dotfiles bin/gemdiff --bin=~/bin/gem-diff
 ```
 
-Links the `sedmv` file from [jasoncodes/scripts] to `~/bin/sedmv`
-and the `gemdiff` file from [jasoncodes/scripts] to `~/bin/gem-diff`.
+Links the `sedmv` file from [jasoncodes/dotfiles] to `~/bin/sedmv`
+and the `gemdiff` file from [jasoncodes/dotfiles] to `~/bin/gem-diff`.
 
 ### Locking to specific Git references
 
@@ -258,7 +258,6 @@ fresh is maintained by [jasoncodes] and [twe4ked].
 MIT
 
 [jasoncodes/dotfiles]: https://github.com/jasoncodes/dotfiles
-[jasoncodes/scripts]: https://github.com/jasoncodes/scripts
 [twe4ked/dotfiles]: https://github.com/twe4ked/dotfiles
 [jasoncodes]: https://github.com/jasoncodes
 [twe4ked]: https://github.com/twe4ked
