@@ -961,13 +961,14 @@ it_does_not_run_build_if_update_fails() {
 }
 
 it_builds_after_update_with_latest_binary() {
-  echo fresh bin/fresh --bin >> $FRESH_RCFILE
+  echo 'fresh bin/\* --bin' >> $FRESH_RCFILE
   mkdir -p $FRESH_LOCAL/bin $FRESH_PATH/source
 
   mkdir -p $FRESH_PATH/source/freshshell/fresh/.git
   stubGit
 
   echo "echo new >> \"$SANDBOX_PATH/fresh.log\"" >> $FRESH_LOCAL/bin/fresh
+  echo "echo bad >> \"$SANDBOX_PATH/fresh.log\"" >> $FRESH_LOCAL/bin/other
 
   assertTrue 'successfully updates' "bin/fresh update"
 

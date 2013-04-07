@@ -480,10 +480,29 @@ _parse_fresh_dsl_args() {
   fi
 }
 
+_dsl_fresh_bin_fresh() {
+  _set_dsl_caller
+  _parse_fresh_dsl_args "$@"
+  if [[ "$MODE" == bin ]]; then
+    _prepare_file_source
+    _file_list | while read SOURCE_FILE; do
+      if [[ "$(basename "$SOURCE_FILE")" == fresh ]]; then
+        _source_file_contents >> "$BIN_FILE_NAME"
+      fi
+    done
+  fi
+}
+
 fresh_install_with_latest_binary() {
-  local FRESH_BIN="$FRESH_PATH/build/bin/fresh"
-  if [[ -x "$FRESH_BIN" ]]; then
-    "$FRESH_BIN" install
+  BIN_FILE_NAME="$(mktemp "${TMPDIR:-/tmp}/fresh.XXXXXXXX")"
+  trap '{ rm -f "$BIN_FILE_NAME"; }' EXIT
+  _run_dsl fresh_bin
+
+  if [[ -s "$BIN_FILE_NAME" ]]; then
+    chmod +x "$BIN_FILE_NAME"
+    "$BIN_FILE_NAME" install
+  else
+    fresh_install
   fi
 }
 
@@ -749,7 +768,6 @@ main() {
     update|up)
       shift
       fresh_update "$@"
-      fresh_install --quiet
       fresh_install_with_latest_binary
       ;;
     edit)
