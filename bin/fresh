@@ -515,6 +515,29 @@ usage: fresh update <filter>
     The filter can be either a GitHub username or username/repo."
   fi
 
+  mkdir -p "$FRESH_PATH/logs"
+  local LOG_FILE="$FRESH_PATH/logs/update-$(date +%Y-%m-%d-%H%M%S).log"
+
+  if [[ -z "$1" ]] || [[ "$1" == "--local" ]]; then
+    (
+      set -e
+      [[ -e "$FRESH_LOCAL/.git" ]] || exit 0
+      if [[ -z "$(cd $FRESH_LOCAL && git status --porcelain)" ]]; then
+        _update_repo "$FRESH_LOCAL" "local files"
+      else
+        _note "Not updating $FRESH_LOCAL because it has uncommitted changes."
+        if [[ "$1" == "--local" ]]; then
+          exit 1
+        fi
+      fi
+    )
+    [[ $? == 0 ]] || exit 1
+
+    if [[ "$1" == "--local" ]]; then
+      return
+    fi
+  fi
+
   local FILTER="$1"
   if [[ -z "$FILTER" ]]; then
     FILTER="*"
@@ -522,31 +545,36 @@ usage: fresh update <filter>
     FILTER="$FILTER/*"
   fi
 
-  local GIT_OUTPUT_FILE="$(mktemp "${TMPDIR:-/tmp}/fresh.XXXXXX")"
-  mkdir -p "$FRESH_PATH/logs"
-  local LOG_FILE="$FRESH_PATH/logs/update-$(date +%Y-%m-%d-%H%M%S).log"
   local MATCHED=0
   while read DIR; do
     local DIR="$(dirname "$DIR")"
     local REPO_NAME="$(_repo_name_from_source_path "$DIR")"
     [[ "$REPO_NAME" == $FILTER ]] || continue
     MATCHED=1
-    echo "* Updating $REPO_NAME" | tee -a "$LOG_FILE"
-    cd "$DIR"
-    git pull --rebase 2>&1 | tee "$GIT_OUTPUT_FILE" | sed 's/^/| /' | tee -a "$LOG_FILE"
-    local GIT_RESULT="${PIPESTATUS[0]}"
-    if egrep -q '^From .*(://github.com/|git@github.com:)' "$GIT_OUTPUT_FILE"; then
-      perl -n -e'/^ {2,}([0-9a-f]{7,})\.\.([0-9a-f]{7,}) / && print "| <'"$(_format_url "https://github.com/$REPO_NAME/compare/\$1...\$2")"'>\n"' "$GIT_OUTPUT_FILE" | tee -a "$LOG_FILE"
-    fi
-    rm "$GIT_OUTPUT_FILE"
-    if [ "$GIT_RESULT" -ne 0 ]; then
-      _fatal_error "Update failed."
-    fi
-    cd "$OLDPWD"
+    _update_repo "$DIR" "$REPO_NAME"
   done < <(find $FRESH_PATH/source -type d -name '.git' | sort)
   if [[ "$MATCHED" == 0 ]]; then
     _fatal_error "No matching sources found."
   fi
+}
+
+_update_repo() {
+  local DIR="$1"
+  local DISPLAY_NAME="$2"
+
+  echo "* Updating $DISPLAY_NAME" | tee -a "$LOG_FILE"
+  cd "$DIR"
+  local GIT_OUTPUT_FILE="$(mktemp "${TMPDIR:-/tmp}/fresh.XXXXXX")"
+  git pull --rebase 2>&1 | tee "$GIT_OUTPUT_FILE" | sed 's/^/| /' | tee -a "$LOG_FILE"
+  local GIT_RESULT="${PIPESTATUS[0]}"
+  if egrep -q '^From .*(://github.com/|git@github.com:)' "$GIT_OUTPUT_FILE"; then
+    perl -n -e'/^ {2,}([0-9a-f]{7,})\.\.([0-9a-f]{7,}) / && print "| <'"$(_format_url "https://github.com/$REPO_NAME/compare/\$1...\$2")"'>\n"' "$GIT_OUTPUT_FILE" | tee -a "$LOG_FILE"
+  fi
+  rm "$GIT_OUTPUT_FILE"
+  if [ "$GIT_RESULT" -ne 0 ]; then
+    _fatal_error "Update failed."
+  fi
+  cd "$OLDPWD"
 }
 
 _repo_name_from_source_path() {
