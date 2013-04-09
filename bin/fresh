@@ -568,7 +568,11 @@ _update_repo() {
   git pull --rebase 2>&1 | tee "$GIT_OUTPUT_FILE" | sed 's/^/| /' | tee -a "$LOG_FILE"
   local GIT_RESULT="${PIPESTATUS[0]}"
   if egrep -q '^From .*(://github.com/|git@github.com:)' "$GIT_OUTPUT_FILE"; then
-    perl -n -e'/^ {2,}([0-9a-f]{7,})\.\.([0-9a-f]{7,}) / && print "| <'"$(_format_url "https://github.com/$REPO_NAME/compare/\$1...\$2")"'>\n"' "$GIT_OUTPUT_FILE" | tee -a "$LOG_FILE"
+    local REPO_URL="$(egrep '^From .*(://github.com/|git@github.com:)' "$GIT_OUTPUT_FILE" | cut -d ' ' -f 2)"
+    local REPO_NAME="$(_repo_name "$REPO_URL")"
+    if [ -n "$REPO_NAME" ]; then
+      perl -n -e'/^ {2,}([0-9a-f]{7,})\.\.([0-9a-f]{7,}) / && print "| <'"$(_format_url "https://github.com/$REPO_NAME/compare/\$1...\$2")"'>\n"' "$GIT_OUTPUT_FILE" | tee -a "$LOG_FILE"
+    fi
   fi
   rm "$GIT_OUTPUT_FILE"
   if [ "$GIT_RESULT" -ne 0 ]; then
