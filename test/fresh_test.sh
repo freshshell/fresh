@@ -948,7 +948,7 @@ usage: fresh update <filter>
 EOF
 }
 
-it_shows_progress_when_updating() {
+it_shows_progress_when_updating_remote() {
   mkdir -p $FRESH_PATH/source/repo/name/.git
   mkdir -p $FRESH_PATH/source/other_repo/other_name/.git
   stubGit
@@ -956,6 +956,17 @@ it_shows_progress_when_updating() {
   bin/fresh update > "$SANDBOX_PATH/fresh_out.log" 2> "$SANDBOX_PATH/fresh_err.log"
   assertTrue 'successfully updates' $?
   assertTrue 'outputs "repo/name"' 'grep -qxF "* Updating repo/name" $SANDBOX_PATH/fresh_out.log'
+  assertTrue 'shows git output with prefix' 'grep -qxF "| Current branch master is up to date." $SANDBOX_PATH/fresh_out.log'
+  assertFalse 'does not output to stderr' '[ -s $SANDBOX_PATH/err.log ]'
+}
+
+it_shows_progress_when_updating_local() {
+  mkdir -p $FRESH_LOCAL/.git
+  stubGit
+
+  bin/fresh update --local > "$SANDBOX_PATH/fresh_out.log" 2> "$SANDBOX_PATH/fresh_err.log"
+  assertTrue 'successfully updates' $?
+  assertTrue 'outputs local message' 'grep -qxF "* Updating local files" $SANDBOX_PATH/fresh_out.log'
   assertTrue 'shows git output with prefix' 'grep -qxF "| Current branch master is up to date." $SANDBOX_PATH/fresh_out.log'
   assertFalse 'does not output to stderr' '[ -s $SANDBOX_PATH/err.log ]'
 }
@@ -993,6 +1004,7 @@ EOF
 }
 
 it_logs_update_output() {
+  mkdir -p $FRESH_LOCAL/.git
   mkdir -p $FRESH_PATH/source/repo/name/.git
   mkdir -p $FRESH_PATH/source/other_repo/other_name/.git
 
@@ -1002,6 +1014,8 @@ it_logs_update_output() {
   assertTrue 'log file name' 'find "$FRESH_PATH/logs" -type f | egrep -q "/logs/update-[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]{6}\\.log$"'
 
   assertFileMatches $FRESH_PATH/logs/* <<EOF
+* Updating local files
+| Current branch master is up to date.
 * Updating other_repo/other_name
 | Current branch master is up to date.
 * Updating repo/name

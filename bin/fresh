@@ -522,16 +522,14 @@ usage: fresh update <filter>
     (
       set -e
       [[ -e "$FRESH_LOCAL/.git" ]] || exit 0
-      cd "$FRESH_LOCAL"
-      if [[ -z "$(git status --porcelain)" ]]; then
-        git pull --rebase
+      if [[ -z "$(cd $FRESH_LOCAL && git status --porcelain)" ]]; then
+        _update_repo "$FRESH_LOCAL" "local files"
       else
         _note "Not updating $FRESH_LOCAL because it has uncommitted changes."
         if [[ "$1" == "--local" ]]; then
           exit 1
         fi
       fi
-      cd "$OLDPWD"
     )
     [[ $? == 0 ]] || exit 1
 
