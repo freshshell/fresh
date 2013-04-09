@@ -221,6 +221,11 @@ fresh update jasoncodes       # update all jasoncodes' repos
 fresh update twe4ked/dotfiles # update twe4ked's dotfiles
 ```
 
+#### Local dotfiles
+
+`fresh update` without any arguments will also fetch any changes made to your local dotfiles stored in `~/.dotfiles`.
+You can update just your local dofiles by specifying the `--local` option.
+
 ### Clean
 
 When you remove a source from your `~/.freshrc` or remove a `--file`/`--bin`

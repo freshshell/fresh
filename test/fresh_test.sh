@@ -861,6 +861,69 @@ git pull --rebase
 EOF
 }
 
+it_updates_local_repo_with_no_args() {
+  mkdir -p $FRESH_LOCAL/.git
+  mkdir -p $FRESH_PATH/source/freshshell/fresh/.git
+  stubGit
+
+  assertTrue 'successfully updates' "bin/fresh update"
+
+  assertFileMatches $SANDBOX_PATH/git.log <<EOF
+cd $FRESH_LOCAL
+git status --porcelain
+cd $FRESH_LOCAL
+git pull --rebase
+cd $FRESH_PATH/source/freshshell/fresh
+git pull --rebase
+EOF
+}
+
+it_only_updates_local_repo_with_local_arg() {
+  mkdir -p $FRESH_LOCAL/.git
+  mkdir -p $FRESH_PATH/source/freshshell/fresh/.git
+  stubGit
+
+  assertTrue 'successfully updates' "bin/fresh update --local"
+
+  assertFileMatches $SANDBOX_PATH/git.log <<EOF
+cd $FRESH_LOCAL
+git status --porcelain
+cd $FRESH_LOCAL
+git pull --rebase
+EOF
+}
+
+it_does_not_update_local_with_other_args() {
+  mkdir -p $FRESH_LOCAL/.git
+  mkdir -p $FRESH_PATH/source/freshshell/fresh/.git
+  stubGit
+
+  assertTrue 'successfully updates' "bin/fresh update freshshell"
+
+  assertFileMatches $SANDBOX_PATH/git.log <<EOF
+cd $FRESH_PATH/source/freshshell/fresh
+git pull --rebase
+EOF
+}
+
+it_does_not_update_local_dirty_local() {
+  mkdir -p $FRESH_LOCAL/.git
+  touch $FRESH_LOCAL/.git/dirty
+  stubGit
+
+  bin/fresh update --local > "$SANDBOX_PATH/out.log" 2> "$SANDBOX_PATH/err.log"
+  assertFalse 'fails to update' $?
+
+  assertFileMatches $SANDBOX_PATH/git.log <<EOF
+cd $FRESH_LOCAL
+git status --porcelain
+EOF
+  assertFileMatches $SANDBOX_PATH/out.log <<EOF
+$(echo $'\033[1;33mNote\033[0m:') Not updating $FRESH_LOCAL because it has uncommitted changes.
+EOF
+}
+
+
 it_errors_if_no_matching_sources_to_update() {
   mkdir -p $FRESH_PATH/source
 

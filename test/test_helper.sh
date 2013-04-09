@@ -92,6 +92,11 @@ case "\$1" in
   config)
     echo git@github.com:repo/name.git
     ;;
+  status)
+    if [ -e .git/dirty ]; then
+      echo ' M some-file'
+    fi
+    ;;
 esac
 EOF
   chmod +x $SANDBOX_PATH/bin/git

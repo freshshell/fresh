@@ -515,6 +515,28 @@ usage: fresh update <filter>
     The filter can be either a GitHub username or username/repo."
   fi
 
+  if [[ -z "$1" ]] || [[ "$1" == "--local" ]]; then
+    (
+      set -e
+      [[ -e "$FRESH_LOCAL/.git" ]] || exit 0
+      cd "$FRESH_LOCAL"
+      if [[ -z "$(git status --porcelain)" ]]; then
+        git pull --rebase
+      else
+        _note "Not updating $FRESH_LOCAL because it has uncommitted changes."
+        if [[ "$1" == "--local" ]]; then
+          exit 1
+        fi
+      fi
+      cd "$OLDPWD"
+    )
+    [[ $? == 0 ]] || exit 1
+
+    if [[ "$1" == "--local" ]]; then
+      return
+    fi
+  fi
+
   local FILTER="$1"
   if [[ -z "$FILTER" ]]; then
     FILTER="*"
