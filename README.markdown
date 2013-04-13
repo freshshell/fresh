@@ -45,16 +45,22 @@ An example `~/.freshrc` file:
 ``` sh
 # handles updating fresh
 fresh freshshell/fresh bin/fresh --bin
+
 # builds jasoncodes' aliases into ~/.fresh/build.sh
 fresh jasoncodes/dotfiles shell/aliases/\*
+
 # builds the shell/aliases/git.sh file into ~/.fresh/build/shell.sh
 fresh twe4ked/dotfiles shell/aliases/git.sh
+
 # links the config/ackrc file to ~/.ackrc
 fresh twe4ked/dotfiles config/ackrc --file
+
 # builds config/notmuch-config.erb with erb and links it to ~/.notmuch-config
 fresh neersighted/dotfiles config/notmuch-config.erb --file=~/.notmuch-config --filter=erb
+
 # links the gemdiff file to ~/bin/gem-diff
 fresh jasoncodes/dotfiles bin/gemdiff --bin=~/bin/gem-diff
+
 # builds the aliases/github.sh file locked to the specified git ref
 fresh twe4ked/dotfiles aliases/github.sh --ref=bea8134
 ```
