@@ -766,6 +766,8 @@ EOF
 }
 
 it_shows_source_of_errors() {
+  stubGit
+
   mkdir -p $FRESH_LOCAL
   echo 'fresh bad-file' > $FRESH_RCFILE
 
@@ -779,6 +781,22 @@ $FRESH_RCFILE:1: fresh bad-file
 
 You may need to run \`fresh update\` if you're adding a new line,
 or the file you're referencing may have moved or been deleted.
+EOF
+
+  mkdir -p $FRESH_LOCAL
+  echo 'fresh repo/name bad-file --ref=abc123' > $FRESH_RCFILE
+
+  bin/fresh > "$SANDBOX_PATH/fresh_out.log" 2> "$SANDBOX_PATH/fresh_err.log"
+  assertFalse 'returns non-zero' $?
+  assertFalse 'does not output to stdout' '[ -s $SANDBOX_PATH/fresh_out.log ]'
+
+  assertFileMatches $SANDBOX_PATH/fresh_err.log <<EOF
+$ERROR_PREFIX Could not find "bad-file" source file.
+$FRESH_RCFILE:1: fresh repo/name bad-file --ref=abc123
+
+You may need to run \`fresh update\` if you're adding a new line,
+or the file you're referencing may have moved or been deleted.
+Have a look at the repo: <$(_format_url https://github.com/repo/name)>
 EOF
 
   mkdir -p $FRESH_LOCAL

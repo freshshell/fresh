@@ -184,7 +184,9 @@ _file_list() {
       fi
     done < <(git ls-tree -r --name-only "$REF")
     cd "$OLDPWD"
-    [[ "$MATCHED" == 1 ]]
+    if [[ "$MATCHED" == 0 ]]; then
+      _fatal_error "Could not find \"$FILE_NAME\" source file."
+    fi
   else
     local path_glob="$SOURCE_DIR/$FILE_NAME"
     if basename "$FILE_NAME" | grep -q '^\.'; then
