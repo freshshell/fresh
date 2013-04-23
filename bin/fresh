@@ -588,7 +588,7 @@ _repo_name_from_source_path() {
 }
 
 fresh_edit() {
-  "${EDITOR:-vi}" "$FRESH_RCFILE"
+  ${EDITOR:-vi} "$FRESH_RCFILE"
 }
 
 fresh_search() {
