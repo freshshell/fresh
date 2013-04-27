@@ -212,7 +212,7 @@ it_warns_if_using_a_remote_source_that_is_your_local_dotfiles() {
   touch $FRESH_PATH/source/repo/name/file{1,2}
   stubGit
 
-  bin/fresh > "$SANDBOX_PATH/out.log" 2> "$SANDBOX_PATH/err.log"
+  runFresh
 
   assertFileMatches $SANDBOX_PATH/out.log <<EOF
 $(echo $'\033[1;33mNote\033[0m:') You seem to be sourcing your local files remotely.
@@ -687,7 +687,7 @@ it_errors_if_existing_symlink_for_file_does_not_point_to_a_fresh_path() {
   touch $FRESH_LOCAL/pryrc
   ln -s /dev/null ~/.pryrc
 
-  bin/fresh > "$SANDBOX_PATH/out.log" 2> "$SANDBOX_PATH/err.log"
+  runFresh fails
 
   assertFileMatches $SANDBOX_PATH/err.log <<EOF
 $ERROR_PREFIX $HOME/.pryrc already exists (pointing to /dev/null)
@@ -709,7 +709,7 @@ it_errors_if_existing_symlink_for_bin_does_not_point_to_a_fresh_path() {
   touch $FRESH_LOCAL/bin/sedmv
   ln -s /dev/null ~/bin/sedmv
 
-  bin/fresh > "$SANDBOX_PATH/out.log" 2> "$SANDBOX_PATH/err.log"
+  runFresh fails
 
   assertFileMatches $SANDBOX_PATH/err.log <<EOF
 $ERROR_PREFIX $HOME/bin/sedmv already exists (pointing to /dev/null)
@@ -771,11 +771,10 @@ it_shows_source_of_errors() {
   mkdir -p $FRESH_LOCAL
   echo 'fresh bad-file' > $FRESH_RCFILE
 
-  bin/fresh > "$SANDBOX_PATH/fresh_out.log" 2> "$SANDBOX_PATH/fresh_err.log"
-  assertFalse 'returns non-zero' $?
-  assertFalse 'does not output to stdout' '[ -s $SANDBOX_PATH/fresh_out.log ]'
+  runFresh fails
+  assertFalse 'does not output to stdout' '[ -s $SANDBOX_PATH/out.log ]'
 
-  assertFileMatches $SANDBOX_PATH/fresh_err.log <<EOF
+  assertFileMatches $SANDBOX_PATH/err.log <<EOF
 $ERROR_PREFIX Could not find "bad-file" source file.
 $FRESH_RCFILE:1: fresh bad-file
 
@@ -786,11 +785,10 @@ EOF
   mkdir -p $FRESH_LOCAL
   echo 'fresh repo/name bad-file --ref=abc123' > $FRESH_RCFILE
 
-  bin/fresh > "$SANDBOX_PATH/fresh_out.log" 2> "$SANDBOX_PATH/fresh_err.log"
-  assertFalse 'returns non-zero' $?
-  assertFalse 'does not output to stdout' '[ -s $SANDBOX_PATH/fresh_out.log ]'
+  runFresh fails
+  assertFalse 'does not output to stdout' '[ -s $SANDBOX_PATH/out.log ]'
 
-  assertFileMatches $SANDBOX_PATH/fresh_err.log <<EOF
+  assertFileMatches $SANDBOX_PATH/err.log <<EOF
 $ERROR_PREFIX Could not find "bad-file" source file.
 $FRESH_RCFILE:1: fresh repo/name bad-file --ref=abc123
 
@@ -802,11 +800,10 @@ EOF
   mkdir -p $FRESH_LOCAL
   echo 'fresh repo/name some-file --blah' > $FRESH_RCFILE
 
-  bin/fresh > "$SANDBOX_PATH/fresh_out.log" 2> "$SANDBOX_PATH/fresh_err.log"
-  assertFalse 'returns non-zero' $?
-  assertFalse 'does not output to stdout' '[ -s $SANDBOX_PATH/fresh_out.log ]'
+  runFresh fails
+  assertFalse 'does not output to stdout' '[ -s $SANDBOX_PATH/out.log ]'
 
-  assertFileMatches $SANDBOX_PATH/fresh_err.log <<EOF
+  assertFileMatches $SANDBOX_PATH/err.log <<EOF
 $ERROR_PREFIX Unknown option: --blah
 $FRESH_RCFILE:1: fresh repo/name some-file --blah
 
@@ -823,11 +820,10 @@ fresh pry.rb --file=~/.pryrc # ruby
 fresh some-other-file
 EOF
 
-  bin/fresh > "$SANDBOX_PATH/fresh_out.log" 2> "$SANDBOX_PATH/fresh_err.log"
-  assertFalse 'returns non-zero' $?
-  assertFalse 'does not output to stdout' '[ -s $SANDBOX_PATH/fresh_out.log ]'
+  runFresh fails
+  assertFalse 'does not output to stdout' '[ -s $SANDBOX_PATH/out.log ]'
 
-  assertFileMatches $SANDBOX_PATH/fresh_err.log <<EOF
+  assertFileMatches $SANDBOX_PATH/err.log <<EOF
 $ERROR_PREFIX Could not find "pry.rb" source file.
 ~/.freshrc.local:3: fresh pry.rb --file=~/.pryrc # ruby
 
@@ -841,7 +837,7 @@ it_updates_fresh_files() {
   mkdir -p $FRESH_PATH/source/other_repo/other_name/.git
   stubGit
 
-  assertTrue 'successfully updates' "bin/fresh update"
+  runFresh update
   assertFileMatches $SANDBOX_PATH/git.log <<EOF
 cd $FRESH_PATH/source/other_repo/other_name
 git pull --rebase
@@ -856,7 +852,7 @@ it_updates_fresh_files_for_a_specified_github_user() {
   mkdir -p $FRESH_PATH/source/jasoncodes/dotfiles/.git
   stubGit
 
-  assertTrue 'successfully updates' "bin/fresh update twe4ked"
+  runFresh update twe4ked
   assertFileMatches $SANDBOX_PATH/git.log <<EOF
 cd $FRESH_PATH/source/twe4ked/dotfiles
 git pull --rebase
@@ -872,7 +868,7 @@ it_updates_fresh_files_for_a_specified_github_repo() {
   mkdir -p $FRESH_PATH/source/jasoncodes/dotfiles/.git
   stubGit
 
-  assertTrue 'successfully updates' "bin/fresh update twe4ked/dotfiles"
+  runFresh update twe4ked/dotfiles
   assertFileMatches $SANDBOX_PATH/git.log <<EOF
 cd $FRESH_PATH/source/twe4ked/dotfiles
 git pull --rebase
@@ -884,7 +880,7 @@ it_updates_local_repo_with_no_args() {
   mkdir -p $FRESH_PATH/source/freshshell/fresh/.git
   stubGit
 
-  assertTrue 'successfully updates' "bin/fresh update"
+  runFresh update
 
   assertFileMatches $SANDBOX_PATH/git.log <<EOF
 cd $FRESH_LOCAL
@@ -901,7 +897,7 @@ it_only_updates_local_repo_with_local_arg() {
   mkdir -p $FRESH_PATH/source/freshshell/fresh/.git
   stubGit
 
-  assertTrue 'successfully updates' "bin/fresh update --local"
+  runFresh update --local
 
   assertFileMatches $SANDBOX_PATH/git.log <<EOF
 cd $FRESH_LOCAL
@@ -916,7 +912,7 @@ it_does_not_update_local_with_other_args() {
   mkdir -p $FRESH_PATH/source/freshshell/fresh/.git
   stubGit
 
-  assertTrue 'successfully updates' "bin/fresh update freshshell"
+  runFresh update freshshell
 
   assertFileMatches $SANDBOX_PATH/git.log <<EOF
 cd $FRESH_PATH/source/freshshell/fresh
@@ -929,8 +925,7 @@ it_does_not_update_local_dirty_local() {
   touch $FRESH_LOCAL/.git/dirty
   stubGit
 
-  bin/fresh update --local > "$SANDBOX_PATH/out.log" 2> "$SANDBOX_PATH/err.log"
-  assertFalse 'fails to update' $?
+  runFresh fails update --local
 
   assertFileMatches $SANDBOX_PATH/git.log <<EOF
 cd $FRESH_LOCAL
@@ -945,7 +940,7 @@ EOF
 it_errors_if_no_matching_sources_to_update() {
   mkdir -p $FRESH_PATH/source
 
-  bin/fresh update foobar > "$SANDBOX_PATH/out.log" 2> "$SANDBOX_PATH/err.log"
+  runFresh fails update foobar
 
   assertFileMatches "$SANDBOX_PATH/err.log" <<EOF
 $ERROR_PREFIX No matching sources found.
@@ -955,7 +950,7 @@ EOF
 it_errors_if_more_than_one_argument_is_passed_to_update() {
   mkdir -p $FRESH_PATH/source
 
-  bin/fresh update twe4ked dotfiles > "$SANDBOX_PATH/out.log" 2> "$SANDBOX_PATH/err.log"
+  runFresh fails update twe4ked dotfiles
 
   assertFileMatches "$SANDBOX_PATH/err.log" <<EOF
 $ERROR_PREFIX Invalid arguments.
@@ -971,10 +966,9 @@ it_shows_progress_when_updating_remote() {
   mkdir -p $FRESH_PATH/source/other_repo/other_name/.git
   stubGit
 
-  bin/fresh update > "$SANDBOX_PATH/fresh_out.log" 2> "$SANDBOX_PATH/fresh_err.log"
-  assertTrue 'successfully updates' $?
-  assertTrue 'outputs "repo/name"' 'grep -qxF "* Updating repo/name" $SANDBOX_PATH/fresh_out.log'
-  assertTrue 'shows git output with prefix' 'grep -qxF "| Current branch master is up to date." $SANDBOX_PATH/fresh_out.log'
+  runFresh update
+  assertTrue 'outputs "repo/name"' 'grep -qxF "* Updating repo/name" $SANDBOX_PATH/out.log'
+  assertTrue 'shows git output with prefix' 'grep -qxF "| Current branch master is up to date." $SANDBOX_PATH/out.log'
   assertFalse 'does not output to stderr' '[ -s $SANDBOX_PATH/err.log ]'
 }
 
@@ -982,10 +976,9 @@ it_shows_progress_when_updating_local() {
   mkdir -p $FRESH_LOCAL/.git
   stubGit
 
-  bin/fresh update --local > "$SANDBOX_PATH/fresh_out.log" 2> "$SANDBOX_PATH/fresh_err.log"
-  assertTrue 'successfully updates' $?
-  assertTrue 'outputs local message' 'grep -qxF "* Updating local files" $SANDBOX_PATH/fresh_out.log'
-  assertTrue 'shows git output with prefix' 'grep -qxF "| Current branch master is up to date." $SANDBOX_PATH/fresh_out.log'
+  runFresh update --local
+  assertTrue 'outputs local message' 'grep -qxF "* Updating local files" $SANDBOX_PATH/out.log'
+  assertTrue 'shows git output with prefix' 'grep -qxF "| Current branch master is up to date." $SANDBOX_PATH/out.log'
   assertFalse 'does not output to stderr' '[ -s $SANDBOX_PATH/err.log ]'
 }
 
@@ -1000,9 +993,8 @@ First, rewinding head to replay your work on top of it...
 Fast-forwarded master to 57b8b2ba7482884169a187d46be63fb8f8f4146b.
 EOF
 
-  bin/fresh update > "$SANDBOX_PATH/fresh_out.log" 2> "$SANDBOX_PATH/fresh_err.log"
-  assertTrue 'successfully updates' $?
-  assertTrue 'shows GitHub compare URL' 'grep -qF "https://github.com/jasoncodes/dotfiles/compare/47ad84c...57b8b2b" $SANDBOX_PATH/fresh_out.log'
+  runFresh update
+  assertTrue 'shows GitHub compare URL' 'grep -qF "https://github.com/jasoncodes/dotfiles/compare/47ad84c...57b8b2b" $SANDBOX_PATH/out.log'
   assertFalse 'does not output to stderr' '[ -s $SANDBOX_PATH/err.log ]'
 }
 
@@ -1017,10 +1009,9 @@ First, rewinding head to replay your work on top of it...
 Fast-forwarded master to 57b8b2ba7482884169a187d46be63fb8f8f4146b.
 EOF
 
-  bin/fresh update --local > "$SANDBOX_PATH/fresh_out.log" 2> "$SANDBOX_PATH/fresh_err.log"
-  assertTrue 'successfully updates' $?
-  cat $SANDBOX_PATH/fresh_err.log
-  assertTrue 'shows GitHub compare URL' 'grep -qF "https://github.com/jasoncodes/dotfiles/compare/47ad84c...57b8b2b" $SANDBOX_PATH/fresh_out.log'
+  runFresh update --local
+  cat $SANDBOX_PATH/err.log
+  assertTrue 'shows GitHub compare URL' 'grep -qF "https://github.com/jasoncodes/dotfiles/compare/47ad84c...57b8b2b" $SANDBOX_PATH/out.log'
   assertFalse 'does not output to stderr' '[ -s $SANDBOX_PATH/err.log ]'
 }
 
@@ -1033,9 +1024,8 @@ From git://gitorious.org/willgit/mainline
    67444ba..a2322a5  master     -> origin/master
 EOF
 
-  bin/fresh update > "$SANDBOX_PATH/fresh_out.log" 2> "$SANDBOX_PATH/fresh_err.log"
-  assertTrue 'successfully updates' $?
-  assertFalse 'does not output a compare URL' 'egrep -q "https?://" $SANDBOX_PATH/fresh_out.log'
+  runFresh update
+  assertFalse 'does not output a compare URL' 'egrep -q "https?://" $SANDBOX_PATH/out.log'
   assertFalse 'does not output to stderr' '[ -s $SANDBOX_PATH/err.log ]'
 }
 
@@ -1045,7 +1035,7 @@ it_logs_update_output() {
   mkdir -p $FRESH_PATH/source/other_repo/other_name/.git
 
   stubGit
-  assertTrue 'successfully updates' "bin/fresh update"
+  runFresh update
   assertTrue 'creates a log file' '[[ "$(find "$FRESH_PATH/logs" -type f | wc -l)" -eq 1 ]]'
   assertTrue 'log file name' 'find "$FRESH_PATH/logs" -type f | egrep -q "/logs/update-[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]{6}\\.log$"'
 
@@ -1069,7 +1059,7 @@ it_does_not_run_build_if_update_fails() {
   touch $FRESH_PATH/source/repo/name1/.git/failure
   stubGit
 
-  assertFalse 'fails to update' "bin/fresh update"
+  runFresh fails update
   assertTrue 'output does not exist' '[ ! -f "$FRESH_PATH/build/shell.sh" ]'
 }
 
@@ -1083,7 +1073,7 @@ it_builds_after_update_with_latest_binary() {
   echo "echo new >> \"$SANDBOX_PATH/fresh.log\"" >> $FRESH_LOCAL/bin/fresh
   echo "echo bad >> \"$SANDBOX_PATH/fresh.log\"" >> $FRESH_LOCAL/bin/other
 
-  assertTrue 'successfully updates' "bin/fresh update"
+  runFresh update
 
   assertFileMatches $SANDBOX_PATH/fresh.log <<EOF
 new
@@ -1103,10 +1093,9 @@ it_errors_if_freshrc_is_missing_bin_fresh() {
   touch $FRESH_RCFILE
 
   unset FRESH_NO_BIN_CHECK
-  bin/fresh > "$SANDBOX_PATH/fresh_out.log" 2> "$SANDBOX_PATH/fresh_err.log"
-  assertFalse 'returns non-zero' $?
+  runFresh fails
   assertFalse 'does not build' '[ -d $FRESH_PATH/build ]'
-  assertTrue 'mentions solution' 'grep -q "fresh freshshell/fresh bin/fresh --bin" $SANDBOX_PATH/fresh_err.log'
+  assertTrue 'mentions solution' 'grep -q "fresh freshshell/fresh bin/fresh --bin" $SANDBOX_PATH/err.log'
 }
 
 it_allows_bin_fresh_error_to_be_disabled() {
@@ -1278,8 +1267,7 @@ EOF
 
 it_searches_directory_for_keywords() {
   stubCurl "foo" "bar baz"
-  bin/fresh search foo bar > $SANDBOX_PATH/out.log 2> $SANDBOX_PATH/err.log
-  assertTrue 'successfully executes' $?
+  runFresh search foo bar
   assertFileMatches $SANDBOX_PATH/out.log <<EOF
 foo
 bar baz
@@ -1298,8 +1286,7 @@ EOF
 
 it_shows_error_if_no_search_query_given() {
   stubCurl
-  bin/fresh search > $SANDBOX_PATH/out.log 2> $SANDBOX_PATH/err.log
-  assertFalse 'returns error' $?
+  runFresh fails search
   assertFileMatches $SANDBOX_PATH/out.log <<EOF
 EOF
   assertFileMatches $SANDBOX_PATH/err.log <<EOF
@@ -1310,8 +1297,7 @@ EOF
 
 it_shows_error_if_search_has_no_results() {
   stubCurl
-  bin/fresh search crap > $SANDBOX_PATH/out.log 2> $SANDBOX_PATH/err.log
-  assertFalse 'returns error' $?
+  runFresh fails search crap
   assertFileMatches $SANDBOX_PATH/out.log <<EOF
 EOF
   assertFileMatches $SANDBOX_PATH/err.log <<EOF
@@ -1329,8 +1315,7 @@ EOF
 
 it_shows_error_if_search_api_call_fails() {
   stubCurl --fail "Could not connect."
-  bin/fresh search blah > $SANDBOX_PATH/out.log 2> $SANDBOX_PATH/err.log
-  assertFalse 'returns error' $?
+  runFresh fails search blah
   assertFileMatches $SANDBOX_PATH/out.log <<EOF
 EOF
   assertFileMatches $SANDBOX_PATH/err.log <<EOF
@@ -1358,8 +1343,7 @@ it_cleans_dead_symlinks_from_home_and_bin() {
   ln -s no_such_file ~/.other
   ln -s no_such_file ~/bin/other
 
-  bin/fresh clean > "$SANDBOX_PATH/out.log" 2> "$SANDBOX_PATH/err.log"
-  assertTrue 'successfully cleans' $?
+  runFresh clean
 
   assertTrue '~/.alive still exists' '[ -L ~/.alive ]'
   assertTrue '~/bin/alive still exists' '[ -L ~/bin/alive ]'
@@ -1381,8 +1365,7 @@ it_cleans_repositories_no_longer_referenced_by_freshrc() {
   echo 'fresh git://example.com/foobar.git file' >> $FRESH_RCFILE
   mkdir -p $FRESH_PATH/source/{foo/bar,foo/baz,abc/def,example.com/foobar}/.git
 
-  bin/fresh clean > "$SANDBOX_PATH/out.log" 2> "$SANDBOX_PATH/err.log"
-  assertTrue 'successfully cleans' $?
+  runFresh clean
 
   assertTrue 'foo/bar still exists' '[ -d "$FRESH_PATH/source/foo/bar/.git" ]'
   assertFalse 'foo/baz was cleaned' '[ -d "$FRESH_PATH/source/foo/baz/.git" ]'
@@ -1409,8 +1392,7 @@ it_shows_sources_for_fresh_lines() {
 
   stubGit
 
-  bin/fresh show > "$SANDBOX_PATH/out.log" 2> "$SANDBOX_PATH/err.log"
-  assertTrue 'successfully cleans' $?
+  runFresh show
 
   assertFileMatches $SANDBOX_PATH/git.log <<EOF
 cd $SANDBOX_PATH/fresh/source/foo/bar
@@ -1441,8 +1423,7 @@ it_shows_git_urls_for_non_github_repos() {
 
   stubGit
 
-  bin/fresh show > "$SANDBOX_PATH/out.log" 2> "$SANDBOX_PATH/err.log"
-  assertTrue 'successfully cleans' $?
+  runFresh show
 
   assertFileMatches $SANDBOX_PATH/out.log <<EOF
 fresh git://example.com/one/two.git file
