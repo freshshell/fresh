@@ -739,6 +739,34 @@ $FRESH_RCFILE:1: fresh pryrc --file
 EOF
 }
 
+it_errors_if_directory_is_not_writable() {
+  echo 'fresh pryrc --file' >> $FRESH_RCFILE
+  mkdir -p $FRESH_LOCAL
+  touch $FRESH_LOCAL/pryrc
+  chmod -w "$SANDBOX_PATH/home"
+
+  runFresh fails
+
+  assertFileMatches $SANDBOX_PATH/err.log <<EOF
+$ERROR_PREFIX Could not create $HOME/.pryrc. Do you have permission?
+$FRESH_RCFILE:1: fresh pryrc --file
+EOF
+}
+
+it_errors_if_directory_cannot_be_created() {
+  echo 'fresh foo --file=~/.config/foo' >> $FRESH_RCFILE
+  mkdir -p $FRESH_LOCAL
+  touch $FRESH_LOCAL/foo
+  chmod -w "$SANDBOX_PATH/home"
+
+  runFresh fails
+
+  assertFileMatches $SANDBOX_PATH/err.log <<EOF
+$ERROR_PREFIX Could not create $HOME/.config/foo. Do you have permission?
+$FRESH_RCFILE:1: fresh foo --file=~/.config/foo
+EOF
+}
+
 it_does_not_error_for_symlinks_created_by_fresh() {
   echo fresh pryrc --file >> $FRESH_RCFILE
   echo fresh bin/sedmv --bin >> $FRESH_RCFILE
