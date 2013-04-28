@@ -360,7 +360,10 @@ _fresh_symlink() {
     SYMLINK_PATH="$(eval echo "$SYMLINK_PATH")"
     if ! [ -L "$SYMLINK_PATH" ]; then
       mkdir -p "$(dirname "$SYMLINK_PATH")"
-      ln -s "$SYMLINK_SOURCE" "$SYMLINK_PATH"
+      if ! ln -s "$SYMLINK_SOURCE" "$SYMLINK_PATH" 2> /dev/null; then
+        SKIP_INFO=1
+        _fatal_error "$SYMLINK_PATH already exists"
+      fi
     else
       if [[ "$(readlink "$SYMLINK_PATH")" != "$SYMLINK_SOURCE" ]]; then
         if [[ "$(readlink "$SYMLINK_PATH")" == "$FRESH_PATH"/build/* ]]; then
@@ -759,12 +762,14 @@ _rc_file_line_reference() {
 _fatal_error() {
   echo $'\033[4;31mError\033[0m:' "$1" >&2
   if [[ "$IN_RC_FILE" == 1 ]]; then
-    cat >&2 <<EOF
-$(_rc_file_line_reference)
+    echo "$(_rc_file_line_reference)" >&2
+    if ! [[ "$SKIP_INFO" == 1 ]]; then
+      cat >&2 <<EOF
 
 You may need to run \`fresh update\` if you're adding a new line,
 or the file you're referencing may have moved or been deleted.
 EOF
+    fi
     if [[ -n "$REPO_NAME" ]]; then
       echo "Have a look at the repo: <$(_format_url "$(_repo_url "$REPO_NAME")")>" >&2
     fi

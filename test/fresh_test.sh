@@ -725,6 +725,20 @@ EOF
   assertEquals /dev/null "$(readlink ~/bin/sedmv)"
 }
 
+it_errors_if_file_exists() {
+  echo 'fresh pryrc --file' >> $FRESH_RCFILE
+  mkdir -p $FRESH_LOCAL
+  touch $FRESH_LOCAL/pryrc
+  touch "$SANDBOX_PATH/home/.pryrc"
+
+  runFresh fails
+
+  assertFileMatches $SANDBOX_PATH/err.log <<EOF
+$ERROR_PREFIX $HOME/.pryrc already exists
+$FRESH_RCFILE:1: fresh pryrc --file
+EOF
+}
+
 it_does_not_error_for_symlinks_created_by_fresh() {
   echo fresh pryrc --file >> $FRESH_RCFILE
   echo fresh bin/sedmv --bin >> $FRESH_RCFILE
