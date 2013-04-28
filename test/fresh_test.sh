@@ -690,7 +690,7 @@ it_errors_if_existing_symlink_for_file_does_not_point_to_a_fresh_path() {
   runFresh fails
 
   assertFileMatches $SANDBOX_PATH/err.log <<EOF
-$ERROR_PREFIX $HOME/.pryrc already exists (pointing to /dev/null)
+$ERROR_PREFIX $HOME/.pryrc already exists (pointing to /dev/null).
 $FRESH_RCFILE:1: fresh pryrc --file
 
 You may need to run \`fresh update\` if you're adding a new line,
@@ -712,7 +712,7 @@ it_errors_if_existing_symlink_for_bin_does_not_point_to_a_fresh_path() {
   runFresh fails
 
   assertFileMatches $SANDBOX_PATH/err.log <<EOF
-$ERROR_PREFIX $HOME/bin/sedmv already exists (pointing to /dev/null)
+$ERROR_PREFIX $HOME/bin/sedmv already exists (pointing to /dev/null).
 $FRESH_RCFILE:1: fresh bin/sedmv --bin
 
 You may need to run \`fresh update\` if you're adding a new line,
@@ -723,6 +723,48 @@ EOF
 EOF
 
   assertEquals /dev/null "$(readlink ~/bin/sedmv)"
+}
+
+it_errors_if_file_exists() {
+  echo 'fresh pryrc --file' >> $FRESH_RCFILE
+  mkdir -p $FRESH_LOCAL
+  touch $FRESH_LOCAL/pryrc
+  touch "$SANDBOX_PATH/home/.pryrc"
+
+  runFresh fails
+
+  assertFileMatches $SANDBOX_PATH/err.log <<EOF
+$ERROR_PREFIX $HOME/.pryrc already exists.
+$FRESH_RCFILE:1: fresh pryrc --file
+EOF
+}
+
+it_errors_if_directory_is_not_writable() {
+  echo 'fresh pryrc --file' >> $FRESH_RCFILE
+  mkdir -p $FRESH_LOCAL
+  touch $FRESH_LOCAL/pryrc
+  chmod -w "$SANDBOX_PATH/home"
+
+  runFresh fails
+
+  assertFileMatches $SANDBOX_PATH/err.log <<EOF
+$ERROR_PREFIX Could not create $HOME/.pryrc. Do you have permission?
+$FRESH_RCFILE:1: fresh pryrc --file
+EOF
+}
+
+it_errors_if_directory_cannot_be_created() {
+  echo 'fresh foo --file=~/.config/foo' >> $FRESH_RCFILE
+  mkdir -p $FRESH_LOCAL
+  touch $FRESH_LOCAL/foo
+  chmod -w "$SANDBOX_PATH/home"
+
+  runFresh fails
+
+  assertFileMatches $SANDBOX_PATH/err.log <<EOF
+$ERROR_PREFIX Could not create $HOME/.config/foo. Do you have permission?
+$FRESH_RCFILE:1: fresh foo --file=~/.config/foo
+EOF
 }
 
 it_does_not_error_for_symlinks_created_by_fresh() {
