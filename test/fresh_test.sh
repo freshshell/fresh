@@ -690,7 +690,7 @@ it_errors_if_existing_symlink_for_file_does_not_point_to_a_fresh_path() {
   runFresh fails
 
   assertFileMatches $SANDBOX_PATH/err.log <<EOF
-$ERROR_PREFIX $HOME/.pryrc already exists (pointing to /dev/null)
+$ERROR_PREFIX $HOME/.pryrc already exists (pointing to /dev/null).
 $FRESH_RCFILE:1: fresh pryrc --file
 
 You may need to run \`fresh update\` if you're adding a new line,
@@ -712,7 +712,7 @@ it_errors_if_existing_symlink_for_bin_does_not_point_to_a_fresh_path() {
   runFresh fails
 
   assertFileMatches $SANDBOX_PATH/err.log <<EOF
-$ERROR_PREFIX $HOME/bin/sedmv already exists (pointing to /dev/null)
+$ERROR_PREFIX $HOME/bin/sedmv already exists (pointing to /dev/null).
 $FRESH_RCFILE:1: fresh bin/sedmv --bin
 
 You may need to run \`fresh update\` if you're adding a new line,
@@ -734,7 +734,7 @@ it_errors_if_file_exists() {
   runFresh fails
 
   assertFileMatches $SANDBOX_PATH/err.log <<EOF
-$ERROR_PREFIX $HOME/.pryrc already exists
+$ERROR_PREFIX $HOME/.pryrc already exists.
 $FRESH_RCFILE:1: fresh pryrc --file
 EOF
 }

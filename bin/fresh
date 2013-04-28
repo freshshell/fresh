@@ -362,14 +362,14 @@ _fresh_symlink() {
       mkdir -p "$(dirname "$SYMLINK_PATH")"
       if ! ln -s "$SYMLINK_SOURCE" "$SYMLINK_PATH" 2> /dev/null; then
         SKIP_INFO=1
-        _fatal_error "$SYMLINK_PATH already exists"
+        _fatal_error "$SYMLINK_PATH already exists."
       fi
     else
       if [[ "$(readlink "$SYMLINK_PATH")" != "$SYMLINK_SOURCE" ]]; then
         if [[ "$(readlink "$SYMLINK_PATH")" == "$FRESH_PATH"/build/* ]]; then
           ln -sf "$SYMLINK_SOURCE" "$SYMLINK_PATH"
         else
-          _fatal_error "$SYMLINK_PATH already exists (pointing to $(readlink "$SYMLINK_PATH"))"
+          _fatal_error "$SYMLINK_PATH already exists (pointing to $(readlink "$SYMLINK_PATH"))."
         fi
       fi
     fi
