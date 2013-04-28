@@ -1498,7 +1498,7 @@ it_adds_lines_to_freshrc_for_local_files() {
   mkdir -p $FRESH_LOCAL
   touch $FRESH_LOCAL/{existing,new\ file}
 
-  yes | bin/fresh 'new file' > $SANDBOX_PATH/out.log 2> $SANDBOX_PATH/err.log
+  yes | runFresh 'new file'
   assertTrue 'successfully adds' $?
 
   assertFileMatches $FRESH_RCFILE <<EOF
@@ -1516,7 +1516,7 @@ EOF
 it_adds_lines_to_freshrc_for_new_remotes() {
   stubGit
 
-  yes | bin/fresh user/repo file > $SANDBOX_PATH/out.log 2> $SANDBOX_PATH/err.log
+  yes | runFresh user/repo file
   assertTrue 'successfully adds' $?
 
   assertFileMatches $FRESH_RCFILE <<EOF
@@ -1540,7 +1540,7 @@ it_adds_lines_to_freshrc_for_existing_remotes() {
 
   stubGit
 
-  yes | bin/fresh user/repo file > $SANDBOX_PATH/out.log 2> $SANDBOX_PATH/err.log
+  yes | runFresh user/repo file
   assertTrue 'successfully adds' $?
 
   assertFileMatches $FRESH_RCFILE <<EOF
@@ -1565,7 +1565,7 @@ it_does_not_add_lines_to_freshrc_if_declined() {
   mkdir -p $FRESH_LOCAL
   touch $FRESH_LOCAL/{existing,new}
 
-  yes n | bin/fresh new > $SANDBOX_PATH/out.log 2> $SANDBOX_PATH/err.log
+  yes n | runFresh new
   assertTrue 'successfully adds' $?
 
   assertFileMatches $FRESH_RCFILE <<EOF
@@ -1584,7 +1584,7 @@ it_adds_lines_to_freshrc_without_updating_existing_repo_if_declined() {
 
   stubGit
 
-  (echo y; echo n) | bin/fresh user/repo file > $SANDBOX_PATH/out.log 2> $SANDBOX_PATH/err.log
+  (echo y; echo n) | runFresh user/repo file
   assertTrue 'successfully adds' $?
 
   assertFileMatches $FRESH_RCFILE <<EOF
