@@ -16,7 +16,7 @@ fi
 
 FRESH_LOCAL="$HOME/.dotfiles"
 if [ -n "$FRESH_LOCAL_SOURCE" ] && ! [ -d "$FRESH_LOCAL" ]; then
-  if ! [[ "$FRESH_LOCAL_SOURCE" == */* || "$FRESH_LOCAL_SOURCE" == *@* ]]; then
+  if ! [[ "$FRESH_LOCAL_SOURCE" == */* || "$FRESH_LOCAL_SOURCE" == *:* ]]; then
     echo 'FRESH_LOCAL_SOURCE must be either in user/repo format or a full Git URL.' >&2
     exit 1
   fi
