@@ -46,9 +46,12 @@ assertFileMatches() {
 
 runFresh() {
   if [ "$1" == 'fails' ]; then
-    assertFalse 'fails to build' bin/fresh
+    shift
+    bin/fresh "$@" > "$SANDBOX_PATH/out.log" 2> "$SANDBOX_PATH/err.log"
+    assertFalse 'fails to build' $?
   else
-    assertTrue 'successfully builds' bin/fresh
+    bin/fresh "$@" > "$SANDBOX_PATH/out.log" 2> "$SANDBOX_PATH/err.log"
+    assertTrue 'successfully builds' $?
   fi
 }
 
