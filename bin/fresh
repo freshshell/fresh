@@ -810,6 +810,13 @@ edit Open freshrc for editing
 show Show source references for freshrc lines
 help Show help
 EOF
+  { for path in ${PATH//:/$'\n'}; do
+      for command in "${path}/fresh-"*; do
+        command="${command##*/fresh-}"
+        echo "$command" "Run $command plugin"
+      done
+    done
+  } | sort | uniq
 }
 
 main() {
