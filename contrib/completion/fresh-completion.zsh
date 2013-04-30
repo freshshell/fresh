@@ -12,14 +12,13 @@
 
 case $CURRENT in
   2)
-    _values 'fresh command' \
-      'install[Build shell configuration and relevant symlinks (default)]' \
-      'update[Update from source repos and rebuild]' \
-      'clean[Remove dead symlinks and source repos]' \
-      'search[Search the fresh directory]' \
-      'edit[Open freshrc for editing]' \
-      'show[Show source references for freshrc lines]' \
-      'help[Show help]'
+    eval "$(
+      printf _values
+      printf " %q" "fresh command"
+      fresh commands | sed -e 's/^\([^ ]*\) *\(.*\)$/\1[\2]/' | while read LINE; do
+        printf " %q" "$LINE"
+      done
+    )"
     ;;
   3)
     case "$words[2]" in

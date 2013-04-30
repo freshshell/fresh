@@ -7,7 +7,7 @@
 _fresh() {
   local cur=${COMP_WORDS[COMP_CWORD]}
   if [[ $COMP_CWORD == 1 ]]; then
-    local WORDS="install update clean search edit show help"
+    local WORDS="$(fresh commands | cut -d ' ' -f 1)"
   elif [[ $COMP_CWORD == 2 ]] && [[ "${COMP_WORDS[1]}" =~ ^update$|^up$ ]]; then
     local WORDS="$(
       cd "$FRESH_PATH/source"
