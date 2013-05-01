@@ -696,13 +696,7 @@ See http://freshshell.com/readme for more documentation.
 usage: fresh <command> [<args>]
 
 Available commands:
-    install            Build shell configuration and relevant symlinks (default)
-    update [<filter>]  Update from source repos and rebuild
-    clean              Removes dead symlinks and source repos
-    search <query>     Search the fresh directory
-    edit               Open freshrc for editing
-    show               Show source references for freshrc lines
-    help               Show this help
+$(fresh_commands | sed -e 's/^/    /' -e 's/ #//')
 EOF
 }
 
@@ -802,18 +796,18 @@ fresh_commands() {
   shopt -s nullglob
 
   cat <<EOF
-install Build shell configuration and relevant symlinks (default)
-update Update from source repos and rebuild
-clean Remove dead symlinks and source repos
-search Search the fresh directory
-edit Open freshrc for editing
-show Show source references for freshrc lines
-help Show help
+install            # Build shell configuration and relevant symlinks (default)
+update [<filter>]  # Update from source repos and rebuild
+clean              # Removes dead symlinks and source repos
+search <query>     # Search the fresh directory
+edit               # Open freshrc for editing
+show               # Show source references for freshrc lines
+help               # Show this help
 EOF
   { for path in ${PATH//:/$'\n'}; do
       for command in "${path}/fresh-"*; do
         command="${command##*/fresh-}"
-        echo "$command" "Run $command plugin"
+        printf "%-19s# %s\n" "$command" "Run $command plugin"
       done
     done
   } | sort | uniq

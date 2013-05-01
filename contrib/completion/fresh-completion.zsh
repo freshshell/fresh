@@ -15,7 +15,7 @@ case $CURRENT in
     eval "$(
       printf _values
       printf " %q" "fresh command"
-      fresh commands | sed -e 's/^\([^ ]*\) *\(.*\)$/\1[\2]/' | while read LINE; do
+      fresh commands | sed -e 's/^\([^ ]*\)[^#]*# \(.*\)$/\1[\2]/' | while read LINE; do
         printf " %q" "$LINE"
       done
     )"
