@@ -855,7 +855,7 @@ main() {
           shift
           "$BIN_NAME" "$@"
         else
-          _fatal_error "Unknown option: $1"
+          _fatal_error "Unknown command: $1"
         fi
       fi
       ;;
