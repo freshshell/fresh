@@ -260,7 +260,7 @@ Running `fresh edit` will open your `~/.freshrc` in your default `$EDITOR`.
 `fresh show` will output each line of your `~/.freshrc` along with
 every source file those lines match. Handy for auditing.
 
-### Sub Commands
+### Subcommands
 
 fresh will detect bin files that start with `fresh-` in your `$PATH`.
 
