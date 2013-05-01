@@ -1671,4 +1671,27 @@ zsh config
 EOF
 }
 
+it_runs_subcommands() {
+  bin="$SANDBOX_PATH/bin/fresh-foo"
+  echo "echo foobar" > $bin
+  chmod +x $bin
+
+  runFresh foo
+
+  assertFileMatches $SANDBOX_PATH/out.log <<EOF
+foobar
+EOF
+  assertFileMatches $SANDBOX_PATH/err.log <<EOF
+EOF
+}
+
+it_errors_for_unknown_commands() {
+  runFresh fails foo
+  assertFileMatches $SANDBOX_PATH/out.log <<EOF
+EOF
+  assertFileMatches $SANDBOX_PATH/err.log <<EOF
+$ERROR_PREFIX Unknown command: foo
+EOF
+}
+
 source test/test_helper.sh

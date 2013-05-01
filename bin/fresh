@@ -696,13 +696,7 @@ See http://freshshell.com/readme for more documentation.
 usage: fresh <command> [<args>]
 
 Available commands:
-    install            Build shell configuration and relevant symlinks (default)
-    update [<filter>]  Update from source repos and rebuild
-    clean              Removes dead symlinks and source repos
-    search <query>     Search the fresh directory
-    edit               Open freshrc for editing
-    show               Show source references for freshrc lines
-    help               Show this help
+$(fresh_commands | sed -e 's/^/    /' -e 's/ #//')
 EOF
 }
 
@@ -798,6 +792,27 @@ _freshrc_file() {
   echo "${FRESH_RCFILE/#$HOME/~}"
 }
 
+fresh_commands() {
+  shopt -s nullglob
+
+  cat <<EOF
+install            # Build shell configuration and relevant symlinks (default)
+update [<filter>]  # Update from source repos and rebuild
+clean              # Removes dead symlinks and source repos
+search <query>     # Search the fresh directory
+edit               # Open freshrc for editing
+show               # Show source references for freshrc lines
+help               # Show this help
+EOF
+  { for path in ${PATH//:/$'\n'}; do
+      for command in "${path}/fresh-"*; do
+        command="${command##*/fresh-}"
+        printf "%-19s# %s\n" "$command" "Run $command plugin"
+      done
+    done
+  } | sort | uniq
+}
+
 main() {
   case "$1" in
     help|--help)
@@ -828,11 +843,20 @@ main() {
       _prevent_invalid_arguments "$@"
       fresh_clean
       ;;
+    commands)
+      fresh_commands
+      ;;
     *)
       if [[ "$1" == */* ]] || [[ -e "$FRESH_LOCAL/$1" ]]; then
         fresh_add "$@"
       else
-        _fatal_error "Unknown option: $1"
+        BIN_NAME="fresh-$1"
+        if which "$BIN_NAME" > /dev/null; then
+          shift
+          "$BIN_NAME" "$@"
+        else
+          _fatal_error "Unknown command: $1"
+        fi
       fi
       ;;
   esac
