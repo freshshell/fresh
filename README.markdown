@@ -273,7 +273,7 @@ You can append fresh lines to your freshrc directly from the command line.
 Try running:
 
 ``` sh
-$ fresh twe4ked/catacomb bin/catacomb --bin
+fresh twe4ked/catacomb bin/catacomb --bin
 ```
 
 You will then get a prompt comfirming that you wish to add a new fresh line.
