@@ -274,6 +274,8 @@ Try running:
 
 ``` sh
 fresh twe4ked/catacomb bin/catacomb --bin
+# or
+fresh https://github.com/twe4ked/catacomb/blob/master/bin/catacomb
 ```
 
 You will then get a prompt comfirming that you wish to add a new fresh line.
