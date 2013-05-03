@@ -266,6 +266,19 @@ fresh will detect bin files that start with `fresh-` in your `$PATH`.
 
 For example running `fresh open` is equivalent to running `fresh-open`.
 
+### Adding Lines Directly From The Command line
+
+You can append fresh lines to your freshrc directly from the command line.
+
+Try running:
+
+``` sh
+$ fresh twe4ked/catacomb bin/catacomb --bin
+```
+
+You will then get a prompt comfirming that you wish to add a new fresh line.
+A you can then modify it if needed by running `fresh edit`.
+
 ## Maintainers
 
 fresh is maintained by [jasoncodes] and [twe4ked].
