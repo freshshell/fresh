@@ -635,6 +635,36 @@ it_links_bin_files_to_destination() {
   assertEquals "$FRESH_PATH/build/bin/gemdiff" "$(readlink ~/bin/scripts/gemdiff)"
 }
 
+it_warns_if_concatenating_bin_files() {
+  echo 'FRESH_NO_BIN_CONFLICT_CHECK=true' >> $FRESH_RCFILE
+  echo 'fresh gemdiff --bin' >> $FRESH_RCFILE
+  echo 'fresh scripts/gemdiff --bin' >> $FRESH_RCFILE
+  echo 'unset FRESH_NO_BIN_CONFLICT_CHECK' >> $FRESH_RCFILE
+  echo 'fresh sedmv --bin' >> $FRESH_RCFILE
+  echo 'fresh scripts/sedmv --bin' >> $FRESH_RCFILE
+  mkdir -p $FRESH_LOCAL/scripts
+  touch $FRESH_LOCAL/{scripts/sedmv,sedmv,scripts/gemdiff,gemdiff}
+
+  runFresh
+
+  assertEquals "$FRESH_PATH/build/bin/sedmv" "$(readlink ~/bin/sedmv)"
+
+  assertFileMatches $SANDBOX_PATH/out.log <<EOF
+$(echo $'\033[1;33mNote\033[0m:') Multiple sources concatenated into a single bin file.
+$FRESH_RCFILE:6: fresh scripts/sedmv --bin
+
+Typically bin files should not be concatenated together into one file.
+"bin/sedmv" may not function as expected.
+
+To disable this warning, add \`FRESH_NO_BIN_CONFLICT_CHECK=true\` in your freshrc file.
+
+$(echo $'Your dot files are now \033[1;32mfresh\033[0m.')
+EOF
+
+assertFileMatches $SANDBOX_PATH/err.log <<EOF
+EOF
+}
+
 it_runs_filters_on_files() {
   mkdir -p $FRESH_LOCAL
   echo "foo other_username bar" > $FRESH_LOCAL/aliases

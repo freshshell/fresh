@@ -351,6 +351,19 @@ _fresh_output() {
     echo >> "$FRESH_PATH/build.new/$DEST_NAME"
   fi
 
+  if [[ -e "$FRESH_PATH/build.new/$DEST_NAME" && "$MODE" == "bin" && "$FRESH_NO_BIN_CONFLICT_CHECK" != "true" ]]; then
+    _note "Multiple sources concatenated into a single bin file."
+    cat <<EOF
+$(_rc_file_line_reference)
+
+Typically bin files should not be concatenated together into one file.
+"$DEST_NAME" may not function as expected.
+
+To disable this warning, add \`FRESH_NO_BIN_CONFLICT_CHECK=true\` in your freshrc file.
+
+EOF
+  fi
+
   _source_file_contents >> "$FRESH_PATH/build.new/$DEST_NAME"
 }
 
