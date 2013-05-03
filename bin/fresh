@@ -714,7 +714,32 @@ EOF
 }
 
 fresh_add() {
-  LINE="$(_escape fresh "$@")"
+  if [[ "$1" == https://github.com/* ]]; then
+    URL="$1"
+
+    LINE="$(echo "$URL" | sed -e 's#^https://github.com/#fresh #' -e 's#/blob/[^/]*/# #')"
+    shift
+    for ARG in "$@"; do
+      LINE="$LINE $ARG"
+    done
+
+    # if we only have the URL try to infer if we have a bin or config file
+    if ! echo "$@" | grep -q "\--bin\|\--file"; then
+      if echo "$URL" | grep -q "/bin/"; then
+        LINE="$LINE --bin"
+      elif echo "$URL" | grep -q "/config/"; then
+        LINE="$LINE --file"
+      fi
+    fi
+
+    REF="$(echo "$URL" | sed 's#^.*/blob/\([^/]*\)/.*$#\1#')"
+    if [[ "$REF" != "master" ]]; then
+      LINE="$LINE --ref=$REF"
+    fi
+  else
+    LINE="$(_escape fresh "$@")"
+  fi
+
   if _confirm "Add \`$LINE\` to $(_freshrc_file)"; then
     echo "Adding \`$LINE\` to $(_freshrc_file)..."
     echo "$LINE" >> "$FRESH_RCFILE"

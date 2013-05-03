@@ -1672,6 +1672,37 @@ EOF
   assertFalse 'did not run git' '[ -f $SANDBOX_PATH/git.log ]'
 }
 
+parse_fresh_add_args() {
+  yes n | runFresh "$@"
+  assertTrue "line matches" "grep -q '^Add \`fresh .*\` to' < $SANDBOX_PATH/out.log"
+  sed -e 's/^Add `//' -e 's/`.*$//' $SANDBOX_PATH/out.log
+  assertFileMatches $SANDBOX_PATH/err.log <<EOF
+EOF
+}
+
+it_adds_lines_to_freshrc_from_github_urls() {
+  # auto add --bin
+  assertEquals "fresh twe4ked/catacomb bin/catacomb --bin" "$(parse_fresh_add_args https://github.com/twe4ked/catacomb/blob/master/bin/catacomb)"
+
+  # --bin will not duplicate
+  assertEquals "fresh twe4ked/catacomb bin/catacomb --bin" "$(parse_fresh_add_args https://github.com/twe4ked/catacomb/blob/master/bin/catacomb --bin)"
+
+  # works out --ref
+  assertEquals "fresh twe4ked/catacomb bin/catacomb --bin --ref=a62f448" "$(parse_fresh_add_args https://github.com/twe4ked/catacomb/blob/a62f448/bin/catacomb)"
+
+  # auto add --file
+  assertEquals "fresh twe4ked/dotfiles config/pryrc --file" "$(parse_fresh_add_args https://github.com/twe4ked/dotfiles/blob/master/config/pryrc)"
+
+  # --file will not duplicate
+  assertEquals "fresh twe4ked/dotfiles config/pryrc --file" "$(parse_fresh_add_args https://github.com/twe4ked/dotfiles/blob/master/config/pryrc --file)"
+
+  # auto add --file preserves other options
+  assertEquals "fresh twe4ked/dotfiles config/pryrc --marker --file" "$(parse_fresh_add_args https://github.com/twe4ked/dotfiles/blob/master/config/pryrc --marker)"
+
+  # doesn't add --bin or --file to other files
+  assertEquals "fresh twe4ked/dotfiles shell/aliases/git.sh" "$(parse_fresh_add_args https://github.com/twe4ked/dotfiles/blob/master/shell/aliases/git.sh)"
+}
+
 it_applies_fresh_options_to_multiple_lines() {
   echo 'fresh-options --file=~/.vimrc --marker=\"' >> $FRESH_RCFILE
   echo "fresh mappings.vim --filter='tr a x'" >> $FRESH_RCFILE
