@@ -956,6 +956,8 @@ it_updates_local_repo_with_no_args() {
 
   assertFileMatches $SANDBOX_PATH/git.log <<EOF
 cd $FRESH_LOCAL
+git rev-parse @{u}
+cd $FRESH_LOCAL
 git status --porcelain
 cd $FRESH_LOCAL
 git pull --rebase
@@ -972,6 +974,8 @@ it_only_updates_local_repo_with_local_arg() {
   runFresh update --local
 
   assertFileMatches $SANDBOX_PATH/git.log <<EOF
+cd $FRESH_LOCAL
+git rev-parse @{u}
 cd $FRESH_LOCAL
 git status --porcelain
 cd $FRESH_LOCAL
@@ -1000,6 +1004,8 @@ it_does_not_update_local_dirty_local() {
   runFresh fails update --local
 
   assertFileMatches $SANDBOX_PATH/git.log <<EOF
+cd $FRESH_LOCAL
+git rev-parse @{u}
 cd $FRESH_LOCAL
 git status --porcelain
 EOF
