@@ -1606,6 +1606,27 @@ git clone https://github.com/user/repo $FRESH_PATH/source/user/repo
 EOF
 }
 
+it_adds_lines_to_freshrc_for_new_remotes_by_url() {
+  stubGit
+
+  yes | runFresh https://github.com/user/repo/blob/master/file
+  assertTrue 'successfully adds' $?
+
+  assertFileMatches $FRESH_RCFILE <<EOF
+fresh user/repo file
+EOF
+  assertFileMatches $SANDBOX_PATH/out.log <<EOF
+Add \`fresh user/repo file\` to $FRESH_RCFILE [Y/n]? Adding \`fresh user/repo file\` to $FRESH_RCFILE...
+$(echo $'Your dot files are now \033[1;32mfresh\033[0m.')
+EOF
+  assertFileMatches $SANDBOX_PATH/err.log <<EOF
+EOF
+  assertFileMatches $SANDBOX_PATH/git.log <<EOF
+cd $SANDBOX_PATH
+git clone https://github.com/user/repo $FRESH_PATH/source/user/repo
+EOF
+}
+
 it_adds_lines_to_freshrc_for_existing_remotes() {
   mkdir -p $FRESH_PATH/source/user/repo/.git
   touch $FRESH_PATH/source/user/repo/file

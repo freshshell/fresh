@@ -717,7 +717,7 @@ fresh_add() {
   if [[ "$1" == https://github.com/* ]]; then
     URL="$1"
 
-    LINE="$(echo "$URL" | sed -e 's#^https://github.com/#fresh #' -e 's#/blob/[^/]*/# #')"
+    LINE="$(echo "$URL" | sed -e 's#^https://github.com/##' -e 's#/blob/[^/]*/# #')"
     shift
     for ARG in "$@"; do
       LINE="$LINE $ARG"
@@ -737,14 +737,14 @@ fresh_add() {
       LINE="$LINE --ref=$REF"
     fi
   else
-    LINE="$(_escape fresh "$@")"
+    LINE="$(_escape "$@")"
   fi
 
-  if _confirm "Add \`$LINE\` to $(_freshrc_file)"; then
-    echo "Adding \`$LINE\` to $(_freshrc_file)..."
-    echo "$LINE" >> "$FRESH_RCFILE"
+  if _confirm "Add \`fresh $LINE\` to $(_freshrc_file)"; then
+    echo "Adding \`fresh $LINE\` to $(_freshrc_file)..."
+    echo "fresh $LINE" >> "$FRESH_RCFILE"
 
-    _parse_fresh_dsl_args "$@"
+    eval _parse_fresh_dsl_args "$LINE"
     local REPO_DIR="$(_repo_name "$REPO_NAME")"
 
     if [[ -n "$REPO_NAME" ]] && [[ -d "$FRESH_PATH/source/$REPO_DIR" ]]; then
