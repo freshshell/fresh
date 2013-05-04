@@ -713,7 +713,7 @@ $(fresh_commands | sed -e 's/^/    /' -e 's/ #//')
 EOF
 }
 
-fresh_add() {
+_parse_fresh_add_args() {
   if [[ "$1" == https://github.com/* ]]; then
     URL="$1"
 
@@ -736,9 +736,14 @@ fresh_add() {
     if [[ "$REF" != "master" ]]; then
       LINE="$LINE --ref=$REF"
     fi
+    echo "$LINE"
   else
-    LINE="$(_escape "$@")"
+    _escape "$@"
   fi
+}
+
+fresh_add() {
+  LINE="$(_parse_fresh_add_args "$@")"
 
   if _confirm "Add \`fresh $LINE\` to $(_freshrc_file)"; then
     echo "Adding \`fresh $LINE\` to $(_freshrc_file)..."
