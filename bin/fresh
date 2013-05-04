@@ -544,19 +544,19 @@ usage: fresh update <filter>
       set -e
       [[ -e "$FRESH_LOCAL/.git" ]] || exit 0
 
-      if (cd $FRESH_LOCAL && git rev-parse @{u} &> /dev/null); then
-        if [[ -z "$(cd $FRESH_LOCAL && git status --porcelain)" ]]; then
-          _update_repo "$FRESH_LOCAL" "local files"
-        else
+      if ! (cd $FRESH_LOCAL && git rev-parse @{u} &> /dev/null); then
+        _note "Not updating $FRESH_LOCAL because the current branch is non-tracking."
+        if [[ "$1" == "--local" ]]; then
+          exit 1
+        fi
+      else
+        if [[ -n "$(cd $FRESH_LOCAL && git status --porcelain)" ]]; then
           _note "Not updating $FRESH_LOCAL because it has uncommitted changes."
           if [[ "$1" == "--local" ]]; then
             exit 1
           fi
-        fi
-      else
-        _note "Not updating $FRESH_LOCAL because the current branch is non-tracking."
-        if [[ "$1" == "--local" ]]; then
-          exit 1
+        else
+          _update_repo "$FRESH_LOCAL" "local files"
         fi
       fi
     )
