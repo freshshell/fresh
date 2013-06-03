@@ -193,20 +193,24 @@ _file_list() {
       _fatal_error "Could not find \"$FILE_NAME\" source file."
     fi
   else
-    local path_glob="$SOURCE_DIR/$FILE_NAME"
-    if basename "$FILE_NAME" | grep -q '^\.'; then
-      local not_name_glob=''
+    if [[ "$FILE_NAME" == '.' ]]; then
+      find "$SOURCE_DIR" -type f -not -path "$SOURCE_DIR/.git/*"
     else
-      local not_name_glob='.*'
-    fi
-    if [[ -d $path_glob ]]; then
-      find "$path_glob" -type f -not -name "$not_name_glob"
-    else
-      find "$SOURCE_DIR" -path "$path_glob" -not -name "$not_name_glob" -type f | while read FILE_PATH; do
-        if ! echo "${FILE_PATH#$path_glob}" | grep -q /; then
-          echo "$FILE_PATH"
-        fi
-      done
+      local path_glob="$SOURCE_DIR/$FILE_NAME"
+      if basename "$FILE_NAME" | grep -q '^\.'; then
+        local not_name_glob=''
+      else
+        local not_name_glob='.*'
+      fi
+      if [[ -d $path_glob ]]; then
+        find "$path_glob" -type f -not -name "$not_name_glob"
+      else
+        find "$SOURCE_DIR" -path "$path_glob" -not -name "$not_name_glob" -type f | while read FILE_PATH; do
+          if ! echo "${FILE_PATH#$path_glob}" | grep -q /; then
+            echo "$FILE_PATH"
+          fi
+        done
+      fi
     fi
   fi | sort
 }

@@ -585,12 +585,13 @@ EOF
 
 it_links_directory_of_generic_files_for_whole_repo() {
   stubGit
-  mkdir -p $FRESH_PATH/source/repo/name/sub $FRESH_LOCAL
+  mkdir -p $FRESH_PATH/source/repo/name/{.git,.hidden-dir,sub} $FRESH_LOCAL
 
   echo 'fresh repo/name . --file=~/.foo/' >> $FRESH_RCFILE
 
   echo file1 > $FRESH_PATH/source/repo/name/file1
   echo file2 > $FRESH_PATH/source/repo/name/sub/file2
+  touch $FRESH_PATH/source/repo/name/{.git,.hidden-dir}/some-file
 
   runFresh
 
@@ -605,6 +606,9 @@ EOF
   assertFileMatches $FRESH_PATH/build/foo/sub/file2 <<EOF
 file2
 EOF
+
+  assertFalse 'git repo is not copied' '[ -e $FRESH_PATH/build/foo/.git ]'
+  assertTrue 'hidden dirs are copied' '[ -e $FRESH_PATH/build/foo/.hidden-dir ]'
 
   assertTrue 'can traverse symlink' '[ -f ~/.foo/file1 ]'
   assertTrue 'can traverse symlink' '[ -f ~/.foo/sub/file2 ]'
