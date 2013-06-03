@@ -583,6 +583,57 @@ EOF
   assertTrue 'can traverse symlink' '[ -f ~/.other/file1 ]'
 }
 
+it_links_directory_of_generic_files_for_whole_repo() {
+  stubGit
+  mkdir -p $FRESH_PATH/source/repo/name/sub $FRESH_LOCAL
+
+  echo 'fresh repo/name . --file=~/.foo/' >> $FRESH_RCFILE
+
+  echo file1 > $FRESH_PATH/source/repo/name/file1
+  echo file2 > $FRESH_PATH/source/repo/name/sub/file2
+
+  runFresh
+
+  assertFileMatches $SANDBOX_PATH/err.log <<EOF
+EOF
+
+  assertEquals "$FRESH_PATH/build/foo" "$(readlink ~/.foo)"
+
+  assertFileMatches $FRESH_PATH/build/foo/file1 <<EOF
+file1
+EOF
+  assertFileMatches $FRESH_PATH/build/foo/sub/file2 <<EOF
+file2
+EOF
+
+  assertTrue 'can traverse symlink' '[ -f ~/.foo/file1 ]'
+  assertTrue 'can traverse symlink' '[ -f ~/.foo/sub/file2 ]'
+}
+
+it_links_directory_of_generic_files_for_whole_repo_with_ref() {
+  stubGit
+  mkdir -p $FRESH_PATH/source/repo/name/.git $FRESH_LOCAL
+
+  echo 'fresh repo/name . --file=~/.foo/' --ref=abc123 >> $FRESH_RCFILE
+
+  runFresh
+
+  assertFileMatches $SANDBOX_PATH/err.log <<EOF
+EOF
+
+  assertEquals "$FRESH_PATH/build/foo" "$(readlink ~/.foo)"
+
+  assertFileMatches $FRESH_PATH/build/foo/ackrc <<EOF
+test data for abc123:ackrc
+EOF
+  assertFileMatches $FRESH_PATH/build/foo/recursive-test/abc/def <<EOF
+test data for abc123:recursive-test/abc/def
+EOF
+
+  assertTrue 'can traverse symlink' '[ -f ~/.foo/ackrc ]'
+  assertTrue 'can traverse symlink' '[ -f ~/.foo/recursive-test/abc/def ]'
+}
+
 it_builds_bin_files() {
   echo 'fresh scripts/sedmv --bin' >> $FRESH_RCFILE
   echo 'fresh pidof.sh --bin=~/bin/pidof' >> $FRESH_RCFILE
