@@ -153,6 +153,9 @@ EOF
     SOURCE_DIR="$REPO_DIR"
   else
     SOURCE_DIR="$FRESH_LOCAL"
+    if [[ "$FILE_NAME" == '.' ]]; then
+      _fatal_error "Cannot source whole of local dotfiles."
+    fi
   fi
 
   # check the source file exists
@@ -166,6 +169,14 @@ EOF
 }
 
 _file_list() {
+  if [[ "$FILE_NAME" == '.' ]]; then
+    if [[ "$MODE" != file ]]; then
+      _fatal_error "Whole repositories can only be sourced in file mode."
+    fi
+    if [[ "$MODE_ARG" != */ ]]; then
+      _fatal_error "Whole repositories require destination to be a directory."
+    fi
+  fi
   if [[ -n "$REF" ]]; then
     cd "$SOURCE_DIR"
     local MATCHED=0

@@ -638,6 +638,44 @@ EOF
   assertTrue 'can traverse symlink' '[ -f ~/.foo/recursive-test/abc/def ]'
 }
 
+it_errors_if_trying_to_use_whole_repo_with_invalid_arguments() {
+  stubGit
+  mkdir -p $FRESH_PATH/source/repo/name/.git $FRESH_LOCAL
+
+  # good
+  echo 'fresh repo/name . --file=~/.good/' > $FRESH_RCFILE
+  runFresh
+  assertFalse 'does not output an error' '[ -s $SANDBOX_PATH/err.log ]'
+
+  # invalid path to --file
+  echo 'fresh repo/name . --file=~/.bad-path' > $FRESH_RCFILE
+  runFresh fails
+  assertFileMatches <(grep Error $SANDBOX_PATH/err.log) <<EOF
+$(echo $'\033[4;31mError\033[0m:') Whole repositories require destination to be a directory.
+EOF
+
+  # missing path to --file
+  echo 'fresh repo/name . --file' > $FRESH_RCFILE
+  runFresh fails
+  assertFileMatches <(grep Error $SANDBOX_PATH/err.log) <<EOF
+$(echo $'\033[4;31mError\033[0m:') Whole repositories require destination to be a directory.
+EOF
+
+  # missing --file
+  echo 'fresh repo/name .' > $FRESH_RCFILE
+  runFresh fails
+  assertFileMatches <(grep Error $SANDBOX_PATH/err.log) <<EOF
+$(echo $'\033[4;31mError\033[0m:') Whole repositories can only be sourced in file mode.
+EOF
+
+  # missing repo
+  echo 'fresh . --file=~/.bad-local/' > $FRESH_RCFILE
+  runFresh fails
+  assertFileMatches <(grep Error $SANDBOX_PATH/err.log) <<EOF
+$(echo $'\033[4;31mError\033[0m:') Cannot source whole of local dotfiles.
+EOF
+}
+
 it_builds_bin_files() {
   echo 'fresh scripts/sedmv --bin' >> $FRESH_RCFILE
   echo 'fresh pidof.sh --bin=~/bin/pidof' >> $FRESH_RCFILE
