@@ -139,10 +139,11 @@ fresh jasoncodes/dotfiles config/pryrc --file --marker
 
 #### Sourcing whole directories of files
 
-Whole directories can be built and symlinked by including a trailing slash on the `--file` path:
+Whole directories or repositories can be built and symlinked by including a trailing slash on the `--file` path:
 
 ``` sh
 fresh mutt --file=~/.mutt/
+fresh tpope/vim-pathogen . --file=~/.vim/bundle/vim-pathogen/ # whole repository
 ```
 
 #### Building files without symlinking
