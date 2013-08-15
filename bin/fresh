@@ -162,7 +162,7 @@ EOF
   if [[ $(find "$SOURCE_DIR" -path "$SOURCE_DIR/$FILE_NAME" | wc -l) -lt 1 ]]; then
     # but not if we are locking to a git ref
     # since we would be checking the working tree
-    if [[ ! -n "$REF" ]] && [[ "$FILE_NAME" != '.' ]]; then
+    if [[ ! -n "$REF" ]] && [[ "$FILE_NAME" != '.' ]] && [[ -z "$ALLOW_EMPTY" ]]; then
       _fatal_error "Could not find \"$FILE_NAME\" source file."
     fi
   fi
@@ -440,6 +440,7 @@ _dsl_fresh_options() {
   DEFAULT_REF=
   DEFAULT_MARKER=
   DEFAULT_FILTER=
+  DEFAULT_ALLOW_EMPTY=
 
   if [[ $# -gt 0 ]]; then
     # __FRESH_OPTIONS__ placeholder as _parse_fresh_dsl_args expects a filename
@@ -450,6 +451,7 @@ _dsl_fresh_options() {
     DEFAULT_REF="$REF"
     DEFAULT_MARKER="$MARKER"
     DEFAULT_FILTER="$FILTER"
+    DEFAULT_ALLOW_EMPTY="$ALLOW_EMPTY"
   fi
 }
 
@@ -466,6 +468,7 @@ _parse_fresh_dsl_args() {
   REF="$DEFAULT_REF"
   MARKER="$DEFAULT_MARKER"
   FILTER="$DEFAULT_FILTER"
+  ALLOW_EMPTY="$DEFAULT_ALLOW_EMPTY"
 
   while [ $# -gt 0 ]
   do
@@ -501,6 +504,9 @@ _parse_fresh_dsl_args() {
         ;;
       --filter)
         _fatal_error "You must specify a filter program."
+        ;;
+      --allow-empty)
+        ALLOW_EMPTY="1"
         ;;
       -*)
         _fatal_error "Unknown option: $1"
