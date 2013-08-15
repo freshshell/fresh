@@ -1,6 +1,6 @@
 #!/bin/bash
 
-it_builds_local_shell_files() {
+_build_local_shell_files() {
   echo fresh aliases/git >> $FRESH_RCFILE
   echo fresh aliases/ruby >> $FRESH_RCFILE
 
@@ -8,9 +8,9 @@ it_builds_local_shell_files() {
   echo "alias gs='git status'" >> $FRESH_LOCAL/aliases/git
   echo "alias gl='git log'" >> $FRESH_LOCAL/aliases/git
   echo "alias rake='bundle exec rake'" >> $FRESH_LOCAL/aliases/ruby
+}
 
-  runFresh
-
+_assert_local_shell_files() {
   assertFileMatches $FRESH_PATH/build/shell.sh <<EOF
 export PATH="\$HOME/bin:\$PATH"
 export FRESH_PATH="$FRESH_PATH"
@@ -27,6 +27,12 @@ EOF
 
   assertFalse 'not executable' '[ -x $FRESH_PATH/build/shell.sh ]'
   assertFalse 'not writable' '[ -w $FRESH_PATH/build/shell.sh ]'
+}
+
+it_builds_local_shell_files() {
+  _build_local_shell_files
+  runFresh
+  _assert_local_shell_files
 }
 
 it_builds_local_shell_files_with_spaces() {
@@ -88,6 +94,13 @@ it_errors_with_missing_local_file() {
   mkdir -p $FRESH_LOCAL
   touch $FRESH_LOCAL/bar
   runFresh fails
+}
+
+it_builds_local_shell_files_with_ignore_missing() {
+  echo fresh aliases/haskell --ignore-missing >> $FRESH_RCFILE
+  _build_local_shell_files
+  runFresh
+  _assert_local_shell_files
 }
 
 it_preserves_existing_compiled_file_when_failing() {
@@ -294,6 +307,39 @@ git ls-tree -r --name-only abc1237
 EOF
 }
 
+it_does_not_error_if_source_file_missing_at_ref_with_ignore_missing() {
+  echo fresh repo/name bad-file --ref=abc1237 --ignore-missing >> $FRESH_RCFILE
+  mkdir -p $FRESH_PATH/source/repo/name
+  stubGit
+
+  runFresh
+
+  assertFileMatches $SANDBOX_PATH/git.log <<EOF
+cd $FRESH_PATH/source/repo/name
+git ls-tree -r --name-only abc1237
+EOF
+}
+
+it_builds_files_with_ref_and_ignore_missing() {
+  echo 'fresh repo/name ackrc --file --ref=abc1237 --ignore-missing' >> $FRESH_RCFILE
+  echo 'fresh repo/name missing --file --ref=abc1237 --ignore-missing' >> $FRESH_RCFILE
+  mkdir -p $FRESH_PATH/source/repo/name
+  stubGit
+
+  runFresh
+
+  assertFileMatches $SANDBOX_PATH/git.log <<EOF
+cd $FRESH_PATH/source/repo/name
+git ls-tree -r --name-only abc1237
+cd $FRESH_PATH/source/repo/name
+git show abc1237:ackrc
+cd $FRESH_PATH/source/repo/name
+git ls-tree -r --name-only abc1237
+EOF
+  assertTrue 'exists' '[ -e $FRESH_PATH/build/ackrc ]'
+  assertFalse 'does not exist' '[ -e $FRESH_PATH/missing ]'
+}
+
 it_ignores_subdirectories_when_globbing_from_working_tree() {
   echo "fresh 'recursive-test/*'" >> $FRESH_RCFILE
 
@@ -436,6 +482,18 @@ EOF
   assertFalse 'not writable' '[ -w $FRESH_PATH/build/pryrc ]'
   assertFalse 'not writable' '[ -w $FRESH_PATH/build/gitconfig ]'
   assertFalse 'not writable' '[ -w $FRESH_PATH/build/vimrc ]'
+}
+
+it_does_not_create_a_file_when_single_source_is_missing_with_ignore_missing() {
+  echo 'fresh tmux.conf --file --ignore-missing' >> $FRESH_RCFILE
+  echo 'fresh ghci --file --ignore-missing' >> $FRESH_RCFILE
+  mkdir -p $FRESH_LOCAL
+  touch $FRESH_LOCAL/tmux.conf
+
+  runFresh
+
+  assertTrue 'exists' '[ -e $FRESH_PATH/build/tmux.conf ]'
+  assertFalse 'does not exist' '[ -e $FRESH_PATH/build/ghci ]'
 }
 
 it_builds_generic_files_with_globbing() {
