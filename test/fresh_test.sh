@@ -336,8 +336,8 @@ git show abc1237:ackrc
 cd $FRESH_PATH/source/repo/name
 git ls-tree -r --name-only abc1237
 EOF
-  assertTrue 'exists' '[ -e $FRESH_PATH/build/ackrc  ]'
-  assertFalse 'does not exist' '[ -e $FRESH_PATH/missing  ]'
+  assertTrue 'exists' '[ -e $FRESH_PATH/build/ackrc ]'
+  assertFalse 'does not exist' '[ -e $FRESH_PATH/missing ]'
 }
 
 it_ignores_subdirectories_when_globbing_from_working_tree() {
@@ -492,8 +492,8 @@ it_does_not_create_a_file_when_single_source_is_missing_with_ignore_missing() {
 
   runFresh
 
-  assertTrue 'exists' '[ -e $FRESH_PATH/build/tmux.conf  ]'
-  assertFalse 'does not exist' '[ -e $FRESH_PATH/build/ghci  ]'
+  assertTrue 'exists' '[ -e $FRESH_PATH/build/tmux.conf ]'
+  assertFalse 'does not exist' '[ -e $FRESH_PATH/build/ghci ]'
 }
 
 it_builds_generic_files_with_globbing() {
