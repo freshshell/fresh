@@ -320,6 +320,26 @@ git ls-tree -r --name-only abc1237
 EOF
 }
 
+it_builds_files_with_ref_and_ignore_missing() {
+  echo 'fresh repo/name ackrc --file --ref=abc1237 --ignore-missing' >> $FRESH_RCFILE
+  echo 'fresh repo/name missing --file --ref=abc1237 --ignore-missing' >> $FRESH_RCFILE
+  mkdir -p $FRESH_PATH/source/repo/name
+  stubGit
+
+  runFresh
+
+  assertFileMatches $SANDBOX_PATH/git.log <<EOF
+cd $FRESH_PATH/source/repo/name
+git ls-tree -r --name-only abc1237
+cd $FRESH_PATH/source/repo/name
+git show abc1237:ackrc
+cd $FRESH_PATH/source/repo/name
+git ls-tree -r --name-only abc1237
+EOF
+  assertTrue 'exists' '[ -e $FRESH_PATH/build/ackrc  ]'
+  assertFalse 'does not exist' '[ -e $FRESH_PATH/missing  ]'
+}
+
 it_ignores_subdirectories_when_globbing_from_working_tree() {
   echo "fresh 'recursive-test/*'" >> $FRESH_RCFILE
 
