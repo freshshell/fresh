@@ -1,6 +1,6 @@
 #!/bin/bash
 
-it_builds_local_shell_files() {
+_build_local_shell_files() {
   echo fresh aliases/git >> $FRESH_RCFILE
   echo fresh aliases/ruby >> $FRESH_RCFILE
 
@@ -8,9 +8,9 @@ it_builds_local_shell_files() {
   echo "alias gs='git status'" >> $FRESH_LOCAL/aliases/git
   echo "alias gl='git log'" >> $FRESH_LOCAL/aliases/git
   echo "alias rake='bundle exec rake'" >> $FRESH_LOCAL/aliases/ruby
+}
 
-  runFresh
-
+_assert_local_shell_files() {
   assertFileMatches $FRESH_PATH/build/shell.sh <<EOF
 export PATH="\$HOME/bin:\$PATH"
 export FRESH_PATH="$FRESH_PATH"
@@ -27,6 +27,12 @@ EOF
 
   assertFalse 'not executable' '[ -x $FRESH_PATH/build/shell.sh ]'
   assertFalse 'not writable' '[ -w $FRESH_PATH/build/shell.sh ]'
+}
+
+it_builds_local_shell_files() {
+  _build_local_shell_files
+  runFresh
+  _assert_local_shell_files
 }
 
 it_builds_local_shell_files_with_spaces() {
@@ -88,6 +94,13 @@ it_errors_with_missing_local_file() {
   mkdir -p $FRESH_LOCAL
   touch $FRESH_LOCAL/bar
   runFresh fails
+}
+
+it_builds_local_shell_files_with_ignore_missing() {
+  echo fresh aliases/haskell --ignore-missing >> $FRESH_RCFILE
+  _build_local_shell_files
+  runFresh
+  _assert_local_shell_files
 }
 
 it_preserves_existing_compiled_file_when_failing() {
