@@ -645,7 +645,7 @@ _repo_name_from_source_path() {
 
 fresh_edit() {
   if [[ -L "$FRESH_RCFILE" ]]; then
-    local RCFILE="$(readlink "$FRESH_RCFILE")"
+    local RCFILE="$(realpath "$FRESH_RCFILE")"
   else
     local RCFILE="$FRESH_RCFILE"
   fi
@@ -871,6 +871,18 @@ _prevent_invalid_arguments() {
   if [ -n "$2" ]; then
     _fatal_error "Invalid arguments"
   fi
+}
+
+realpath() {
+  perl - "$@" <<PERL
+    use Cwd 'abs_path';
+
+    if (-e \$ARGV[0]) {
+      print abs_path(\$ARGV[0]) . "\n";
+    } else {
+      exit 1;
+    }
+PERL
 }
 
 _freshrc_file() {

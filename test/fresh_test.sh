@@ -1888,6 +1888,8 @@ it_edits_freshrc_files() {
 
 it_edits_linked_freshrc_files() {
   FRESH_RCFILE=~/.freshrc
+  mkdir -p ~/.dotfiles/
+  touch ~/.dotfiles/freshrc
   ln -s ~/.dotfiles/freshrc ~/.freshrc
   assertEquals "$HOME/.dotfiles/freshrc" "$(EDITOR=echo fresh edit)"
 }
