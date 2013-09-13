@@ -69,11 +69,18 @@ To disable this error, add \`FRESH_NO_BIN_CHECK=true\` in your freshrc file."
   # remove the old build dir
   rm -rf "$FRESH_PATH/build.old"
 
+  fresh_after_build
+
   # success!
   if [ ! "$1" == "--quiet" ];
   then
     echo $'Your dot files are now \033[1;32mfresh\033[0m.'
   fi
+}
+
+# placeholder method that can be overridden in your freshrc
+fresh_after_build() {
+  true
 }
 
 _dsl_install_fresh() {

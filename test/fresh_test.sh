@@ -1334,6 +1334,17 @@ it_allows_bin_fresh_error_to_be_disabled() {
   runFresh
 }
 
+it_runs_fresh_after_build() {
+  echo "fresh_after_build() { echo test after_build; }" >> $FRESH_RCFILE
+
+  runFresh
+
+  assertFileMatches $SANDBOX_PATH/out.log <<EOF
+test after_build
+$(echo $'Your dot files are now \033[1;32mfresh\033[0m.')
+EOF
+}
+
 assert_parse_fresh_dsl_args() {
   (
     set -e
