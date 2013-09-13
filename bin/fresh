@@ -644,7 +644,12 @@ _repo_name_from_source_path() {
 }
 
 fresh_edit() {
-  ${EDITOR:-vi} "$FRESH_RCFILE"
+  if [[ -L "$FRESH_RCFILE" ]]; then
+    local RCFILE="$(readlink "$FRESH_RCFILE")"
+  else
+    local RCFILE="$FRESH_RCFILE"
+  fi
+  ${EDITOR:-vi} "$RCFILE"
 }
 
 fresh_search() {
