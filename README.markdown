@@ -46,6 +46,9 @@ An example `~/.freshrc` file:
 # handles updating fresh
 fresh freshshell/fresh bin/fresh --bin
 
+# links your local ~/.dotfiles/gitconfig to ~/.gitconfig (you can change your local directory by setting $FRESH_LOCAL)
+fresh gitconfig --file
+
 # builds jasoncodes' aliases into ~/.fresh/build.sh
 fresh jasoncodes/dotfiles shell/aliases/\*
 
