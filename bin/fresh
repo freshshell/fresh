@@ -789,12 +789,8 @@ fresh_add() {
     eval _parse_fresh_dsl_args "$LINE"
     local REPO_DIR="$(_repo_name "$REPO_NAME")"
 
-    if [[ -n "$REPO_NAME" ]] && [[ -d "$FRESH_PATH/source/$REPO_DIR" ]]; then
-      if _confirm "Update local cache of $REPO_DIR"; then
-        fresh_update "$REPO_DIR"
-      else
-        _note "You can run \`fresh update $REPO_DIR\`."
-      fi
+    if [[ -n "$REPO_NAME" ]] && [[ -d "$FRESH_PATH/source/$REPO_DIR" ]] && [[ ! -e "$FRESH_PATH/source/$REPO_DIR/$FILE_NAME" ]]; then
+      fresh_update "$REPO_DIR"
     fi
 
     fresh_install

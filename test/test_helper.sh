@@ -66,6 +66,9 @@ case "\$1" in
     echo test data > "\$3/file"
     ;;
   pull)
+    if [ -e .git/commands ]; then
+      bash .git/commands
+    fi
     if [ -e .git/output ]; then
       cat .git/output
     else
