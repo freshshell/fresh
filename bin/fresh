@@ -70,10 +70,7 @@ To disable this error, add \`FRESH_NO_BIN_CHECK=true\` in your freshrc file."
   rm -rf "$FRESH_PATH/build.old"
 
   # success!
-  if [ ! "$1" == "--quiet" ];
-  then
-    echo $'Your dot files are now \033[1;32mfresh\033[0m.'
-  fi
+  echo $'Your dot files are now \033[1;32mfresh\033[0m.'
 }
 
 _dsl_install_fresh() {
