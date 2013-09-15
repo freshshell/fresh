@@ -5,6 +5,10 @@ FRESH_PATH="${FRESH_PATH:-$HOME/.fresh}"
 FRESH_LOCAL="${FRESH_LOCAL:-$HOME/.dotfiles}"
 
 set -o pipefail
+set -o nounset
+
+IN_RC_FILE=0
+SKIP_INFO=0
 
 _prefix_match() {
   local glob="$2*"
@@ -22,7 +26,7 @@ fresh_install() {
   _run_dsl install
 
   # safety check to ensure the user doesn't lock themselves out
-  if [[ -z "$FRESH_NO_BIN_CHECK" ]] && [[ ! -x "$FRESH_PATH/build.new/bin/fresh" ]]; then
+  if [[ -z "${FRESH_NO_BIN_CHECK:-}" ]] && [[ ! -x "$FRESH_PATH/build.new/bin/fresh" ]]; then
     _fatal_error "It looks you do not have fresh in your freshrc file. This could result
 in difficulties running \`fresh\` later. You probably want to add a line like
 the following using \`fresh edit\`:
@@ -120,8 +124,8 @@ _repo_name() {
 _prepare_file_source() {
   # clone or update source repo
   if [ -n "$REPO_NAME" ]; then
-    if [ -d "$FRESH_LOCAL/.git" ] && [ -z "$FRESH_NO_LOCAL_CHECK" ]; then
-      if [ -z "$LOCAL_REPO_URL" ]; then
+    if [ -d "$FRESH_LOCAL/.git" ] && [ -z "${FRESH_NO_LOCAL_CHECK:-}" ]; then
+      if [ -z "${LOCAL_REPO_URL:-}" ]; then
         LOCAL_REPO_URL="$(cd "$FRESH_LOCAL" && git config --get remote.origin.url)"
       fi
       LOCAL_REPO_NAME="$(_repo_name "$LOCAL_REPO_URL")"
@@ -371,7 +375,7 @@ _fresh_output() {
     echo >> "$FRESH_PATH/build.new/$DEST_NAME"
   fi
 
-  if [[ -e "$FRESH_PATH/build.new/$DEST_NAME" && "$MODE" == "bin" && "$FRESH_NO_BIN_CONFLICT_CHECK" != "true" ]]; then
+  if [[ -e "$FRESH_PATH/build.new/$DEST_NAME" && "$MODE" == "bin" && "${FRESH_NO_BIN_CONFLICT_CHECK:-}" != "true" ]]; then
     _note "Multiple sources concatenated into a single bin file."
     cat <<EOF
 $(_rc_file_line_reference)
@@ -420,6 +424,7 @@ _run_dsl() {
   # load the freshrc file
   if [ -e "$FRESH_RCFILE" ]; then
     IN_RC_FILE=1
+    fresh-options # init defaults
     source "$FRESH_RCFILE"
     IN_RC_FILE=0
   fi
@@ -565,7 +570,7 @@ usage: fresh update <filter>
   mkdir -p "$FRESH_PATH/logs"
   local LOG_FILE="$FRESH_PATH/logs/update-$(date +%Y-%m-%d-%H%M%S).log"
 
-  if [[ -z "$1" ]] || [[ "$1" == "--local" ]]; then
+  if [[ $# == 0 ]] || [[ "$1" == "--local" ]]; then
     (
       set -e
       [[ -e "$FRESH_LOCAL/.git" ]] || exit 0
@@ -588,12 +593,12 @@ usage: fresh update <filter>
     )
     [[ $? == 0 ]] || exit 1
 
-    if [[ "$1" == "--local" ]]; then
+    if [[ "${1:-}" == "--local" ]]; then
       return
     fi
   fi
 
-  local FILTER="$1"
+  local FILTER="${1:-}"
   if [[ -z "$FILTER" ]]; then
     FILTER="*"
   elif ! echo "$FILTER" | grep -q /; then
@@ -783,6 +788,7 @@ fresh_add() {
     echo "Adding \`fresh $LINE\` to $(_freshrc_file)..."
     echo "fresh $LINE" >> "$FRESH_RCFILE"
 
+    _dsl_fresh_options # init defaults
     eval _parse_fresh_dsl_args "$LINE"
     local REPO_DIR="$(_repo_name "$REPO_NAME")"
 
@@ -860,7 +866,7 @@ _format_url() {
 }
 
 _prevent_invalid_arguments() {
-  if [ -n "$2" ]; then
+  if [ $# -gt 1 ]; then
     _fatal_error "Invalid arguments"
   fi
 }
@@ -891,7 +897,7 @@ EOF
 }
 
 main() {
-  case "$1" in
+  case "${1:-}" in
     help|--help)
       fresh_help
       ;;
@@ -939,6 +945,6 @@ main() {
   esac
 }
 
-if [ -z "$__FRESH_TEST_MODE" ]; then
+if [ -z "${__FRESH_TEST_MODE:-}" ]; then
   main "$@"
 fi
