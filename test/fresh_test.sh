@@ -1881,6 +1881,27 @@ it_adds_lines_to_freshrc_from_github_urls() {
   assertEquals "fresh twe4ked/dotfiles shell/aliases/git.sh" "$(parse_fresh_add_args https://github.com/twe4ked/dotfiles/blob/master/shell/aliases/git.sh)"
 }
 
+it_edits_freshrc_files() {
+  FRESH_RCFILE=~/.freshrc
+  assertEquals "$HOME/.freshrc" "$(EDITOR=echo fresh edit)"
+}
+
+it_edits_linked_freshrc_files() {
+  FRESH_RCFILE=~/.freshrc
+  mkdir -p ~/.dotfiles/
+  touch ~/.dotfiles/freshrc
+  ln -s ~/.dotfiles/freshrc ~/.freshrc
+  assertEquals "$HOME/.dotfiles/freshrc" "$(EDITOR=echo fresh edit)"
+}
+
+it_edits_relative_linked_freshrc_files() {
+  FRESH_RCFILE=~/.freshrc
+  mkdir -p ~/.dotfiles/
+  touch ~/.dotfiles/freshrc
+  ln -s .dotfiles/freshrc ~/.freshrc
+  assertEquals "$HOME/.dotfiles/freshrc" "$(EDITOR=echo fresh edit)"
+}
+
 it_applies_fresh_options_to_multiple_lines() {
   echo 'fresh-options --file=~/.vimrc --marker=\"' >> $FRESH_RCFILE
   echo "fresh mappings.vim --filter='tr a x'" >> $FRESH_RCFILE
