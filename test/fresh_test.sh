@@ -1795,9 +1795,9 @@ git clone https://github.com/user/repo $FRESH_PATH/source/user/repo
 EOF
 }
 
-it_adds_lines_to_freshrc_for_existing_remotes() {
+it_adds_lines_to_freshrc_for_existing_remotes_and_updates_if_the_file_does_not_exist() {
   mkdir -p $FRESH_PATH/source/user/repo/.git
-  touch $FRESH_PATH/source/user/repo/file
+  echo "touch \"$FRESH_PATH/source/user/repo/file\"" > "$FRESH_PATH/source/user/repo/.git/commands"
 
   stubGit
 
@@ -1809,7 +1809,7 @@ fresh user/repo file
 EOF
   assertFileMatches $SANDBOX_PATH/out.log <<EOF
 Add \`fresh user/repo file\` to $FRESH_RCFILE [Y/n]? Adding \`fresh user/repo file\` to $FRESH_RCFILE...
-Update local cache of user/repo [Y/n]? * Updating user/repo
+* Updating user/repo
 | Current branch master is up to date.
 $(echo $'Your dot files are now \033[1;32mfresh\033[0m.')
 EOF
@@ -1839,13 +1839,13 @@ EOF
 EOF
 }
 
-it_adds_lines_to_freshrc_without_updating_existing_repo_if_declined() {
+it_adds_lines_to_freshrc_without_updating_existing_repo_if_the_file_exists() {
   mkdir -p $FRESH_PATH/source/user/repo/.git
   touch $FRESH_PATH/source/user/repo/file
 
   stubGit
 
-  (echo y; echo n) | runFresh user/repo file
+  yes | runFresh user/repo file
   assertTrue 'successfully adds' $?
 
   assertFileMatches $FRESH_RCFILE <<EOF
@@ -1853,7 +1853,6 @@ fresh user/repo file
 EOF
   assertFileMatches $SANDBOX_PATH/out.log <<EOF
 Add \`fresh user/repo file\` to $FRESH_RCFILE [Y/n]? Adding \`fresh user/repo file\` to $FRESH_RCFILE...
-Update local cache of user/repo [Y/n]? $(echo $'\033[1;33mNote\033[0m:') You can run \`fresh update user/repo\`.
 $(echo $'Your dot files are now \033[1;32mfresh\033[0m.')
 EOF
   assertFileMatches $SANDBOX_PATH/err.log <<EOF
