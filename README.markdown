@@ -46,6 +46,9 @@ An example `~/.freshrc` file:
 # handles updating fresh
 fresh freshshell/fresh bin/fresh --bin
 
+# links your local ~/.dotfiles/gitconfig to ~/.gitconfig (you can change your local directory by setting $FRESH_LOCAL)
+fresh gitconfig --file
+
 # builds jasoncodes' aliases into ~/.fresh/build.sh
 fresh jasoncodes/dotfiles shell/aliases/\*
 
@@ -209,6 +212,13 @@ fresh-options
 
 `fresh-options` overrides any previous `fresh-options` calls.
 Passing no arguments resets back to the default.
+
+### Advanced Usage
+
+There are many other ways you can customize fresh.
+Check out our [advanced usage wiki pages][advanced usage] for more information.
+
+[advanced usage]: https://github.com/freshshell/fresh/wiki#advanced-usage
 
 ## Command line options
 
