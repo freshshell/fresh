@@ -1350,6 +1350,7 @@ assert_parse_fresh_dsl_args() {
     set -e
     __FRESH_TEST_MODE=1
     source bin/fresh
+    _dsl_fresh_options # init defaults
     _parse_fresh_dsl_args "$@" > $SANDBOX_PATH/test_parse_fresh_dsl_args.out
     echo REPO_NAME="$REPO_NAME"
     echo FILE_NAME="$FILE_NAME"
