@@ -749,13 +749,13 @@ _dsl_show_fresh() {
 }
 
 fresh_help() {
+  echo $'Keep your dot files \033[1;32mfresh\033[0m.'
 cat <<EOF
-Keep your dot files fresh.
 
 The following commands will install/update configuration files
 as specified in your $(_freshrc_file) file.
 
-See http://freshshell.com/readme for more documentation.
+See $(_format_url http://freshshell.com/readme) for more documentation.
 
 usage: fresh <command> [<args>]
 
