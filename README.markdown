@@ -11,6 +11,22 @@ added to the [directory].
 
 [![Build Status](https://secure.travis-ci.org/freshshell/fresh.png?branch=master)](http://travis-ci.org/freshshell/fresh)
 
+## Contents
+
+- [Installation](#installation)
+- [Usage](#usage)
+	- [Sources](#sources)
+	- [Shell files](#shell-files)
+	- [Config files](#config-files)
+	- [Bin files](#bin-files)
+	- [Locking to specific Git references](#locking-to-specific-git-references)
+	- [Filters](#filters)
+	- [Option Blocks](#option-blocks)
+	- [Advanced Usage](#advanced-usage)
+- [Command line options](#command-line-options)
+- [Maintainers](#maintainers)
+- [Licence](#licence)
+
 ## Installation
 
 Install [fresh](http://freshshell.com/) with the following:
