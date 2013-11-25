@@ -38,8 +38,8 @@ if ! [ -e ~/.freshrc ]; then
 #
 # Examples:
 #
-#   fresh twe4ked/dotfiles shell/functions.sh
-#   fresh jasoncodes/dotfiles aliases/rails.sh
+#   fresh twe4ked/dotfiles shell/functions/*
+#   fresh jasoncodes/dotfiles shell/aliases/rails.sh
 #   fresh jasoncodes/dotfiles config/tmux.conf --file
 #
 # See http://freshshell.com/readme for documentation.
