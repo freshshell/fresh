@@ -38,7 +38,7 @@ if ! [ -e ~/.freshrc ]; then
 #
 # Examples:
 #
-#   fresh twe4ked/dotfiles shell/functions/*
+#   fresh twe4ked/dotfiles shell/functions/\*
 #   fresh jasoncodes/dotfiles shell/aliases/rails.sh
 #   fresh jasoncodes/dotfiles config/tmux.conf --file
 #
