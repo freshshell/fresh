@@ -30,8 +30,8 @@ if [ -n "$FRESH_LOCAL_SOURCE" ] && ! [ -d "$FRESH_LOCAL" ]; then
 fi
 
 if ! [ -e ~/.freshrc ]; then
-  if [ -r ~/.dotfiles/freshrc ]; then
-    ln -s .dotfiles/freshrc ~/.freshrc
+  if [ -r "$FRESH_LOCAL/freshrc" ]; then
+    ln -s "$FRESH_LOCAL/freshrc" ~/.freshrc
   else
     cat << 'EOF' > ~/.freshrc
 # freshshell.com
