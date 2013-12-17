@@ -1,8 +1,10 @@
-#!/bin/bash -e
+#!/bin/bash
 #
 # Install fresh with the following command:
 #
 #   bash -c "`curl -sL get.freshshell.com`"
+
+set -e
 
 mkdir -p ~/.fresh/source/freshshell
 
