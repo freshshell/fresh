@@ -316,6 +316,8 @@ fresh is maintained by [jasoncodes] and [twe4ked].
 
 MIT
 
+![Analytics](https://ga-beacon.appspot.com/UA-35374397-2/fresh/readme?pixel)
+
 [jasoncodes/dotfiles]: https://github.com/jasoncodes/dotfiles
 [twe4ked/dotfiles]: https://github.com/twe4ked/dotfiles
 [jasoncodes]: https://github.com/jasoncodes
