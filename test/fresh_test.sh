@@ -1367,7 +1367,7 @@ EOF
 assert_parse_fresh_dsl_args() {
   (
     set -e
-    __FRESH_TEST_MODE=1
+    __FRESH_TEST_MODE__=1
     source bin/fresh
     _dsl_fresh_options # init defaults
     _parse_fresh_dsl_args "$@" > $SANDBOX_PATH/test_parse_fresh_dsl_args.out
@@ -1696,7 +1696,7 @@ EOF
 it_escapes_arguments() {
   (
     set -e
-    __FRESH_TEST_MODE=1
+    __FRESH_TEST_MODE__=1
     source bin/fresh
     _escape foo 'bar baz' > $SANDBOX_PATH/escape.out
   )
@@ -1709,7 +1709,7 @@ EOF
 it_confirms_query_positive() {
   (
     set -e
-    __FRESH_TEST_MODE=1
+    __FRESH_TEST_MODE__=1
     source bin/fresh
     echo y | _confirm 'Test question' > $SANDBOX_PATH/confirm.out
   )
@@ -1720,7 +1720,7 @@ it_confirms_query_positive() {
 it_confirms_query_negative() {
   (
     set -e
-    __FRESH_TEST_MODE=1
+    __FRESH_TEST_MODE__=1
     source bin/fresh
     echo n | _confirm 'Test question' > $SANDBOX_PATH/confirm.out
   )
@@ -1731,7 +1731,7 @@ it_confirms_query_negative() {
 it_confirms_query_default() {
   (
     set -e
-    __FRESH_TEST_MODE=1
+    __FRESH_TEST_MODE__=1
     source bin/fresh
     echo | _confirm 'Test question' > $SANDBOX_PATH/confirm.out
   )
@@ -1742,7 +1742,7 @@ it_confirms_query_default() {
 it_confirms_query_invalid() {
   (
     set -e
-    __FRESH_TEST_MODE=1
+    __FRESH_TEST_MODE__=1
     source bin/fresh
     echo -e "blah\ny" | _confirm 'Test question' > $SANDBOX_PATH/confirm.out
   )

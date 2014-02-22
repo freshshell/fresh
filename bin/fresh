@@ -976,6 +976,6 @@ main() {
   esac
 }
 
-if [ -z "${__FRESH_TEST_MODE:-}" ]; then
+if [ -z "${__FRESH_TEST_MODE__:-}" ]; then
   main "$@"
 fi
