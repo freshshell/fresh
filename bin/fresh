@@ -87,7 +87,9 @@ fresh_after_build() {
 
 _fresh_preamble() {
   if [ -z "${__FRESH_PREAMBLE_DONE__:-}" ]; then
-    echo "export PATH=\"${FRESH_BIN_PATH/#$HOME/\$HOME}:\$PATH\"" >> "$FRESH_PATH/build.new/shell.sh"
+    if [ -z "${FRESH_NO_PATH_EXPORT:-}" ]; then
+      echo "export PATH=\"${FRESH_BIN_PATH/#$HOME/\$HOME}:\$PATH\"" >> "$FRESH_PATH/build.new/shell.sh"
+    fi
     echo "export FRESH_PATH=\"$FRESH_PATH\"" >> "$FRESH_PATH/build.new/shell.sh"
     __FRESH_PREAMBLE_DONE__=1
   fi
