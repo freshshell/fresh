@@ -1334,6 +1334,25 @@ it_allows_bin_fresh_error_to_be_disabled() {
   runFresh
 }
 
+it_allows_default_bin_path_to_be_configured() {
+  echo "FRESH_BIN_PATH=\"\$HOME/Applications/bin\"" >> $FRESH_RCFILE
+  echo "fresh bin/fresh --bin" >> $FRESH_RCFILE
+  mkdir -p $FRESH_LOCAL/bin
+  echo "test file" > $FRESH_LOCAL/bin/fresh
+
+  runFresh
+
+  assertTrue 'file exists after' '[ -f "$HOME/Applications/bin/fresh" ]'
+  assertEquals "$FRESH_PATH/build/bin/fresh" "$(readlink ~/Applications/bin/fresh)"
+  assertFileMatches $FRESH_PATH/build/shell.sh <<EOF
+export PATH="\$HOME/Applications/bin:\$PATH"
+export FRESH_PATH="$FRESH_PATH"
+EOF
+  assertFileMatches "$HOME/Applications/bin/fresh" <<EOF
+test file
+EOF
+}
+
 it_runs_fresh_after_build() {
   echo "fresh_after_build() { echo test after_build; }" >> $FRESH_RCFILE
 
