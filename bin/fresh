@@ -146,7 +146,9 @@ _prepare_file_source() {
   if [ -n "$REPO_NAME" ]; then
     if [ -d "$FRESH_LOCAL/.git" ] && [ -z "${FRESH_NO_LOCAL_CHECK:-}" ]; then
       if [ -z "${LOCAL_REPO_URL:-}" ]; then
-        LOCAL_REPO_URL="$(cd "$FRESH_LOCAL" && git config --get remote.origin.url)"
+        local UPSTREAM_BRANCH="$(cd "$FRESH_LOCAL" && git rev-parse --abbrev-ref --symbolic-full-name @{u} 2> /dev/null)"
+        local UPSTREAM_REMOTE="$(echo "$UPSTREAM_BRANCH" | cut -d/ -f1)"
+        LOCAL_REPO_URL="$(cd "$FRESH_LOCAL" && git config --get remote.$UPSTREAM_REMOTE.url)"
       fi
       LOCAL_REPO_NAME="$(_repo_name "$LOCAL_REPO_URL")"
       SOURCE_REPO_NAME="$(_repo_name "$REPO_NAME")"

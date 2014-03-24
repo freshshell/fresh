@@ -103,6 +103,9 @@ case "\$1" in
       echo ' M some-file'
     fi
     ;;
+  rev-parse)
+    echo my-remote-name/master
+    ;;
 esac
 EOF
   chmod +x $SANDBOX_PATH/bin/git

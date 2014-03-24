@@ -242,7 +242,9 @@ EOF
 EOF
   assertFileMatches $SANDBOX_PATH/git.log <<EOF
 cd $FRESH_LOCAL
-git config --get remote.origin.url
+git rev-parse --abbrev-ref --symbolic-full-name @{u}
+cd $FRESH_LOCAL
+git config --get remote.my-remote-name.url
 EOF
 }
 
