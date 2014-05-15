@@ -248,6 +248,23 @@ git config --get remote.my-remote-name.url
 EOF
 }
 
+it_does_not_fail_if_local_dotfiles_does_not_have_a_remote() {
+  echo fresh repo/name file >> $FRESH_RCFILE
+  mkdir -p $FRESH_PATH/source/repo/name/.git
+  touch $FRESH_PATH/source/repo/name/file
+
+  mkdir -p $FRESH_LOCAL
+  git init $FRESH_LOCAL > /dev/null
+
+  runFresh
+
+  assertFileMatches $SANDBOX_PATH/out.log <<EOF
+$(echo $'Your dot files are now \033[1;32mfresh\033[0m.')
+EOF
+  assertFileMatches $SANDBOX_PATH/err.log <<EOF
+EOF
+}
+
 it_builds_with_ref_locks() {
   echo fresh repo/name 'aliases/*' --ref=abc1237 >> $FRESH_RCFILE
   echo fresh repo/name ackrc --file --ref=1234567 >> $FRESH_RCFILE
