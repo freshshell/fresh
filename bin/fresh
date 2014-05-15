@@ -984,6 +984,6 @@ main() {
   esac
 }
 
-if [ -z "${__FRESH_TEST_MODE__:-}" ]; then
+if [ "$BASH_SOURCE" == "$0" ]; then
   main "$@"
 fi
