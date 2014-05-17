@@ -156,6 +156,12 @@ fresh twe4ked/dotfiles 'vim/*' --file=~/.vimrc --marker='"'
 fresh jasoncodes/dotfiles config/pryrc --file --marker
 ```
 
+#### Ordering globbed directories
+
+Using a glob to source multiple files from a single directory will read files in alphabetical order.
+If you need to control the order in which files are sourced, you can create a `.fresh-order` file
+in the directory being globbed containing an ordered list of files to read first.
+
 #### Sourcing whole directories of files
 
 Whole directories or repositories can be built and symlinked by including a trailing slash on the `--file` path:

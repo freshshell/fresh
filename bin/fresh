@@ -207,6 +207,10 @@ _file_list() {
   if [[ -n "$REF" ]]; then
     cd "$SOURCE_DIR"
     local MATCHED=0
+    local TEMP_ORDER_FILE="$(mktemp "${TMPDIR:-/tmp}/fresh.XXXXXX")"
+    if [[ "$FILE_NAME" == *\** ]]; then
+      (git show "$REF:$(dirname "$FILE_NAME")/.fresh-order") > "$TEMP_ORDER_FILE"
+    fi
     while read FILE_PATH; do
       if [[ "$FILE_NAME" == '.' ]]; then
         echo "$FILE_PATH"
@@ -225,14 +229,15 @@ _file_list() {
           MATCHED=1
         fi
       fi
-    done < <(git ls-tree -r --name-only "$REF")
+    done < <(git ls-tree -r --name-only "$REF" | _file_list_sort "$(dirname "$FILE_NAME")" "$TEMP_ORDER_FILE")
+    rm "$TEMP_ORDER_FILE"
     cd "$OLDPWD"
     if [[ "$MATCHED" == 0 ]] && [[ -z "$IGNORE_MISSING" ]]; then
       _fatal_error "Could not find \"$FILE_NAME\" source file."
     fi
   else
     if [[ "$FILE_NAME" == '.' ]]; then
-      find "$SOURCE_DIR" -type f -not -path "$SOURCE_DIR/.git/*"
+      find "$SOURCE_DIR" -type f -not -path "$SOURCE_DIR/.git/*" | sort
     else
       local path_glob="$SOURCE_DIR/$FILE_NAME"
       if basename "$FILE_NAME" | grep -q '^\.'; then
@@ -247,10 +252,32 @@ _file_list() {
           if ! echo "${FILE_PATH#$path_glob}" | grep -q /; then
             echo "$FILE_PATH"
           fi
-        done
+        done | _file_list_sort "$(dirname "$path_glob")" "$(dirname "$path_glob")/.fresh-order"
       fi
     fi
-  fi | sort
+  fi
+}
+
+_file_list_sort() {
+  local PREFIX="$1"
+  local ORDER_FILE="$2"
+
+  if [[ -s "$ORDER_FILE" ]]; then
+    local TEMP_PATHS_FILE="$(mktemp "${TMPDIR:-/tmp}/fresh.XXXXXX")"
+    cat > "$TEMP_PATHS_FILE"
+
+    local TEMP_ORDER_FILE="$(mktemp "${TMPDIR:-/tmp}/fresh.XXXXXX")"
+    cat "$ORDER_FILE" | while read NAME; do
+      echo "$PREFIX/$NAME" >> "$TEMP_ORDER_FILE"
+    done
+
+    (grep -xFf "$TEMP_PATHS_FILE" "$TEMP_ORDER_FILE" || true)
+    (grep -vxFf "$TEMP_ORDER_FILE" "$TEMP_PATHS_FILE" || true) | sort
+
+    rm "$TEMP_PATHS_FILE" "$TEMP_ORDER_FILE"
+  else
+    sort
+  fi | (grep -v '\.fresh-order$' || true)
 }
 
 _source_file_contents() {

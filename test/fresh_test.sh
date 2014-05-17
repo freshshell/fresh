@@ -278,6 +278,8 @@ it_builds_with_ref_locks() {
 
   assertFileMatches $SANDBOX_PATH/git.log <<EOF
 cd $FRESH_PATH/source/repo/name
+git show abc1237:aliases/.fresh-order
+cd $FRESH_PATH/source/repo/name
 git ls-tree -r --name-only abc1237
 cd $FRESH_PATH/source/repo/name
 git show abc1237:aliases/git.sh
@@ -409,11 +411,64 @@ it_ignores_hidden_files_when_globbing_with_ref() {
 EOF
 }
 
+it_orders_files_when_globbing_from_working_tree() {
+  echo "fresh 'order-test/*'" >> $FRESH_RCFILE
+
+  mkdir -p $FRESH_LOCAL/order-test
+  touch $FRESH_LOCAL/order-test/{a,b,c,d,e}
+  echo d >> $FRESH_LOCAL/order-test/.fresh-order
+  echo f >> $FRESH_LOCAL/order-test/.fresh-order
+  echo b >> $FRESH_LOCAL/order-test/.fresh-order
+
+  runFresh
+
+  assertFileMatches <(grep '^# fresh' $FRESH_PATH/build/shell.sh) <<EOF
+# fresh: order-test/d
+# fresh: order-test/b
+# fresh: order-test/a
+# fresh: order-test/c
+# fresh: order-test/e
+EOF
+}
+
+it_orders_files_when_globbing_with_ref() {
+  echo "fresh repo/name 'order-test/*' --ref=abc1237" >> $FRESH_RCFILE
+  mkdir -p $FRESH_PATH/source/repo/name
+  stubGit
+
+  runFresh
+
+  assertFileMatches <(grep '^# fresh' $FRESH_PATH/build/shell.sh) <<EOF
+# fresh: repo/name order-test/d @ abc1237
+# fresh: repo/name order-test/b @ abc1237
+# fresh: repo/name order-test/a @ abc1237
+# fresh: repo/name order-test/c @ abc1237
+# fresh: repo/name order-test/e @ abc1237
+EOF
+
+  assertFileMatches $SANDBOX_PATH/git.log <<EOF
+cd $FRESH_PATH/source/repo/name
+git show abc1237:order-test/.fresh-order
+cd $FRESH_PATH/source/repo/name
+git ls-tree -r --name-only abc1237
+cd $FRESH_PATH/source/repo/name
+git show abc1237:order-test/d
+cd $FRESH_PATH/source/repo/name
+git show abc1237:order-test/b
+cd $FRESH_PATH/source/repo/name
+git show abc1237:order-test/a
+cd $FRESH_PATH/source/repo/name
+git show abc1237:order-test/c
+cd $FRESH_PATH/source/repo/name
+git show abc1237:order-test/e
+EOF
+}
+
 it_includes_hidden_files_when_explicitly_referenced_from_working_tree() {
   echo "fresh 'hidden-test/.*'" >> $FRESH_RCFILE
 
   mkdir -p $FRESH_LOCAL/hidden-test
-  touch $FRESH_LOCAL/hidden-test/{abc,.def}
+  touch $FRESH_LOCAL/hidden-test/{abc,.def,.fresh-order}
 
   runFresh
 

@@ -79,7 +79,13 @@ case "\$1" in
     fi
     ;;
   show)
-    echo test data for "\$2"
+    if [[ "\$2" == "abc1237:order-test/.fresh-order" ]]; then
+      echo d
+      echo f
+      echo b
+    else
+      echo test data for "\$2"
+    fi
     ;;
   ls-tree)
     echo aliases/git.sh
@@ -91,6 +97,13 @@ case "\$1" in
     echo recursive-test/abc/def
     echo hidden-test/foo
     echo hidden-test/.bar
+    echo hidden-test/.fresh-order
+    echo order-test/.fresh-order
+    echo order-test/a
+    echo order-test/b
+    echo order-test/c
+    echo order-test/d
+    echo order-test/e
     ;;
   log)
     echo 1234567
