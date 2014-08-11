@@ -1,0 +1,9 @@
+{
+  "name": "fresh",
+  "version": "0.0.1",
+  "description": "Keep your dotfiles fresh",
+  "global": "true",
+  "install": "./install.sh",
+  "scripts": [ "bin/fresh" ]
+}
+
