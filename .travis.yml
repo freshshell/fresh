@@ -1,1 +1,1 @@
-script: ./test/fresh_test.sh
+script: make test
