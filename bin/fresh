@@ -955,6 +955,7 @@ clean              # Removes dead symlinks and source repos
 search <query>     # Search the fresh directory
 edit               # Open freshrc for editing
 show               # Show source references for freshrc lines
+file               # Returns the local file path for a fresh line
 help               # Show this help
 EOF
   { for path in ${PATH//:/$'\n'}; do
@@ -964,6 +965,27 @@ EOF
       done
     done
   } | sort | uniq
+}
+
+fresh_file() {
+  if [[ "${1:-}" == "fresh" ]]; then
+    shift
+  fi
+
+  _dsl_fresh_options # init defaults
+  eval _parse_fresh_dsl_args "$@"
+  if [[ -n "$REPO_NAME" ]]; then
+    local REPO_DIR="$FRESH_PATH/source/$(_repo_name "$REPO_NAME")"
+  else
+    local REPO_DIR="$FRESH_LOCAL"
+  fi
+  local FILE="$REPO_DIR/$FILE_NAME"
+
+  if [[ -f "$FILE" ]]; then
+    echo "$FILE"
+  else
+    _fatal_error "File not found: $FILE"
+  fi
 }
 
 main() {
@@ -995,6 +1017,10 @@ main() {
     clean)
       _prevent_invalid_arguments "$@"
       fresh_clean
+      ;;
+    file)
+      shift
+      fresh_file "$@"
       ;;
     commands)
       fresh_commands

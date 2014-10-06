@@ -1848,6 +1848,38 @@ describe 'fresh' do
     end
   end
 
+  describe 'file' do
+    it 'outputs the local file in the source directory' do
+      touch fresh_path + 'source/twe4ked/dotfiles/bin/date-iso'
+
+      run_fresh(
+        command: %w[file twe4ked/dotfiles bin/date-iso --bin=/bin/iso_date],
+        success: "#{fresh_path + 'source/twe4ked/dotfiles/bin/date-iso'}\n")
+    end
+
+    it 'outputs the local file in the source directory when prefixed with fresh' do
+      touch fresh_path + 'source/jasoncodes/dotfiles/bin/vol'
+
+      run_fresh(
+        command: %w[file fresh https://github.com/jasoncodes/dotfiles bin/vol --bin],
+        success: "#{fresh_path + 'source/jasoncodes/dotfiles/bin/vol'}\n")
+    end
+
+    it 'outputs the local file in the local directory' do
+      touch fresh_local_path + 'shell/aliases.sh'
+
+      run_fresh(
+        command: %w[file shell/aliases.sh],
+        success: "#{fresh_local_path + 'shell/aliases.sh'}\n")
+    end
+
+    it 'errors when fresh file output file does not exist' do
+      run_fresh(
+        command: %w[file twe4ked/dotfiles bin/date-iso --bin=/bin/iso_date],
+        error: "#{ERROR_PREFIX} File not found: #{fresh_path + 'source/twe4ked/dotfiles/bin/date-iso'}\n")
+    end
+  end
+
   describe 'fresh-options' do
     it 'applies fresh options to multiple lines' do
       rc <<-EOF
