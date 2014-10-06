@@ -964,7 +964,7 @@ EOF
 
 main() {
   case "${1:-}" in
-    help|--help)
+    help|--help|-h)
       fresh_help
       ;;
     install|'')
