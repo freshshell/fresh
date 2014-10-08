@@ -86,6 +86,12 @@ EOF
   # move the new build into place
   mv "$FRESH_PATH/build.new" "$FRESH_PATH/build"
 
+  if [[ -n "${__FRESH_AFTER_FINALIZE_CALLBACKS__:-}" ]]; then
+    for __func__ in "${__FRESH_AFTER_FINALIZE_CALLBACKS__[@]}"; do
+      $__func__
+    done
+  fi
+
   # remove the old still running fresh binary
   # (we do this outside the build dir to avoid NFS unlink files getting in the way)
   if [[ -e "$FRESH_PATH/build.old/bin/fresh" ]]; then
@@ -107,11 +113,15 @@ fresh-callback() {
     __FRESH_AFTER_BUILD_CALLBACKS__=("$(declare -f "$2")")
   elif [[ "$CALLBACK_TYPE" == "AFTER_BUILD" ]]; then
     __FRESH_AFTER_BUILD_CALLBACKS__=("${__FRESH_AFTER_BUILD_CALLBACKS__[@]}" "$(declare -f "$2")")
+  elif [[ -z "${__FRESH_AFTER_FINALIZE_CALLBACKS__:-}" ]] && [[ "$CALLBACK_TYPE" == "AFTER_FINALIZE" ]]; then
+    __FRESH_AFTER_FINALIZE_CALLBACKS__=("$(declare -f "$2")")
+  elif [[ "$CALLBACK_TYPE" == "AFTER_FINALIZE" ]]; then
+    __FRESH_AFTER_FINALIZE_CALLBACKS__=("${__FRESH_AFTER_FINALIZE_CALLBACKS__[@]}" "$(declare -f "$2")")
   else
     IN_RC_FILE=0
     _fatal_error "Invalid type \"$1\" passed to callback.
 
-Valid types are [\"after-build\"]"
+Valid types are [\"after-build\", \"after-finalize\"]"
   fi
 }
 
