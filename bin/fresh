@@ -107,17 +107,17 @@ EOF
 }
 
 fresh-callback() {
-  local CALLBACK_TYPE="$(echo "$1" | tr - _ | tr a-z A-Z)"
+  local CALLBACK_TYPE="$1"
 
   case "${CALLBACK_TYPE:-}" in
-    AFTER_BUILD)
+    after-build)
       if [[ -z "${__FRESH_AFTER_BUILD_CALLBACKS__:-}" ]]; then
         __FRESH_AFTER_BUILD_CALLBACKS__=("$(declare -f "$2")")
       else
         __FRESH_AFTER_BUILD_CALLBACKS__=("${__FRESH_AFTER_BUILD_CALLBACKS__[@]}" "$(declare -f "$2")")
       fi
       ;;
-    AFTER_FINALIZE)
+    after-finalize)
       if [[ -z "${__FRESH_AFTER_FINALIZE_CALLBACKS__:-}" ]]; then
         __FRESH_AFTER_FINALIZE_CALLBACKS__=("$(declare -f "$2")")
       else
