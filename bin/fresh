@@ -89,8 +89,29 @@ Your callback won't be run until has been updated to the new syntax.
 EOF
   fi
 
+  if [[ -n "${__FRESH_AFTER_BUILD_CALLBACKS__:-}" ]]; then
+    for __func__ in "${__FRESH_AFTER_BUILD_CALLBACKS__[@]}"; do
+      $__func__
+    done
+  fi
+
   # success!
   echo $'Your dot files are now \033[1;32mfresh\033[0m.'
+}
+
+fresh-callback() {
+  local CALLBACK_TYPE="$(echo "$1" | tr - _ | tr a-z A-Z)"
+
+  if [[ -z "${__FRESH_AFTER_BUILD_CALLBACKS__:-}" ]] && [[ "$CALLBACK_TYPE" == "AFTER_BUILD" ]]; then
+    __FRESH_AFTER_BUILD_CALLBACKS__=("$(declare -f "$2")")
+  elif [[ "$CALLBACK_TYPE" == "AFTER_BUILD" ]]; then
+    __FRESH_AFTER_BUILD_CALLBACKS__=("${__FRESH_AFTER_BUILD_CALLBACKS__[@]}" "$(declare -f "$2")")
+  else
+    IN_RC_FILE=0
+    _fatal_error "Invalid type \"$1\" passed to callback.
+
+Valid types are [\"after-build\"]"
+  fi
 }
 
 _fresh_preamble() {
