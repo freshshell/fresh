@@ -109,20 +109,28 @@ EOF
 fresh-callback() {
   local CALLBACK_TYPE="$(echo "$1" | tr - _ | tr a-z A-Z)"
 
-  if [[ -z "${__FRESH_AFTER_BUILD_CALLBACKS__:-}" ]] && [[ "$CALLBACK_TYPE" == "AFTER_BUILD" ]]; then
-    __FRESH_AFTER_BUILD_CALLBACKS__=("$(declare -f "$2")")
-  elif [[ "$CALLBACK_TYPE" == "AFTER_BUILD" ]]; then
-    __FRESH_AFTER_BUILD_CALLBACKS__=("${__FRESH_AFTER_BUILD_CALLBACKS__[@]}" "$(declare -f "$2")")
-  elif [[ -z "${__FRESH_AFTER_FINALIZE_CALLBACKS__:-}" ]] && [[ "$CALLBACK_TYPE" == "AFTER_FINALIZE" ]]; then
-    __FRESH_AFTER_FINALIZE_CALLBACKS__=("$(declare -f "$2")")
-  elif [[ "$CALLBACK_TYPE" == "AFTER_FINALIZE" ]]; then
-    __FRESH_AFTER_FINALIZE_CALLBACKS__=("${__FRESH_AFTER_FINALIZE_CALLBACKS__[@]}" "$(declare -f "$2")")
-  else
-    IN_RC_FILE=0
-    _fatal_error "Invalid type \"$1\" passed to callback.
+  case "${CALLBACK_TYPE:-}" in
+    AFTER_BUILD)
+      if [[ -z "${__FRESH_AFTER_BUILD_CALLBACKS__:-}" ]]; then
+        __FRESH_AFTER_BUILD_CALLBACKS__=("$(declare -f "$2")")
+      else
+        __FRESH_AFTER_BUILD_CALLBACKS__=("${__FRESH_AFTER_BUILD_CALLBACKS__[@]}" "$(declare -f "$2")")
+      fi
+      ;;
+    AFTER_FINALIZE)
+      if [[ -z "${__FRESH_AFTER_FINALIZE_CALLBACKS__:-}" ]]; then
+        __FRESH_AFTER_FINALIZE_CALLBACKS__=("$(declare -f "$2")")
+      else
+        __FRESH_AFTER_FINALIZE_CALLBACKS__=("${__FRESH_AFTER_FINALIZE_CALLBACKS__[@]}" "$(declare -f "$2")")
+      fi
+      ;;
+    *)
+      IN_RC_FILE=0
+      _fatal_error "Invalid type \"$1\" passed to callback.
 
 Valid types are [\"after-build\", \"after-finalize\"]"
-  fi
+      ;;
+  esac
 }
 
 _fresh_preamble() {
