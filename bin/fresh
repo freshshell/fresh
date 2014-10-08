@@ -62,17 +62,14 @@ To disable this error, add \`FRESH_NO_BIN_CHECK=true\` in your freshrc file."
   fi
 
   if declare -f fresh_after_build > /dev/null; then
-    _note "\`fresh_after_build\` is deprecated."
+    _note "\`fresh_after_build\` has been replaced with an \"after-finalize\" callback."
     cat <<EOF
-Please use the following syntax:
+Please update your freshrc to use the following syntax:
 
     foo_bar() {
       echo foo bar
     }
-    fresh-callback after-build foo_bar
-
-Your callback won't be run until has been updated to the new syntax.
-Additionaly the after-build callback now happens before the new build directory is moved into place.
+    fresh-callback after-finalize foo_bar
 
 EOF
   fi
