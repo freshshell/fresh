@@ -74,15 +74,23 @@ To disable this error, add \`FRESH_NO_BIN_CHECK=true\` in your freshrc file."
   # remove the old build dir
   rm -rf "$FRESH_PATH/build.old"
 
-  fresh_after_build
+  if declare -f fresh_after_build > /dev/null; then
+    _note "\`fresh_after_build\` is deprecated."
+    cat <<EOF
+Please use the following syntax:
+
+    foo_bar() {
+      echo foo bar
+    }
+    fresh-callback after-build foo_bar
+
+Your callback won't be run until has been updated to the new syntax.
+
+EOF
+  fi
 
   # success!
   echo $'Your dot files are now \033[1;32mfresh\033[0m.'
-}
-
-# placeholder method that can be overridden in your freshrc
-fresh_after_build() {
-  true
 }
 
 _fresh_preamble() {
