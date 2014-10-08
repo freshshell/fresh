@@ -61,6 +61,28 @@ To disable this error, add \`FRESH_NO_BIN_CHECK=true\` in your freshrc file."
     fi
   fi
 
+  if declare -f fresh_after_build > /dev/null; then
+    _note "\`fresh_after_build\` is deprecated."
+    cat <<EOF
+Please use the following syntax:
+
+    foo_bar() {
+      echo foo bar
+    }
+    fresh-callback after-build foo_bar
+
+Your callback won't be run until has been updated to the new syntax.
+Additionaly the after-build callback now happens before the new build directory is moved into place.
+
+EOF
+  fi
+
+  if [[ -n "${__FRESH_AFTER_BUILD_CALLBACKS__:-}" ]]; then
+    for __func__ in "${__FRESH_AFTER_BUILD_CALLBACKS__[@]}"; do
+      $__func__
+    done
+  fi
+
   # move the new build into place
   mv "$FRESH_PATH/build.new" "$FRESH_PATH/build"
 
@@ -73,27 +95,6 @@ To disable this error, add \`FRESH_NO_BIN_CHECK=true\` in your freshrc file."
 
   # remove the old build dir
   rm -rf "$FRESH_PATH/build.old"
-
-  if declare -f fresh_after_build > /dev/null; then
-    _note "\`fresh_after_build\` is deprecated."
-    cat <<EOF
-Please use the following syntax:
-
-    foo_bar() {
-      echo foo bar
-    }
-    fresh-callback after-build foo_bar
-
-Your callback won't be run until has been updated to the new syntax.
-
-EOF
-  fi
-
-  if [[ -n "${__FRESH_AFTER_BUILD_CALLBACKS__:-}" ]]; then
-    for __func__ in "${__FRESH_AFTER_BUILD_CALLBACKS__[@]}"; do
-      $__func__
-    done
-  fi
 
   # success!
   echo $'Your dot files are now \033[1;32mfresh\033[0m.'
