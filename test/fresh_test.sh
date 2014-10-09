@@ -1,18 +1,5 @@
 #!/bin/bash
 
-it_errors_if_source_file_missing_at_ref() {
-  echo fresh repo/name bad-file --ref=abc1237 >> $FRESH_RCFILE
-  mkdir -p $FRESH_PATH/source/repo/name
-  stubGit
-
-  runFresh fails
-
-  assertFileMatches $SANDBOX_PATH/git.log <<EOF
-cd $FRESH_PATH/source/repo/name
-git ls-tree -r --name-only abc1237
-EOF
-}
-
 it_does_not_error_if_source_file_missing_at_ref_with_ignore_missing() {
   echo fresh repo/name bad-file --ref=abc1237 --ignore-missing >> $FRESH_RCFILE
   mkdir -p $FRESH_PATH/source/repo/name

@@ -103,6 +103,10 @@ def expect_shell_sh_to(matcher)
   expect(File.writable? shell_sh_path).to be false
 end
 
+def format_url(url)
+  "\033[4;34m#{url}\033[0m"
+end
+
 RSpec.configure do |config|
   config.before do
     %w[home bin].each do |dir|

@@ -297,6 +297,26 @@ describe 'fresh' do
         expect(File.read(File.join(fresh_path, 'build/bin/sedmv'))).
           to eq "test data for abcdefg:sedmv\n"
       end
+
+      it 'errors if source file missing at ref' do
+        add_to_file freshrc_path, 'fresh repo/name bad-file --ref=abc1237'
+        FileUtils.mkdir_p File.join(fresh_path, 'source/repo/name')
+        stub_git
+
+        run_fresh stderr: <<-EOF.strip_heredoc
+          #{ERROR_PREFIX} Could not find "bad-file" source file.
+          #{freshrc_path}:1: fresh repo/name bad-file --ref=abc1237
+
+          You may need to run `fresh update` if you're adding a new line,
+          or the file you're referencing may have moved or been deleted.
+          Have a look at the repo: <#{format_url 'https://github.com/repo/name'}>
+        EOF
+
+        expect(git_log).to eq <<-EOF.strip_heredoc
+          cd #{fresh_path}/source/repo/name
+          git ls-tree -r --name-only abc1237
+        EOF
+      end
     end
   end
 end
