@@ -1,31 +1,5 @@
 #!/bin/bash
 
-it_ignores_subdirectories_when_globbing_from_working_tree() {
-  echo "fresh 'recursive-test/*'" >> $FRESH_RCFILE
-
-  mkdir -p $FRESH_LOCAL/recursive-test/abc
-  touch $FRESH_LOCAL/recursive-test/{abc/def,foo,bar}
-
-  runFresh
-
-  assertFileMatches <(grep '^# fresh' $FRESH_PATH/build/shell.sh) <<EOF
-# fresh: recursive-test/bar
-# fresh: recursive-test/foo
-EOF
-}
-
-it_ignores_subdirectories_when_globbing_with_ref() {
-  echo "fresh repo/name 'recursive-test/*' --ref=abc1237" >> $FRESH_RCFILE
-  stubGit
-
-  runFresh
-
-  assertFileMatches <(grep '^# fresh' $FRESH_PATH/build/shell.sh) <<EOF
-# fresh: repo/name recursive-test/bar @ abc1237
-# fresh: repo/name recursive-test/foo @ abc1237
-EOF
-}
-
 it_ignores_hidden_files_when_globbing_from_working_tree() {
   echo "fresh 'hidden-test/*'" >> $FRESH_RCFILE
 

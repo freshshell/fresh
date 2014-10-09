@@ -357,4 +357,32 @@ describe 'fresh' do
       end
     end
   end
+
+  describe 'ignoring subdirectories when globbing' do
+    it 'from working tree' do
+      add_to_file freshrc_path, "fresh 'recursive-test/*'"
+      %w[abc/def foo bar].each do |path|
+        touch File.join(fresh_local_path, 'recursive-test', path)
+      end
+
+      run_fresh
+
+      expect(File.read(shell_sh_path).lines.grep(/^# fresh/).join).to eq <<-EOF.strip_heredoc
+        # fresh: recursive-test/bar
+        # fresh: recursive-test/foo
+      EOF
+    end
+
+    it 'with ref' do
+      add_to_file freshrc_path, "fresh repo/name 'recursive-test/*' --ref=abc1237"
+      stub_git
+
+      run_fresh
+
+      expect(File.read(shell_sh_path).lines.grep(/^# fresh/).join).to eq <<-EOF.strip_heredoc
+          # fresh: repo/name recursive-test/bar @ abc1237
+          # fresh: repo/name recursive-test/foo @ abc1237
+      EOF
+    end
+  end
 end
