@@ -74,6 +74,12 @@ def add_to_file(path, content)
   end
 end
 
+def touch(path)
+  path = File.join(path)
+  FileUtils.mkdir_p File.dirname(path)
+  FileUtils.touch path
+end
+
 def stub_git
   spec_bin_path = File.join(File.dirname(__FILE__), 'support', 'bin')
   ENV['PATH'] = [spec_bin_path, ENV['PATH']].join(':')

@@ -248,5 +248,55 @@ describe 'fresh' do
 
       run_fresh
     end
+
+    describe 'using --ref' do
+      it 'builds' do
+        add_to_file freshrc_path, <<-EOF.strip_heredoc
+          fresh repo/name 'aliases/*' --ref=abc1237
+          fresh repo/name ackrc --file --ref=1234567
+          fresh repo/name sedmv --bin --ref=abcdefg
+        EOF
+        # test with only one of aliases/* existing at HEAD
+        touch [fresh_path, 'source/repo/name/aliases/git.sh']
+        stub_git
+
+        run_fresh
+
+        source_repo_name_dir_path = File.join(fresh_path, 'source/repo/name')
+        expect(git_log).to eq <<-EOF.strip_heredoc
+          cd #{source_repo_name_dir_path}
+          git show abc1237:aliases/.fresh-order
+          cd #{source_repo_name_dir_path}
+          git ls-tree -r --name-only abc1237
+          cd #{source_repo_name_dir_path}
+          git show abc1237:aliases/git.sh
+          cd #{source_repo_name_dir_path}
+          git show abc1237:aliases/ruby.sh
+          cd #{source_repo_name_dir_path}
+          git ls-tree -r --name-only 1234567
+          cd #{source_repo_name_dir_path}
+          git show 1234567:ackrc
+          cd #{source_repo_name_dir_path}
+          git ls-tree -r --name-only abcdefg
+          cd #{source_repo_name_dir_path}
+          git show abcdefg:sedmv
+        EOF
+
+        expect_shell_sh_to eq <<-EOF.strip_heredoc
+          # fresh: repo/name aliases/git.sh @ abc1237
+
+          test data for abc1237:aliases/git.sh
+
+          # fresh: repo/name aliases/ruby.sh @ abc1237
+
+          test data for abc1237:aliases/ruby.sh
+        EOF
+
+        expect(File.read(File.join(fresh_path, 'build/ackrc'))).
+          to eq "test data for 1234567:ackrc\n"
+        expect(File.read(File.join(fresh_path, 'build/bin/sedmv'))).
+          to eq "test data for abcdefg:sedmv\n"
+      end
+    end
   end
 end
