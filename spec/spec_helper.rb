@@ -62,10 +62,7 @@ end
 
 def add_to_file(path, content)
   path = File.join(path)
-  # TODO
-  if !File.directory?(File.dirname(path))# && !File.exists?(File.dirname(path))
-    FileUtils.mkdir_p File.dirname(path)
-  end
+  FileUtils.mkdir_p File.dirname(path)
 
   if !(content =~ /\n/)
     content = "#{content}\n"
