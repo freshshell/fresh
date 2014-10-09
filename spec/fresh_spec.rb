@@ -411,4 +411,62 @@ describe 'fresh' do
       EOF
     end
   end
+
+  describe 'ordering with .fresh-order when globbing' do
+    it 'from working tree' do
+      add_to_file freshrc_path, "fresh 'order-test/*'"
+      %w[a b c d e].each do |path|
+        touch [fresh_local_path, 'order-test', path]
+      end
+      add_to_file [fresh_local_path, 'order-test', '.fresh-order'], <<-EOF.strip_heredoc
+        d
+        f
+        b
+      EOF
+
+      run_fresh
+
+      expect(File.read(shell_sh_path).lines.grep(/^# fresh/).join).to eq <<-EOF.strip_heredoc
+        # fresh: order-test/d
+        # fresh: order-test/b
+        # fresh: order-test/a
+        # fresh: order-test/c
+        # fresh: order-test/e
+      EOF
+    end
+
+    it 'with ref' do
+      add_to_file freshrc_path, "fresh repo/name 'order-test/*' --ref=abc1237"
+      FileUtils.mkdir_p File.join(fresh_path, 'source/repo/name')
+      stub_git
+
+      run_fresh
+
+      expect(File.read(shell_sh_path).lines.grep(/^# fresh/).join).to eq <<-EOF.strip_heredoc
+        # fresh: repo/name order-test/d @ abc1237
+        # fresh: repo/name order-test/b @ abc1237
+        # fresh: repo/name order-test/a @ abc1237
+        # fresh: repo/name order-test/c @ abc1237
+        # fresh: repo/name order-test/e @ abc1237
+      EOF
+
+      source_repo_name_dir_path = File.join(fresh_path, 'source/repo/name')
+      expect(git_log).to eq <<-EOF.strip_heredoc
+        cd #{source_repo_name_dir_path}
+        git show abc1237:order-test/.fresh-order
+        cd #{source_repo_name_dir_path}
+        git ls-tree -r --name-only abc1237
+        cd #{source_repo_name_dir_path}
+        git show abc1237:order-test/d
+        cd #{source_repo_name_dir_path}
+        git show abc1237:order-test/b
+        cd #{source_repo_name_dir_path}
+        git show abc1237:order-test/a
+        cd #{source_repo_name_dir_path}
+        git show abc1237:order-test/c
+        cd #{source_repo_name_dir_path}
+        git show abc1237:order-test/e
+      EOF
+    end
+  end
 end
