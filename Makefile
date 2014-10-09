@@ -2,7 +2,7 @@
 
 test:
 	./test/fresh_test.sh
-	bundle exec rspec
+	bundle exec rspec --format=doc
 
 install:
 	./install.sh
