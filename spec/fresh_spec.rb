@@ -80,8 +80,7 @@ describe 'fresh' do
 
     it 'errors with missing local file' do
       add_to_file freshrc_path, 'fresh foo'
-      FileUtils.mkdir_p fresh_local_path
-      FileUtils.touch File.join(fresh_local_path, 'bar')
+      touch [fresh_local_path, 'bar']
 
       run_fresh stderr: <<-EOF.strip_heredoc
         #{ERROR_PREFIX} Could not find "foo" source file.
@@ -212,7 +211,7 @@ describe 'fresh' do
       FileUtils.mkdir_p File.join(fresh_local_path, '.git')
       FileUtils.mkdir_p File.join(fresh_path, 'source/repo/name/.git')
       [1, 2].each do |n|
-        FileUtils.touch File.join(fresh_path, 'source/repo/name', "file#{n}")
+        touch [fresh_path, 'source/repo/name', "file#{n}"]
       end
       stub_git
 
@@ -239,7 +238,7 @@ describe 'fresh' do
     it 'does not fail if local dotfiles does not have a remote' do
       add_to_file freshrc_path, 'fresh repo/name file'
       FileUtils.mkdir_p File.join(fresh_path, 'source/repo/name/.git')
-      FileUtils.touch File.join(fresh_path, 'source/repo/name/file')
+      touch [fresh_path, 'source/repo/name/file']
 
       FileUtils.mkdir_p fresh_local_path
       silence(:stdout) do
@@ -362,7 +361,7 @@ describe 'fresh' do
     it 'from working tree' do
       add_to_file freshrc_path, "fresh 'recursive-test/*'"
       %w[abc/def foo bar].each do |path|
-        touch File.join(fresh_local_path, 'recursive-test', path)
+        touch [fresh_local_path, 'recursive-test', path]
       end
 
       run_fresh
@@ -391,7 +390,7 @@ describe 'fresh' do
       add_to_file freshrc_path, "fresh 'hidden-test/*'"
 
       %w[abc .def].each do |path|
-        touch File.join(fresh_local_path, 'hidden-test', path)
+        touch [fresh_local_path, 'hidden-test', path]
       end
 
       run_fresh
