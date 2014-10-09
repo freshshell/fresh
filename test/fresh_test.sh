@@ -1,29 +1,5 @@
 #!/bin/bash
 
-it_includes_hidden_files_when_explicitly_referenced_from_working_tree() {
-  echo "fresh 'hidden-test/.*'" >> $FRESH_RCFILE
-
-  mkdir -p $FRESH_LOCAL/hidden-test
-  touch $FRESH_LOCAL/hidden-test/{abc,.def,.fresh-order}
-
-  runFresh
-
-  assertFileMatches <(grep '^# fresh' $FRESH_PATH/build/shell.sh) <<EOF
-# fresh: hidden-test/.def
-EOF
-}
-
-it_includes_hidden_files_when_explicitly_referenced_with_ref() {
-  echo "fresh repo/name 'hidden-test/.*' --ref=abc1237" >> $FRESH_RCFILE
-  stubGit
-
-  runFresh
-
-  assertFileMatches <(grep '^# fresh' $FRESH_PATH/build/shell.sh) <<EOF
-# fresh: repo/name hidden-test/.bar @ abc1237
-EOF
-}
-
 it_builds_generic_files() {
   echo 'fresh lib/tmux.conf --file' >> $FRESH_RCFILE
   echo 'fresh lib/pryrc.rb --file=~/.pryrc --marker' >> $FRESH_RCFILE
