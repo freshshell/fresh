@@ -167,7 +167,7 @@ describe 'fresh' do
 
       it 'does not clone existing repos' do
         add_to_file freshrc_path, 'fresh repo/name file'
-        add_to_file [fresh_path, 'source/repo/name/file'], 'remote content'
+        touch [fresh_path, 'source/repo/name/file']
         stub_git
 
         run_fresh
