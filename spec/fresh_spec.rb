@@ -103,76 +103,78 @@ describe 'fresh' do
   end
 
   describe 'remote files' do
-    it 'clones GitHub repos' do
-      add_to_file freshrc_path, 'fresh repo/name file'
-      stub_git
+    describe 'cloning' do
+      it 'clones GitHub repos' do
+        add_to_file freshrc_path, 'fresh repo/name file'
+        stub_git
 
-      run_fresh
+        run_fresh
 
-      expect(git_log).to eq <<-EOF.strip_heredoc
-        cd #{Dir.pwd}
-        git clone https://github.com/repo/name #{sandbox_path}/fresh/source/repo/name
-      EOF
-      expect(
-        File.read(File.join(sandbox_path, 'fresh', 'source', 'repo', 'name', 'file'))
-      ).to eq "test data\n"
-    end
+        expect(git_log).to eq <<-EOF.strip_heredoc
+          cd #{Dir.pwd}
+          git clone https://github.com/repo/name #{sandbox_path}/fresh/source/repo/name
+        EOF
+        expect(
+          File.read(File.join(sandbox_path, 'fresh', 'source', 'repo', 'name', 'file'))
+        ).to eq "test data\n"
+      end
 
-    it 'clones other repos' do
-      add_to_file freshrc_path, <<-EOF
-        fresh git://example.com/one/two.git file
-        fresh http://example.com/foo file
-        fresh https://example.com/bar file
-        fresh git@test.example.com:baz.git file
-      EOF
-      stub_git
+      it 'clones other repos' do
+        add_to_file freshrc_path, <<-EOF
+          fresh git://example.com/one/two.git file
+          fresh http://example.com/foo file
+          fresh https://example.com/bar file
+          fresh git@test.example.com:baz.git file
+        EOF
+        stub_git
 
-      run_fresh
+        run_fresh
 
-      expect(git_log).to eq <<-EOF.strip_heredoc
-        cd #{Dir.pwd}
-        git clone git://example.com/one/two.git #{sandbox_path}/fresh/source/example.com/one-two
-        cd #{Dir.pwd}
-        git clone http://example.com/foo #{sandbox_path}/fresh/source/example.com/foo
-        cd #{Dir.pwd}
-        git clone https://example.com/bar #{sandbox_path}/fresh/source/example.com/bar
-        cd #{Dir.pwd}
-        git clone git@test.example.com:baz.git #{sandbox_path}/fresh/source/test.example.com/baz
-      EOF
-    end
+        expect(git_log).to eq <<-EOF.strip_heredoc
+          cd #{Dir.pwd}
+          git clone git://example.com/one/two.git #{sandbox_path}/fresh/source/example.com/one-two
+          cd #{Dir.pwd}
+          git clone http://example.com/foo #{sandbox_path}/fresh/source/example.com/foo
+          cd #{Dir.pwd}
+          git clone https://example.com/bar #{sandbox_path}/fresh/source/example.com/bar
+          cd #{Dir.pwd}
+          git clone git@test.example.com:baz.git #{sandbox_path}/fresh/source/test.example.com/baz
+        EOF
+      end
 
-    it 'clones github repos with full urls' do
-      add_to_file freshrc_path, <<-EOF
-        fresh git@github.com:ssh/test.git file
-        fresh git://github.com/git/test.git file
-        fresh http://github.com/http/test file
-        fresh https://github.com/https/test file
-      EOF
-      stub_git
+      it 'clones github repos with full urls' do
+        add_to_file freshrc_path, <<-EOF
+          fresh git@github.com:ssh/test.git file
+          fresh git://github.com/git/test.git file
+          fresh http://github.com/http/test file
+          fresh https://github.com/https/test file
+        EOF
+        stub_git
 
-      run_fresh
+        run_fresh
 
-      expect(git_log).to eq <<-EOF.strip_heredoc
-        cd #{Dir.pwd}
-        git clone git@github.com:ssh/test.git #{sandbox_path}/fresh/source/ssh/test
-        cd #{Dir.pwd}
-        git clone git://github.com/git/test.git #{sandbox_path}/fresh/source/git/test
-        cd #{Dir.pwd}
-        git clone http://github.com/http/test #{sandbox_path}/fresh/source/http/test
-        cd #{Dir.pwd}
-        git clone https://github.com/https/test #{sandbox_path}/fresh/source/https/test
-      EOF
-    end
+        expect(git_log).to eq <<-EOF.strip_heredoc
+          cd #{Dir.pwd}
+          git clone git@github.com:ssh/test.git #{sandbox_path}/fresh/source/ssh/test
+          cd #{Dir.pwd}
+          git clone git://github.com/git/test.git #{sandbox_path}/fresh/source/git/test
+          cd #{Dir.pwd}
+          git clone http://github.com/http/test #{sandbox_path}/fresh/source/http/test
+          cd #{Dir.pwd}
+          git clone https://github.com/https/test #{sandbox_path}/fresh/source/https/test
+        EOF
+      end
 
-    it 'does not clone existing repos' do
-      add_to_file freshrc_path, 'fresh repo/name file'
-      stub_git
-      FileUtils.mkdir_p File.join(fresh_path, 'source/repo/name')
-      FileUtils.touch File.join(fresh_path, 'source/repo/name/file')
+      it 'does not clone existing repos' do
+        add_to_file freshrc_path, 'fresh repo/name file'
+        stub_git
+        FileUtils.mkdir_p File.join(fresh_path, 'source/repo/name')
+        FileUtils.touch File.join(fresh_path, 'source/repo/name/file')
 
-      run_fresh
+        run_fresh
 
-      expect(File.exists?(git_log_path)).to be false
+        expect(File.exists?(git_log_path)).to be false
+      end
     end
   end
 end
