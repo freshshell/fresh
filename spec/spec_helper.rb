@@ -44,8 +44,8 @@ def run_fresh(options = {})
     expect(@stderr).to eq options[:stderr]
     expect(@exit_status).to be false
   else
-    expect(@stdout).to eq "Your dot files are now \e[1;32mfresh\e[0m.\n"
     expect(@stderr).to be_empty
+    expect(@stdout).to eq "Your dot files are now \e[1;32mfresh\e[0m.\n"
     expect(@exit_status).to be true
   end
 end
