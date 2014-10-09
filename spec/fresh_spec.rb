@@ -235,5 +235,18 @@ describe 'fresh' do
         git config --get remote.my-remote-name.url
       EOF
     end
+
+    it 'does not fail if local dotfiles does not have a remote' do
+      add_to_file freshrc_path, 'fresh repo/name file'
+      FileUtils.mkdir_p File.join(fresh_path, 'source/repo/name/.git')
+      FileUtils.touch File.join(fresh_path, 'source/repo/name/file')
+
+      FileUtils.mkdir_p fresh_local_path
+      silence(:stdout) do
+        expect(system 'git', 'init', fresh_local_path).to be true
+      end
+
+      run_fresh
+    end
   end
 end
