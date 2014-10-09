@@ -203,5 +203,37 @@ describe 'fresh' do
         EOF
       end
     end
+
+    it 'warns if using a remote source that is your local dotfiles' do
+      add_to_file freshrc_path, <<-EOF.strip_heredoc
+        fresh repo/name file1
+        fresh repo/name file2
+      EOF
+      FileUtils.mkdir_p File.join(fresh_local_path, '.git')
+      FileUtils.mkdir_p File.join(fresh_path, 'source/repo/name/.git')
+      [1, 2].each do |n|
+        FileUtils.touch File.join(fresh_path, 'source/repo/name', "file#{n}")
+      end
+      stub_git
+
+      run_fresh stdout: <<-EOF.strip_heredoc
+        #{NOTE_PREFIX} You seem to be sourcing your local files remotely.
+        #{freshrc_path}:1: fresh repo/name file1
+
+        You can remove "repo/name" when sourcing from your local dotfiles repo (#{fresh_local_path}).
+        Use \`fresh file\` instead of \`fresh repo/name file\`.
+
+        To disable this warning, add \`FRESH_NO_LOCAL_CHECK=true\` in your freshrc file.
+
+        #{FRESH_SUCCESS_LINE}
+      EOF
+
+      expect(git_log).to eq <<-EOF.strip_heredoc
+        cd #{fresh_local_path}
+        git rev-parse --abbrev-ref --symbolic-full-name @{u}
+        cd #{fresh_local_path}
+        git config --get remote.my-remote-name.url
+      EOF
+    end
   end
 end

@@ -1,35 +1,5 @@
 #!/bin/bash
 
-it_warns_if_using_a_remote_source_that_is_your_local_dotfiles() {
-  echo fresh repo/name file1 >> $FRESH_RCFILE
-  echo fresh repo/name file2 >> $FRESH_RCFILE
-  mkdir -p $FRESH_LOCAL/.git $FRESH_PATH/source/repo/name/.git
-  touch $FRESH_PATH/source/repo/name/file{1,2}
-  stubGit
-
-  runFresh
-
-  assertFileMatches $SANDBOX_PATH/out.log <<EOF
-$(echo $'\033[1;33mNote\033[0m:') You seem to be sourcing your local files remotely.
-$FRESH_RCFILE:1: fresh repo/name file1
-
-You can remove "repo/name" when sourcing from your local dotfiles repo ($FRESH_LOCAL).
-Use \`fresh file\` instead of \`fresh repo/name file\`.
-
-To disable this warning, add \`FRESH_NO_LOCAL_CHECK=true\` in your freshrc file.
-
-$(echo $'Your dot files are now \033[1;32mfresh\033[0m.')
-EOF
-  assertFileMatches $SANDBOX_PATH/err.log <<EOF
-EOF
-  assertFileMatches $SANDBOX_PATH/git.log <<EOF
-cd $FRESH_LOCAL
-git rev-parse --abbrev-ref --symbolic-full-name @{u}
-cd $FRESH_LOCAL
-git config --get remote.my-remote-name.url
-EOF
-}
-
 it_does_not_fail_if_local_dotfiles_does_not_have_a_remote() {
   echo fresh repo/name file >> $FRESH_RCFILE
   mkdir -p $FRESH_PATH/source/repo/name/.git

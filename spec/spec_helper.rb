@@ -3,6 +3,8 @@ require 'active_support/core_ext/string/strip.rb'
 require 'tmpdir'
 
 ERROR_PREFIX = "\e[4;31mError\e[0m:"
+NOTE_PREFIX = "\033[1;33mNote\033[0m:"
+FRESH_SUCCESS_LINE = "Your dot files are now \e[1;32mfresh\e[0m."
 
 def sandbox_path
   @sandbox_path ||= Dir.mktmpdir
@@ -47,9 +49,13 @@ def run_fresh(options = {})
     expect(@stdout).to be_empty
     expect(@stderr).to eq options[:stderr]
     expect(@exit_status).to be false
+  elsif options[:stdout]
+    expect(@stderr).to be_empty
+    expect(@stdout).to eq options[:stdout]
+    expect(@exit_status).to be true
   else
     expect(@stderr).to be_empty
-    expect(@stdout).to eq "Your dot files are now \e[1;32mfresh\e[0m.\n"
+    expect(@stdout).to eq "#{FRESH_SUCCESS_LINE}\n"
     expect(@exit_status).to be true
   end
 end
