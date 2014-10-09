@@ -1,29 +1,5 @@
 #!/bin/bash
 
-it_ignores_hidden_files_when_globbing_from_working_tree() {
-  echo "fresh 'hidden-test/*'" >> $FRESH_RCFILE
-
-  mkdir -p $FRESH_LOCAL/hidden-test
-  touch $FRESH_LOCAL/hidden-test/{abc,.def}
-
-  runFresh
-
-  assertFileMatches <(grep '^# fresh' $FRESH_PATH/build/shell.sh) <<EOF
-# fresh: hidden-test/abc
-EOF
-}
-
-it_ignores_hidden_files_when_globbing_with_ref() {
-  echo "fresh repo/name 'hidden-test/*' --ref=abc1237" >> $FRESH_RCFILE
-  stubGit
-
-  runFresh
-
-  assertFileMatches <(grep '^# fresh' $FRESH_PATH/build/shell.sh) <<EOF
-# fresh: repo/name hidden-test/foo @ abc1237
-EOF
-}
-
 it_orders_files_when_globbing_from_working_tree() {
   echo "fresh 'order-test/*'" >> $FRESH_RCFILE
 

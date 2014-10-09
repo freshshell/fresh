@@ -385,4 +385,31 @@ describe 'fresh' do
       EOF
     end
   end
+
+  describe 'ignoring hidden files when globbing' do
+    it 'from working tree' do
+      add_to_file freshrc_path, "fresh 'hidden-test/*'"
+
+      %w[abc .def].each do |path|
+        touch File.join(fresh_local_path, 'hidden-test', path)
+      end
+
+      run_fresh
+
+      expect(File.read(shell_sh_path).lines.grep(/^# fresh/).join).to eq <<-EOF.strip_heredoc
+        # fresh: hidden-test/abc
+      EOF
+    end
+
+    it 'with ref' do
+      add_to_file freshrc_path, "fresh repo/name 'hidden-test/*' --ref=abc1237"
+      stub_git
+
+      run_fresh
+
+      expect(File.read(shell_sh_path).lines.grep(/^# fresh/).join).to eq <<-EOF.strip_heredoc
+        # fresh: repo/name hidden-test/foo @ abc1237
+      EOF
+    end
+  end
 end
