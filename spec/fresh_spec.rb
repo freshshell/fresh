@@ -317,6 +317,44 @@ describe 'fresh' do
           git ls-tree -r --name-only abc1237
         EOF
       end
+
+      context 'with --ignore-missing' do
+        it 'does not error if source file missing at ref with --ignore-missing' do
+          add_to_file freshrc_path, 'fresh repo/name bad-file --ref=abc1237 --ignore-missing'
+          FileUtils.mkdir_p File.join(fresh_path, 'source/repo/name')
+          stub_git
+
+          run_fresh
+
+          expect(git_log).to eq <<-EOF.strip_heredoc
+            cd #{fresh_path}/source/repo/name
+            git ls-tree -r --name-only abc1237
+          EOF
+        end
+
+        it 'builds files with ref and ignore missing' do
+          add_to_file freshrc_path, <<-EOF.strip_heredoc
+            fresh repo/name ackrc --file --ref=abc1237 --ignore-missing
+            fresh repo/name missing --file --ref=abc1237 --ignore-missing
+          EOF
+          FileUtils.mkdir_p File.join(fresh_path, 'source/repo/name')
+          stub_git
+
+          run_fresh
+
+          source_repo_name_dir_path = File.join(fresh_path, 'source/repo/name')
+          expect(git_log).to eq <<-EOF.strip_heredoc
+            cd #{source_repo_name_dir_path}
+            git ls-tree -r --name-only abc1237
+            cd #{source_repo_name_dir_path}
+            git show abc1237:ackrc
+            cd #{source_repo_name_dir_path}
+            git ls-tree -r --name-only abc1237
+          EOF
+          expect(File.exists? File.join(fresh_path, 'build/ackrc')).to be true
+          expect(File.exists? File.join(fresh_path, 'missing')).to be false
+        end
+      end
     end
   end
 end
