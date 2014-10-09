@@ -56,72 +56,7 @@ runFresh() {
 }
 
 stubGit() {
-  cat > $SANDBOX_PATH/bin/git <<EOF
-#!/bin/bash -e
-echo cd "\$(pwd)" >> $SANDBOX_PATH/git.log
-echo git "\$@" >> $SANDBOX_PATH/git.log
-case "\$1" in
-  clone)
-    mkdir "\$3"
-    echo test data > "\$3/file"
-    ;;
-  pull)
-    if [ -e .git/commands ]; then
-      bash .git/commands
-    fi
-    if [ -e .git/output ]; then
-      cat .git/output
-    else
-      echo Current branch master is up to date.
-    fi
-    if [ -e .git/failure ]; then
-      exit 1
-    fi
-    ;;
-  show)
-    if [[ "\$2" == "abc1237:order-test/.fresh-order" ]]; then
-      echo d
-      echo f
-      echo b
-    else
-      echo test data for "\$2"
-    fi
-    ;;
-  ls-tree)
-    echo aliases/git.sh
-    echo aliases/ruby.sh
-    echo ackrc
-    echo sedmv
-    echo recursive-test/foo
-    echo recursive-test/bar
-    echo recursive-test/abc/def
-    echo hidden-test/foo
-    echo hidden-test/.bar
-    echo hidden-test/.fresh-order
-    echo order-test/.fresh-order
-    echo order-test/a
-    echo order-test/b
-    echo order-test/c
-    echo order-test/d
-    echo order-test/e
-    ;;
-  log)
-    echo 1234567
-    ;;
-  config)
-    echo git@github.com:repo/name.git
-    ;;
-  status)
-    if [ -e .git/dirty ]; then
-      echo ' M some-file'
-    fi
-    ;;
-  rev-parse)
-    echo my-remote-name/master
-    ;;
-esac
-EOF
-  chmod +x $SANDBOX_PATH/bin/git
+  cp ../../spec/support/bin/git $SANDBOX_PATH/bin/git
 }
 
 stubCurl() {

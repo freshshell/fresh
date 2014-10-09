@@ -101,4 +101,21 @@ describe 'fresh' do
       expect(File.read(shell_sh_path)).to eq "existing shell.sh\n"
     end
   end
+
+  describe 'remote files' do
+    it 'clones GitHub repos' do
+      add_to_file freshrc_path, 'fresh repo/name file'
+      stub_git
+
+      run_fresh
+
+      expect(git_log).to eq <<-EOF.strip_heredoc
+        cd #{Dir.pwd}
+        git clone https://github.com/repo/name #{sandbox_path}/fresh/source/repo/name
+      EOF
+      expect(
+        File.read(File.join(sandbox_path, 'fresh', 'source', 'repo', 'name', 'file'))
+      ).to eq "test data\n"
+    end
+  end
 end

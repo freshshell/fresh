@@ -1,20 +1,5 @@
 #!/bin/bash
 
-it_clones_github_repos() {
-  echo fresh repo/name file >> $FRESH_RCFILE
-  stubGit
-
-  runFresh
-
-  assertFileMatches $SANDBOX_PATH/git.log <<EOF
-cd $(pwd)
-git clone https://github.com/repo/name $SANDBOX_PATH/fresh/source/repo/name
-EOF
-  assertFileMatches $FRESH_PATH/source/repo/name/file <<EOF
-test data
-EOF
-}
-
 it_clones_other_repos() {
   echo fresh git://example.com/one/two.git file >> $FRESH_RCFILE
   echo fresh http://example.com/foo file >> $FRESH_RCFILE

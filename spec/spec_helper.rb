@@ -28,6 +28,10 @@ def shell_sh_path
   File.join sandbox_path, 'fresh', 'build', 'shell.sh'
 end
 
+def git_log
+  File.read(File.join(sandbox_path, 'git.log'))
+end
+
 def run_fresh(options = {})
   @stdout = capture(:stdout) do
     @stderr = capture(:stderr) do
@@ -63,6 +67,11 @@ def add_to_file(path, content)
   end
 end
 
+def stub_git
+  spec_bin_path = File.join(File.dirname(__FILE__), 'support', 'bin')
+  ENV['PATH'] = [spec_bin_path, ENV['PATH']].join(':')
+end
+
 def expect_shell_sh_to(matcher)
   empty_shell_sh = <<-EOF.strip_heredoc
     export PATH="\$HOME/bin:\$PATH"
@@ -91,6 +100,8 @@ RSpec.configure do |config|
 
     ENV['HOME'] = File.join(sandbox_path, 'home')
     ENV['PATH'] = [bin_path, ENV['PATH']].join(':')
+
+    ENV['SANDBOX_PATH'] = sandbox_path
 
     ENV['FRESH_RCFILE'] = freshrc_path
     ENV['FRESH_PATH'] = fresh_path
