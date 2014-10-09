@@ -167,13 +167,40 @@ describe 'fresh' do
 
       it 'does not clone existing repos' do
         add_to_file freshrc_path, 'fresh repo/name file'
+        add_to_file [fresh_path, 'source/repo/name/file'], 'remote content'
         stub_git
-        FileUtils.mkdir_p File.join(fresh_path, 'source/repo/name')
-        FileUtils.touch File.join(fresh_path, 'source/repo/name/file')
 
         run_fresh
 
         expect(File.exists?(git_log_path)).to be false
+      end
+    end
+
+    describe 'building shell files' do
+      it 'builds shell files from cloned github repos' do
+        add_to_file freshrc_path, 'fresh repo/name file'
+        add_to_file [fresh_path, 'source/repo/name/file'], 'remote content'
+
+        run_fresh
+
+        expect_shell_sh_to eq <<-EOF.strip_heredoc
+          # fresh: repo/name file
+
+          remote content
+        EOF
+      end
+
+      it 'builds shell files from cloned other repos' do
+        add_to_file freshrc_path, 'fresh git://example.com/foobar.git file'
+        add_to_file [fresh_path, 'source/example.com/foobar/file'], 'remote content'
+
+        run_fresh
+
+        expect_shell_sh_to eq <<-EOF.strip_heredoc
+          # fresh: git://example.com/foobar.git file
+
+          remote content
+        EOF
       end
     end
   end

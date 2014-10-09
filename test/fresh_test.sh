@@ -1,39 +1,5 @@
 #!/bin/bash
 
-it_builds_shell_files_from_cloned_github_repos() {
-  echo fresh repo/name file >> $FRESH_RCFILE
-  mkdir -p $FRESH_PATH/source/repo/name
-  echo remote content > $FRESH_PATH/source/repo/name/file
-
-  runFresh
-
-  assertFileMatches $FRESH_PATH/build/shell.sh <<EOF
-export PATH="\$HOME/bin:\$PATH"
-export FRESH_PATH="$FRESH_PATH"
-
-# fresh: repo/name file
-
-remote content
-EOF
-}
-
-it_builds_shell_files_from_cloned_other_repos() {
-  echo fresh git://example.com/foobar.git file >> $FRESH_RCFILE
-  mkdir -p $FRESH_PATH/source/example.com/foobar
-  echo remote content > $FRESH_PATH/source/example.com/foobar/file
-
-  runFresh
-
-  assertFileMatches $FRESH_PATH/build/shell.sh <<EOF
-export PATH="\$HOME/bin:\$PATH"
-export FRESH_PATH="$FRESH_PATH"
-
-# fresh: git://example.com/foobar.git file
-
-remote content
-EOF
-}
-
 it_warns_if_using_a_remote_source_that_is_your_local_dotfiles() {
   echo fresh repo/name file1 >> $FRESH_RCFILE
   echo fresh repo/name file2 >> $FRESH_RCFILE
