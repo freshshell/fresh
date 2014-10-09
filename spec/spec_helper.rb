@@ -28,8 +28,12 @@ def shell_sh_path
   File.join sandbox_path, 'fresh', 'build', 'shell.sh'
 end
 
+def git_log_path
+  File.join sandbox_path, 'git.log'
+end
+
 def git_log
-  File.read(File.join(sandbox_path, 'git.log'))
+  File.read git_log_path
 end
 
 def run_fresh(options = {})

@@ -1,58 +1,5 @@
 #!/bin/bash
 
-it_clones_other_repos() {
-  echo fresh git://example.com/one/two.git file >> $FRESH_RCFILE
-  echo fresh http://example.com/foo file >> $FRESH_RCFILE
-  echo fresh https://example.com/bar file >> $FRESH_RCFILE
-  echo fresh git@test.example.com:baz.git file >> $FRESH_RCFILE
-  stubGit
-
-  runFresh
-
-  assertFileMatches $SANDBOX_PATH/git.log <<EOF
-cd $(pwd)
-git clone git://example.com/one/two.git $SANDBOX_PATH/fresh/source/example.com/one-two
-cd $(pwd)
-git clone http://example.com/foo $SANDBOX_PATH/fresh/source/example.com/foo
-cd $(pwd)
-git clone https://example.com/bar $SANDBOX_PATH/fresh/source/example.com/bar
-cd $(pwd)
-git clone git@test.example.com:baz.git $SANDBOX_PATH/fresh/source/test.example.com/baz
-EOF
-}
-
-it_clones_github_repos_with_full_urls() {
-  echo fresh git@github.com:ssh/test.git file >> $FRESH_RCFILE
-  echo fresh git://github.com/git/test.git file >> $FRESH_RCFILE
-  echo fresh http://github.com/http/test file >> $FRESH_RCFILE
-  echo fresh https://github.com/https/test file >> $FRESH_RCFILE
-  stubGit
-
-  runFresh
-
-  assertFileMatches $SANDBOX_PATH/git.log <<EOF
-cd $(pwd)
-git clone git@github.com:ssh/test.git $SANDBOX_PATH/fresh/source/ssh/test
-cd $(pwd)
-git clone git://github.com/git/test.git $SANDBOX_PATH/fresh/source/git/test
-cd $(pwd)
-git clone http://github.com/http/test $SANDBOX_PATH/fresh/source/http/test
-cd $(pwd)
-git clone https://github.com/https/test $SANDBOX_PATH/fresh/source/https/test
-EOF
-}
-
-it_does_not_clone_existing_repos() {
-  echo fresh repo/name file >> $FRESH_RCFILE
-  stubGit
-  mkdir -p $FRESH_PATH/source/repo/name
-  touch $FRESH_PATH/source/repo/name/file
-
-  runFresh
-
-  assertFalse 'did not run git' '[ -f $SANDBOX_PATH/git.log ]'
-}
-
 it_builds_shell_files_from_cloned_github_repos() {
   echo fresh repo/name file >> $FRESH_RCFILE
   mkdir -p $FRESH_PATH/source/repo/name
