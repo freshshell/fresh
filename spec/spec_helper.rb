@@ -89,6 +89,10 @@ def stub_git
   ENV['PATH'] = [spec_bin_path, ENV['PATH']].join(':')
 end
 
+def shell_sh_marker_lines
+  File.read(shell_sh_path).lines.grep(/^# fresh/).join
+end
+
 def expect_shell_sh_to(matcher)
   empty_shell_sh = <<-EOF.strip_heredoc
     export PATH="\$HOME/bin:\$PATH"

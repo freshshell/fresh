@@ -531,7 +531,7 @@ describe 'fresh' do
 
       run_fresh
 
-      expect(File.read(shell_sh_path).lines.grep(/^# fresh/).join).to eq <<-EOF.strip_heredoc
+      expect(shell_sh_marker_lines).to eq <<-EOF.strip_heredoc
         # fresh: recursive-test/bar
         # fresh: recursive-test/foo
       EOF
@@ -543,7 +543,7 @@ describe 'fresh' do
 
       run_fresh
 
-      expect(File.read(shell_sh_path).lines.grep(/^# fresh/).join).to eq <<-EOF.strip_heredoc
+      expect(shell_sh_marker_lines).to eq <<-EOF.strip_heredoc
           # fresh: repo/name recursive-test/bar @ abc1237
           # fresh: repo/name recursive-test/foo @ abc1237
       EOF
@@ -563,7 +563,7 @@ describe 'fresh' do
 
         run_fresh
 
-        expect(File.read(shell_sh_path).lines.grep(/^# fresh/).join).to eq <<-EOF.strip_heredoc
+        expect(shell_sh_marker_lines).to eq <<-EOF.strip_heredoc
           # fresh: hidden-test/abc
         EOF
       end
@@ -573,7 +573,7 @@ describe 'fresh' do
 
         run_fresh
 
-        expect(File.read(shell_sh_path).lines.grep(/^# fresh/).join).to eq <<-EOF.strip_heredoc
+        expect(shell_sh_marker_lines).to eq <<-EOF.strip_heredoc
           # fresh: hidden-test/.def
         EOF
       end
@@ -589,7 +589,7 @@ describe 'fresh' do
 
         run_fresh
 
-        expect(File.read(shell_sh_path).lines.grep(/^# fresh/).join).to eq <<-EOF.strip_heredoc
+        expect(shell_sh_marker_lines).to eq <<-EOF.strip_heredoc
           # fresh: repo/name hidden-test/foo @ abc1237
         EOF
       end
@@ -599,7 +599,7 @@ describe 'fresh' do
 
         run_fresh
 
-        expect(File.read(shell_sh_path).lines.grep(/^# fresh/).join).to eq <<-EOF.strip_heredoc
+        expect(shell_sh_marker_lines).to eq <<-EOF.strip_heredoc
           # fresh: repo/name hidden-test/.bar @ abc1237
         EOF
       end
@@ -620,7 +620,7 @@ describe 'fresh' do
 
       run_fresh
 
-      expect(File.read(shell_sh_path).lines.grep(/^# fresh/).join).to eq <<-EOF.strip_heredoc
+      expect(shell_sh_marker_lines).to eq <<-EOF.strip_heredoc
         # fresh: order-test/d
         # fresh: order-test/b
         # fresh: order-test/a
@@ -636,7 +636,7 @@ describe 'fresh' do
 
       run_fresh
 
-      expect(File.read(shell_sh_path).lines.grep(/^# fresh/).join).to eq <<-EOF.strip_heredoc
+      expect(shell_sh_marker_lines).to eq <<-EOF.strip_heredoc
         # fresh: repo/name order-test/d @ abc1237
         # fresh: repo/name order-test/b @ abc1237
         # fresh: repo/name order-test/a @ abc1237
