@@ -6,9 +6,9 @@ describe 'fresh' do
       rc 'fresh aliases/git'
       rc 'fresh aliases/ruby'
 
-      file_add [fresh_local_path, 'aliases', 'git'], "alias gs='git status'"
-      file_add [fresh_local_path, 'aliases', 'git'], "alias gl='git log'"
-      file_add [fresh_local_path, 'aliases', 'ruby'], "alias rake='bundle exec rake'"
+      file_add fresh_local_path + 'aliases/git', "alias gs='git status'"
+      file_add fresh_local_path + 'aliases/git', "alias gl='git log'"
+      file_add fresh_local_path + 'aliases/ruby', "alias rake='bundle exec rake'"
 
       run_fresh
 
@@ -27,9 +27,9 @@ describe 'fresh' do
     it 'builds with spaces' do
       rc "fresh 'aliases/foo bar'"
 
-      file_add [fresh_local_path, 'aliases', 'foo bar'], 'SPACE'
-      file_add [fresh_local_path, 'aliases', 'foo'], 'foo'
-      file_add [fresh_local_path, 'aliases', 'bar'], 'bar'
+      file_add fresh_local_path + 'aliases/foo bar', 'SPACE'
+      file_add fresh_local_path + 'aliases/foo', 'foo'
+      file_add fresh_local_path + 'aliases/bar', 'bar'
 
       run_fresh
 
@@ -43,9 +43,9 @@ describe 'fresh' do
     it 'builds with globbing' do
       rc "fresh 'aliases/file*'"
 
-      file_add [fresh_local_path, 'aliases', 'file1'], 'file1'
-      file_add [fresh_local_path, 'aliases', 'file2'], 'file2'
-      file_add [fresh_local_path, 'aliases', 'other'], 'other'
+      file_add fresh_local_path + 'aliases/file1', 'file1'
+      file_add fresh_local_path + 'aliases/file2', 'file2'
+      file_add fresh_local_path + 'aliases/other', 'other'
 
       run_fresh
 
@@ -84,18 +84,18 @@ describe 'fresh' do
           fresh tmux.conf --file --ignore-missing
           fresh ghci --file --ignore-missing
         EOF
-        touch [fresh_local_path, 'tmux.conf']
+        touch fresh_local_path + 'tmux.conf'
 
         run_fresh
 
-        expect(File).to exist File.join(fresh_path, 'build/tmux.conf')
-        expect(File).to_not exist File.join(fresh_path, 'build/ghci')
+        expect(File).to exist fresh_path + 'build/tmux.conf'
+        expect(File).to_not exist fresh_path + 'build/ghci'
       end
     end
 
     it 'errors with missing local file' do
       rc 'fresh foo'
-      touch [fresh_local_path, 'bar']
+      touch fresh_local_path + 'bar'
 
       run_fresh error: <<-EOF.strip_heredoc
         #{ERROR_PREFIX} Could not find "foo" source file.
@@ -125,46 +125,46 @@ describe 'fresh' do
           fresh config/\*.vim --file=~/.vimrc --marker=\\"
         EOF
 
-        file_add [fresh_local_path, 'lib/tmux.conf'], <<-EOF.strip_heredoc
+        file_add fresh_local_path + 'lib/tmux.conf', <<-EOF.strip_heredoc
           unbind C-b
           set -g prefix C-a
         EOF
-        file_add [fresh_local_path, 'lib/pryrc.rb'], <<-EOF.strip_heredoc
+        file_add fresh_local_path + 'lib/pryrc.rb', <<-EOF.strip_heredoc
           Pry.config.color = true
           Pry.config.history.should_save = true
         EOF
-        file_add [fresh_local_path, 'config/git/colors'], <<-EOF.strip_heredoc
+        file_add fresh_local_path + 'config/git/colors', <<-EOF.strip_heredoc
           [color]
           ui = auto
         EOF
-        file_add [fresh_local_path, 'config/git/rebase'], <<-EOF.strip_heredoc
+        file_add fresh_local_path + 'config/git/rebase', <<-EOF.strip_heredoc
           [rebase]
           autosquash = true
         EOF
-        file_add [fresh_local_path, 'config/mappings.vim'], 'map Y y$'
-        file_add [fresh_local_path, 'config/global.vim'], 'set hidden'
+        file_add fresh_local_path + 'config/mappings.vim', 'map Y y$'
+        file_add fresh_local_path + 'config/global.vim', 'set hidden'
 
         run_fresh
 
         expect_shell_sh_to be_default
 
-        expect(File.read(File.join(fresh_path, 'build/tmux.conf'))).to eq <<-EOF.strip_heredoc
+        expect(File.read(fresh_path + 'build/tmux.conf')).to eq <<-EOF.strip_heredoc
           unbind C-b
           set -g prefix C-a
         EOF
-        expect(File.read(File.join(fresh_path, 'build/pryrc'))).to eq <<-EOF.strip_heredoc
+        expect(File.read(fresh_path + 'build/pryrc')).to eq <<-EOF.strip_heredoc
           # fresh: lib/pryrc.rb
 
           Pry.config.color = true
           Pry.config.history.should_save = true
         EOF
-        expect(File.read(File.join(fresh_path, 'build/gitconfig'))).to eq <<-EOF.strip_heredoc
+        expect(File.read(fresh_path + 'build/gitconfig')).to eq <<-EOF.strip_heredoc
           [color]
           ui = auto
           [rebase]
           autosquash = true
         EOF
-        expect(File.read(File.join(fresh_path, 'build/vimrc'))).to eq <<-EOF.strip_heredoc
+        expect(File.read(fresh_path + 'build/vimrc')).to eq <<-EOF.strip_heredoc
           " fresh: config/global.vim
 
           set hidden
@@ -187,15 +187,15 @@ describe 'fresh' do
       it 'builds generic files with globbing' do
         rc "fresh 'file*' --file"
 
-        file_add [fresh_local_path, 'file1'], 'file1'
-        file_add [fresh_local_path, 'file2'], 'file2'
-        file_add [fresh_local_path, 'other'], 'other'
+        file_add fresh_local_path + 'file1', 'file1'
+        file_add fresh_local_path + 'file2', 'file2'
+        file_add fresh_local_path + 'other', 'other'
 
         run_fresh
 
-        expect(File).to exist File.join(fresh_path, 'build/file1')
-        expect(File).to exist File.join(fresh_path, 'build/file2')
-        expect(File).to_not exist File.join(fresh_path, 'build/other')
+        expect(File).to exist fresh_path + 'build/file1'
+        expect(File).to exist fresh_path + 'build/file2'
+        expect(File).to_not exist fresh_path + 'build/other'
       end
 
       it 'links generic files to destination' do
@@ -207,7 +207,7 @@ describe 'fresh' do
           fresh "with spaces" --file="~/a path/with spaces"
         EOF
         %w[lib/tmux.conf lib/pryrc.rb .gitconfig bclear.vim with\ spaces].each do |path|
-          touch [fresh_local_path, path]
+          touch fresh_local_path + path
         end
 
         run_fresh
@@ -228,13 +228,13 @@ describe 'fresh' do
           fresh foo --file=~/.foo/file
           fresh bar --file=~/.bar/file
         EOF
-        file_add [fresh_local_path, 'foo'], 'foo'
-        file_add [fresh_local_path, 'bar'], 'bar'
+        file_add fresh_local_path + 'foo', 'foo'
+        file_add fresh_local_path + 'bar', 'bar'
 
         run_fresh
 
-        expect(File.read(File.join(fresh_path, 'build/foo-file'))).to eq "foo\n"
-        expect(File.read(File.join(fresh_path, 'build/bar-file'))).to eq "bar\n"
+        expect(File.read(fresh_path + 'build/foo-file')).to eq "foo\n"
+        expect(File.read(fresh_path + 'build/bar-file')).to eq "bar\n"
         [
           %w[foo-file ~/.foo/file],
           %w[bar-file ~/.bar/file],
@@ -245,17 +245,17 @@ describe 'fresh' do
 
       it 'does not link generic files with relative paths' do
         rc 'fresh foo-bar.zsh --file=vendor/foo/bar.zsh'
-        touch [fresh_local_path, 'foo-bar.zsh']
+        touch fresh_local_path + 'foo-bar.zsh'
 
         run_fresh
 
-        expect(File).to exist File.join(fresh_path, 'build/vendor/foo/bar.zsh')
+        expect(File).to exist fresh_path + 'build/vendor/foo/bar.zsh'
         expect(File.symlink?('vendor/foo/bar.zsh')).to eq false
       end
 
       it 'does not allow relative paths above build dir' do
         rc 'fresh foo-bar.zsh --file=../foo/bar.zsh'
-        touch [fresh_local_path, 'foo-bar.zsh']
+        touch fresh_local_path + 'foo-bar.zsh'
 
         run_fresh error: <<-EOF.strip_heredoc
           #{ERROR_PREFIX} Relative paths must be inside build dir.
@@ -281,7 +281,7 @@ describe 'fresh' do
           git clone https://github.com/repo/name #{sandbox_path}/fresh/source/repo/name
         EOF
         expect(
-          File.read(File.join(sandbox_path, 'fresh', 'source', 'repo', 'name', 'file'))
+          File.read sandbox_path + 'fresh/source/repo/name/file'
         ).to eq "test data\n"
       end
 
@@ -333,7 +333,7 @@ describe 'fresh' do
 
       it 'does not clone existing repos' do
         rc 'fresh repo/name file'
-        touch [fresh_path, 'source/repo/name/file']
+        touch fresh_path + 'source/repo/name/file'
         stub_git
 
         run_fresh
@@ -345,7 +345,7 @@ describe 'fresh' do
     describe 'building shell files' do
       it 'builds shell files from cloned github repos' do
         rc 'fresh repo/name file'
-        file_add [fresh_path, 'source/repo/name/file'], 'remote content'
+        file_add fresh_path + 'source/repo/name/file', 'remote content'
 
         run_fresh
 
@@ -358,7 +358,7 @@ describe 'fresh' do
 
       it 'builds shell files from cloned other repos' do
         rc 'fresh git://example.com/foobar.git file'
-        file_add [fresh_path, 'source/example.com/foobar/file'], 'remote content'
+        file_add fresh_path + 'source/example.com/foobar/file', 'remote content'
 
         run_fresh
 
@@ -375,10 +375,10 @@ describe 'fresh' do
         fresh repo/name file1
         fresh repo/name file2
       EOF
-      FileUtils.mkdir_p File.join(fresh_local_path, '.git')
-      FileUtils.mkdir_p File.join(fresh_path, 'source/repo/name/.git')
+      FileUtils.mkdir_p fresh_local_path + '.git'
+      FileUtils.mkdir_p fresh_path + 'source/repo/name/.git'
       [1, 2].each do |n|
-        touch [fresh_path, 'source/repo/name', "file#{n}"]
+        touch fresh_path + "source/repo/name/file#{n}"
       end
       stub_git
 
@@ -404,12 +404,12 @@ describe 'fresh' do
 
     it 'does not fail if local dotfiles does not have a remote' do
       rc 'fresh repo/name file'
-      FileUtils.mkdir_p File.join(fresh_path, 'source/repo/name/.git')
-      touch [fresh_path, 'source/repo/name/file']
+      FileUtils.mkdir_p fresh_path + 'source/repo/name/.git'
+      touch fresh_path + 'source/repo/name/file'
 
       FileUtils.mkdir_p fresh_local_path
       silence(:stdout) do
-        expect(system 'git', 'init', fresh_local_path).to be true
+        expect(system 'git', 'init', fresh_local_path.to_s).to be true
       end
 
       run_fresh
@@ -423,28 +423,27 @@ describe 'fresh' do
           fresh repo/name sedmv --bin --ref=abcdefg
         EOF
         # test with only one of aliases/* existing at HEAD
-        touch [fresh_path, 'source/repo/name/aliases/git.sh']
+        touch fresh_path + 'source/repo/name/aliases/git.sh'
         stub_git
 
         run_fresh
 
-        source_repo_name_dir_path = File.join(fresh_path, 'source/repo/name')
         expect(git_log).to eq <<-EOF.strip_heredoc
-          cd #{source_repo_name_dir_path}
+          cd #{fresh_path + 'source/repo/name'}
           git show abc1237:aliases/.fresh-order
-          cd #{source_repo_name_dir_path}
+          cd #{fresh_path + 'source/repo/name'}
           git ls-tree -r --name-only abc1237
-          cd #{source_repo_name_dir_path}
+          cd #{fresh_path + 'source/repo/name'}
           git show abc1237:aliases/git.sh
-          cd #{source_repo_name_dir_path}
+          cd #{fresh_path + 'source/repo/name'}
           git show abc1237:aliases/ruby.sh
-          cd #{source_repo_name_dir_path}
+          cd #{fresh_path + 'source/repo/name'}
           git ls-tree -r --name-only 1234567
-          cd #{source_repo_name_dir_path}
+          cd #{fresh_path + 'source/repo/name'}
           git show 1234567:ackrc
-          cd #{source_repo_name_dir_path}
+          cd #{fresh_path + 'source/repo/name'}
           git ls-tree -r --name-only abcdefg
-          cd #{source_repo_name_dir_path}
+          cd #{fresh_path + 'source/repo/name'}
           git show abcdefg:sedmv
         EOF
 
@@ -458,15 +457,15 @@ describe 'fresh' do
           test data for abc1237:aliases/ruby.sh
         EOF
 
-        expect(File.read(File.join(fresh_path, 'build/ackrc'))).
+        expect(File.read(fresh_path + 'build/ackrc')).
           to eq "test data for 1234567:ackrc\n"
-        expect(File.read(File.join(fresh_path, 'build/bin/sedmv'))).
+        expect(File.read(fresh_path + 'build/bin/sedmv')).
           to eq "test data for abcdefg:sedmv\n"
       end
 
       it 'errors if source file missing at ref' do
         rc 'fresh repo/name bad-file --ref=abc1237'
-        FileUtils.mkdir_p File.join(fresh_path, 'source/repo/name')
+        FileUtils.mkdir_p fresh_path + 'source/repo/name'
         stub_git
 
         run_fresh error: <<-EOF.strip_heredoc
@@ -487,7 +486,7 @@ describe 'fresh' do
       context 'with --ignore-missing' do
         it 'does not error if source file missing at ref with --ignore-missing' do
           rc 'fresh repo/name bad-file --ref=abc1237 --ignore-missing'
-          FileUtils.mkdir_p File.join(fresh_path, 'source/repo/name')
+          FileUtils.mkdir_p fresh_path + 'source/repo/name'
           stub_git
 
           run_fresh
@@ -503,22 +502,21 @@ describe 'fresh' do
             fresh repo/name ackrc --file --ref=abc1237 --ignore-missing
             fresh repo/name missing --file --ref=abc1237 --ignore-missing
           EOF
-          FileUtils.mkdir_p File.join(fresh_path, 'source/repo/name')
+          FileUtils.mkdir_p fresh_path + 'source/repo/name'
           stub_git
 
           run_fresh
 
-          source_repo_name_dir_path = File.join(fresh_path, 'source/repo/name')
           expect(git_log).to eq <<-EOF.strip_heredoc
-            cd #{source_repo_name_dir_path}
+            cd #{fresh_path + 'source/repo/name'}
             git ls-tree -r --name-only abc1237
-            cd #{source_repo_name_dir_path}
+            cd #{fresh_path + 'source/repo/name'}
             git show abc1237:ackrc
-            cd #{source_repo_name_dir_path}
+            cd #{fresh_path + 'source/repo/name'}
             git ls-tree -r --name-only abc1237
           EOF
-          expect(File).to exist File.join(fresh_path, 'build/ackrc')
-          expect(File).to_not exist File.join(fresh_path, 'missing')
+          expect(File).to exist fresh_path + 'build/ackrc'
+          expect(File).to_not exist fresh_path + 'missing'
         end
       end
     end
@@ -614,7 +612,7 @@ describe 'fresh' do
       %w[a b c d e].each do |path|
         touch [fresh_local_path, 'order-test', path]
       end
-      file_add [fresh_local_path, 'order-test', '.fresh-order'], <<-EOF.strip_heredoc
+      file_add fresh_local_path + 'order-test/.fresh-order', <<-EOF.strip_heredoc
         d
         f
         b
@@ -633,7 +631,7 @@ describe 'fresh' do
 
     it 'with ref' do
       rc "fresh repo/name 'order-test/*' --ref=abc1237"
-      FileUtils.mkdir_p File.join(fresh_path, 'source/repo/name')
+      FileUtils.mkdir_p fresh_path + 'source/repo/name'
       stub_git
 
       run_fresh
@@ -646,21 +644,20 @@ describe 'fresh' do
         # fresh: repo/name order-test/e @ abc1237
       EOF
 
-      source_repo_name_dir_path = File.join(fresh_path, 'source/repo/name')
       expect(git_log).to eq <<-EOF.strip_heredoc
-        cd #{source_repo_name_dir_path}
+        cd #{fresh_path + 'source/repo/name'}
         git show abc1237:order-test/.fresh-order
-        cd #{source_repo_name_dir_path}
+        cd #{fresh_path + 'source/repo/name'}
         git ls-tree -r --name-only abc1237
-        cd #{source_repo_name_dir_path}
+        cd #{fresh_path + 'source/repo/name'}
         git show abc1237:order-test/d
-        cd #{source_repo_name_dir_path}
+        cd #{fresh_path + 'source/repo/name'}
         git show abc1237:order-test/b
-        cd #{source_repo_name_dir_path}
+        cd #{fresh_path + 'source/repo/name'}
         git show abc1237:order-test/a
-        cd #{source_repo_name_dir_path}
+        cd #{fresh_path + 'source/repo/name'}
         git show abc1237:order-test/c
-        cd #{source_repo_name_dir_path}
+        cd #{fresh_path + 'source/repo/name'}
         git show abc1237:order-test/e
       EOF
     end

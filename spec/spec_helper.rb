@@ -8,31 +8,31 @@ NOTE_PREFIX = "\033[1;33mNote\033[0m:"
 FRESH_SUCCESS_LINE = "Your dot files are now \e[1;32mfresh\e[0m."
 
 def sandbox_path
-  @sandbox_path ||= Dir.mktmpdir
+  @sandbox_path ||= Pathname.new(Dir.mktmpdir)
 end
 
 def fresh_local_path
-  File.join sandbox_path, 'dotfiles'
+  Pathname.new sandbox_path + 'dotfiles'
 end
 
 def fresh_path
-  File.join sandbox_path, 'fresh'
+  Pathname.new sandbox_path + 'fresh'
 end
 
 def freshrc_path
-  File.join sandbox_path, 'freshrc'
+  Pathname.new sandbox_path + 'freshrc'
 end
 
 def bin_path
-  File.join sandbox_path, 'bin'
+  Pathname.new sandbox_path + 'bin'
 end
 
 def shell_sh_path
-  File.join sandbox_path, 'fresh', 'build', 'shell.sh'
+  Pathname.new sandbox_path + 'fresh/build/shell.sh'
 end
 
 def git_log_path
-  File.join sandbox_path, 'git.log'
+  Pathname.new sandbox_path + 'git.log'
 end
 
 def git_log
@@ -122,11 +122,11 @@ RSpec.configure do |config|
     ENV['HOME'] = File.join(sandbox_path, 'home')
     ENV['PATH'] = [bin_path, ENV['PATH']].join(':')
 
-    ENV['SANDBOX_PATH'] = sandbox_path
+    ENV['SANDBOX_PATH'] = sandbox_path.to_s
 
-    ENV['FRESH_RCFILE'] = freshrc_path
-    ENV['FRESH_PATH'] = fresh_path
-    ENV['FRESH_LOCAL'] = fresh_local_path
+    ENV['FRESH_RCFILE'] = freshrc_path.to_s
+    ENV['FRESH_PATH'] = fresh_path.to_s
+    ENV['FRESH_LOCAL'] = fresh_local_path.to_s
     ENV['FRESH_NO_BIN_CHECK'] = 'true'
 
     @original_path = Dir.pwd
