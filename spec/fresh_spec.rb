@@ -338,7 +338,7 @@ describe 'fresh' do
 
         run_fresh
 
-        expect(File).to_not exist(git_log_path)
+        expect(File).to_not exist git_log_path
       end
     end
 
