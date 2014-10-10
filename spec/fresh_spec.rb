@@ -6,9 +6,9 @@ describe 'fresh' do
       rc 'fresh aliases/git'
       rc 'fresh aliases/ruby'
 
-      add_to_file [fresh_local_path, 'aliases', 'git'], "alias gs='git status'"
-      add_to_file [fresh_local_path, 'aliases', 'git'], "alias gl='git log'"
-      add_to_file [fresh_local_path, 'aliases', 'ruby'], "alias rake='bundle exec rake'"
+      file_add [fresh_local_path, 'aliases', 'git'], "alias gs='git status'"
+      file_add [fresh_local_path, 'aliases', 'git'], "alias gl='git log'"
+      file_add [fresh_local_path, 'aliases', 'ruby'], "alias rake='bundle exec rake'"
 
       run_fresh
 
@@ -27,9 +27,9 @@ describe 'fresh' do
     it 'builds with spaces' do
       rc "fresh 'aliases/foo bar'"
 
-      add_to_file [fresh_local_path, 'aliases', 'foo bar'], 'SPACE'
-      add_to_file [fresh_local_path, 'aliases', 'foo'], 'foo'
-      add_to_file [fresh_local_path, 'aliases', 'bar'], 'bar'
+      file_add [fresh_local_path, 'aliases', 'foo bar'], 'SPACE'
+      file_add [fresh_local_path, 'aliases', 'foo'], 'foo'
+      file_add [fresh_local_path, 'aliases', 'bar'], 'bar'
 
       run_fresh
 
@@ -43,9 +43,9 @@ describe 'fresh' do
     it 'builds with globbing' do
       rc "fresh 'aliases/file*'"
 
-      add_to_file [fresh_local_path, 'aliases', 'file1'], 'file1'
-      add_to_file [fresh_local_path, 'aliases', 'file2'], 'file2'
-      add_to_file [fresh_local_path, 'aliases', 'other'], 'other'
+      file_add [fresh_local_path, 'aliases', 'file1'], 'file1'
+      file_add [fresh_local_path, 'aliases', 'file2'], 'file2'
+      file_add [fresh_local_path, 'aliases', 'other'], 'other'
 
       run_fresh
 
@@ -107,7 +107,7 @@ describe 'fresh' do
     end
 
     it 'preserves existing compiled files when failing' do
-      add_to_file shell_sh_path, 'existing shell.sh'
+      file_add shell_sh_path, 'existing shell.sh'
 
       rc 'invalid'
       run_fresh stderr: "#{freshrc_path}: line 1: invalid: command not found\n"
@@ -125,24 +125,24 @@ describe 'fresh' do
           fresh config/\*.vim --file=~/.vimrc --marker=\\"
         EOF
 
-        add_to_file [fresh_local_path, 'lib/tmux.conf'], <<-EOF.strip_heredoc
+        file_add [fresh_local_path, 'lib/tmux.conf'], <<-EOF.strip_heredoc
           unbind C-b
           set -g prefix C-a
         EOF
-        add_to_file [fresh_local_path, 'lib/pryrc.rb'], <<-EOF.strip_heredoc
+        file_add [fresh_local_path, 'lib/pryrc.rb'], <<-EOF.strip_heredoc
           Pry.config.color = true
           Pry.config.history.should_save = true
         EOF
-        add_to_file [fresh_local_path, 'config/git/colors'], <<-EOF.strip_heredoc
+        file_add [fresh_local_path, 'config/git/colors'], <<-EOF.strip_heredoc
           [color]
           ui = auto
         EOF
-        add_to_file [fresh_local_path, 'config/git/rebase'], <<-EOF.strip_heredoc
+        file_add [fresh_local_path, 'config/git/rebase'], <<-EOF.strip_heredoc
           [rebase]
           autosquash = true
         EOF
-        add_to_file [fresh_local_path, 'config/mappings.vim'], 'map Y y$'
-        add_to_file [fresh_local_path, 'config/global.vim'], 'set hidden'
+        file_add [fresh_local_path, 'config/mappings.vim'], 'map Y y$'
+        file_add [fresh_local_path, 'config/global.vim'], 'set hidden'
 
         run_fresh
 
@@ -187,9 +187,9 @@ describe 'fresh' do
       it 'builds generic files with globbing' do
         rc "fresh 'file*' --file"
 
-        add_to_file [fresh_local_path, 'file1'], 'file1'
-        add_to_file [fresh_local_path, 'file2'], 'file2'
-        add_to_file [fresh_local_path, 'other'], 'other'
+        file_add [fresh_local_path, 'file1'], 'file1'
+        file_add [fresh_local_path, 'file2'], 'file2'
+        file_add [fresh_local_path, 'other'], 'other'
 
         run_fresh
 
@@ -228,8 +228,8 @@ describe 'fresh' do
           fresh foo --file=~/.foo/file
           fresh bar --file=~/.bar/file
         EOF
-        add_to_file [fresh_local_path, 'foo'], 'foo'
-        add_to_file [fresh_local_path, 'bar'], 'bar'
+        file_add [fresh_local_path, 'foo'], 'foo'
+        file_add [fresh_local_path, 'bar'], 'bar'
 
         run_fresh
 
@@ -345,7 +345,7 @@ describe 'fresh' do
     describe 'building shell files' do
       it 'builds shell files from cloned github repos' do
         rc 'fresh repo/name file'
-        add_to_file [fresh_path, 'source/repo/name/file'], 'remote content'
+        file_add [fresh_path, 'source/repo/name/file'], 'remote content'
 
         run_fresh
 
@@ -358,7 +358,7 @@ describe 'fresh' do
 
       it 'builds shell files from cloned other repos' do
         rc 'fresh git://example.com/foobar.git file'
-        add_to_file [fresh_path, 'source/example.com/foobar/file'], 'remote content'
+        file_add [fresh_path, 'source/example.com/foobar/file'], 'remote content'
 
         run_fresh
 
@@ -614,7 +614,7 @@ describe 'fresh' do
       %w[a b c d e].each do |path|
         touch [fresh_local_path, 'order-test', path]
       end
-      add_to_file [fresh_local_path, 'order-test', '.fresh-order'], <<-EOF.strip_heredoc
+      file_add [fresh_local_path, 'order-test', '.fresh-order'], <<-EOF.strip_heredoc
         d
         f
         b

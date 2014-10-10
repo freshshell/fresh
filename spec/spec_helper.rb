@@ -62,10 +62,10 @@ def run_fresh(options = {})
 end
 
 def rc(content)
-  add_to_file freshrc_path, content
+  file_add freshrc_path, content
 end
 
-def add_to_file(path, content)
+def file_add(path, content)
   path = File.join(path)
   FileUtils.mkdir_p File.dirname(path)
 
