@@ -183,6 +183,88 @@ describe 'fresh' do
           expect(File.writable? path).to be false
         end
       end
+
+      it 'builds generic files with globbing' do
+        add_to_file freshrc_path, "fresh 'file*' --file"
+
+        add_to_file [fresh_local_path, 'file1'], 'file1'
+        add_to_file [fresh_local_path, 'file2'], 'file2'
+        add_to_file [fresh_local_path, 'other'], 'other'
+
+        run_fresh
+
+        expect(File.exists? File.join(fresh_path, 'build/file1')).to be true
+        expect(File.exists? File.join(fresh_path, 'build/file2')).to be true
+        expect(File.exists? File.join(fresh_path, 'build/other')).to be false
+      end
+
+      it 'links generic files to destination' do
+        add_to_file freshrc_path, <<-EOF.strip_heredoc
+          fresh lib/tmux.conf --file
+          fresh lib/pryrc.rb --file=~/.pryrc
+          fresh .gitconfig --file
+          fresh bclear.vim --file=~/.vim/colors/bclear.vim
+          fresh "with spaces" --file="~/a path/with spaces"
+        EOF
+        %w[lib/tmux.conf lib/pryrc.rb .gitconfig bclear.vim with\ spaces].each do |path|
+          touch [fresh_local_path, path]
+        end
+
+        run_fresh
+
+        [
+          %w[tmux.conf ~/.tmux.conf],
+          %w[pryrc ~/.pryrc],
+          %w[gitconfig ~/.gitconfig],
+          %w[vim-colors-bclear.vim ~/.vim/colors/bclear.vim],
+          %w[a-path-with-spaces ~/a\ path/with\ spaces],
+        ].each do |build_file, symlink_destination|
+          expect(File.join(fresh_path, 'build', build_file)).to eq File.readlink(File.expand_path(symlink_destination))
+        end
+      end
+
+      it 'builds and links generic files with same basename' do
+        add_to_file freshrc_path, <<-EOF.strip_heredoc
+          fresh foo --file=~/.foo/file
+          fresh bar --file=~/.bar/file
+        EOF
+        add_to_file [fresh_local_path, 'foo'], 'foo'
+        add_to_file [fresh_local_path, 'bar'], 'bar'
+
+        run_fresh
+
+        expect(File.read(File.join(fresh_path, 'build/foo-file'))).to eq "foo\n"
+        expect(File.read(File.join(fresh_path, 'build/bar-file'))).to eq "bar\n"
+        [
+          %w[foo-file ~/.foo/file],
+          %w[bar-file ~/.bar/file],
+        ].each do |build_file, symlink_destination|
+          expect(File.join(fresh_path, 'build', build_file)).to eq File.readlink(File.expand_path(symlink_destination))
+        end
+      end
+
+      it 'does not link generic files with relative paths' do
+        add_to_file freshrc_path, 'fresh foo-bar.zsh --file=vendor/foo/bar.zsh'
+        touch [fresh_local_path, 'foo-bar.zsh']
+
+        run_fresh
+
+        expect(File.exists? File.join(fresh_path, 'build/vendor/foo/bar.zsh')).to be true
+        expect(File.symlink?('vendor/foo/bar.zsh')).to eq false
+      end
+
+      it 'does not allow relative paths above build dir' do
+        add_to_file freshrc_path, 'fresh foo-bar.zsh --file=../foo/bar.zsh'
+        touch [fresh_local_path, 'foo-bar.zsh']
+
+        run_fresh stderr: <<-EOF.strip_heredoc
+          #{ERROR_PREFIX} Relative paths must be inside build dir.
+          #{freshrc_path}:1: fresh foo-bar.zsh --file=../foo/bar.zsh
+
+          You may need to run `fresh update` if you're adding a new line,
+          or the file you're referencing may have moved or been deleted.
+        EOF
+      end
     end
   end
 
