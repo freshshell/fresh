@@ -1,17 +1,5 @@
 #!/bin/bash
 
-it_does_not_create_a_file_when_single_source_is_missing_with_ignore_missing() {
-  echo 'fresh tmux.conf --file --ignore-missing' >> $FRESH_RCFILE
-  echo 'fresh ghci --file --ignore-missing' >> $FRESH_RCFILE
-  mkdir -p $FRESH_LOCAL
-  touch $FRESH_LOCAL/tmux.conf
-
-  runFresh
-
-  assertTrue 'exists' '[ -e $FRESH_PATH/build/tmux.conf ]'
-  assertFalse 'does not exist' '[ -e $FRESH_PATH/build/ghci ]'
-}
-
 it_builds_generic_files_with_globbing() {
   echo "fresh 'file*' --file" >> $FRESH_RCFILE
 

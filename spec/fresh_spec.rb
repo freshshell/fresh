@@ -78,6 +78,19 @@ describe 'fresh' do
 
         expect_shell_sh_to be_default
       end
+
+      it 'does not create a file when single source is missing' do
+        add_to_file freshrc_path, <<-EOF.strip_heredoc
+          fresh tmux.conf --file --ignore-missing
+          fresh ghci --file --ignore-missing
+        EOF
+        touch [fresh_local_path, 'tmux.conf']
+
+        run_fresh
+
+        expect(File.exists? File.join(fresh_path, 'build/tmux.conf')).to be true
+        expect(File.exists? File.join(fresh_path, 'build/ghci')).to be false
+      end
     end
 
     it 'errors with missing local file' do
