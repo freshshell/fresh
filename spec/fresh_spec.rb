@@ -61,11 +61,11 @@ describe 'fresh' do
     end
 
     it 'creates empty output with no freshrc file' do
-      expect(File.exists?(shell_sh_path)).to be false
+      expect(File).to_not exist(shell_sh_path)
 
       run_fresh
 
-      expect(File.exists?(shell_sh_path)).to be true
+      expect(File).to exist(shell_sh_path)
       expect_shell_sh_to be_default
     end
 
@@ -88,8 +88,8 @@ describe 'fresh' do
 
         run_fresh
 
-        expect(File.exists? File.join(fresh_path, 'build/tmux.conf')).to be true
-        expect(File.exists? File.join(fresh_path, 'build/ghci')).to be false
+        expect(File).to exist File.join(fresh_path, 'build/tmux.conf')
+        expect(File).to_not exist File.join(fresh_path, 'build/ghci')
       end
     end
 
@@ -176,7 +176,7 @@ describe 'fresh' do
 
         %w[shell.sh tmux.conf pryrc gitconfig vimrc].each do |path|
           path = File.join fresh_path, 'build', path
-          expect(File.exists? path).to be true
+          expect(File).to exist(path)
 
           expect(File.executable? path).to be false
           expect(File.world_readable? path).to be nil
@@ -193,9 +193,9 @@ describe 'fresh' do
 
         run_fresh
 
-        expect(File.exists? File.join(fresh_path, 'build/file1')).to be true
-        expect(File.exists? File.join(fresh_path, 'build/file2')).to be true
-        expect(File.exists? File.join(fresh_path, 'build/other')).to be false
+        expect(File).to exist File.join(fresh_path, 'build/file1')
+        expect(File).to exist File.join(fresh_path, 'build/file2')
+        expect(File).to_not exist File.join(fresh_path, 'build/other')
       end
 
       it 'links generic files to destination' do
@@ -249,7 +249,7 @@ describe 'fresh' do
 
         run_fresh
 
-        expect(File.exists? File.join(fresh_path, 'build/vendor/foo/bar.zsh')).to be true
+        expect(File).to exist File.join(fresh_path, 'build/vendor/foo/bar.zsh')
         expect(File.symlink?('vendor/foo/bar.zsh')).to eq false
       end
 
@@ -338,7 +338,7 @@ describe 'fresh' do
 
         run_fresh
 
-        expect(File.exists?(git_log_path)).to be false
+        expect(File).to_not exist(git_log_path)
       end
     end
 
@@ -517,8 +517,8 @@ describe 'fresh' do
             cd #{source_repo_name_dir_path}
             git ls-tree -r --name-only abc1237
           EOF
-          expect(File.exists? File.join(fresh_path, 'build/ackrc')).to be true
-          expect(File.exists? File.join(fresh_path, 'missing')).to be false
+          expect(File).to exist File.join(fresh_path, 'build/ackrc')
+          expect(File).to_not exist File.join(fresh_path, 'missing')
         end
       end
     end
