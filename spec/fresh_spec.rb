@@ -3,8 +3,8 @@ require 'spec_helper'
 describe 'fresh' do
   describe 'local shell files' do
     it 'builds' do
-      add_to_file freshrc_path, 'fresh aliases/git'
-      add_to_file freshrc_path, 'fresh aliases/ruby'
+      rc 'fresh aliases/git'
+      rc 'fresh aliases/ruby'
 
       add_to_file [fresh_local_path, 'aliases', 'git'], "alias gs='git status'"
       add_to_file [fresh_local_path, 'aliases', 'git'], "alias gl='git log'"
@@ -25,7 +25,7 @@ describe 'fresh' do
     end
 
     it 'builds with spaces' do
-      add_to_file freshrc_path, "fresh 'aliases/foo bar'"
+      rc "fresh 'aliases/foo bar'"
 
       add_to_file [fresh_local_path, 'aliases', 'foo bar'], 'SPACE'
       add_to_file [fresh_local_path, 'aliases', 'foo'], 'foo'
@@ -41,7 +41,7 @@ describe 'fresh' do
     end
 
     it 'builds with globbing' do
-      add_to_file freshrc_path, "fresh 'aliases/file*'"
+      rc "fresh 'aliases/file*'"
 
       add_to_file [fresh_local_path, 'aliases', 'file1'], 'file1'
       add_to_file [fresh_local_path, 'aliases', 'file2'], 'file2'
@@ -71,7 +71,7 @@ describe 'fresh' do
 
     describe 'using --ignore-missing' do
       it 'builds' do
-        add_to_file freshrc_path, 'fresh aliases/haskell --ignore-missing'
+        rc 'fresh aliases/haskell --ignore-missing'
         FileUtils.mkdir_p fresh_local_path
 
         run_fresh
@@ -80,7 +80,7 @@ describe 'fresh' do
       end
 
       it 'does not create a file when single source is missing' do
-        add_to_file freshrc_path, <<-EOF.strip_heredoc
+        rc <<-EOF.strip_heredoc
           fresh tmux.conf --file --ignore-missing
           fresh ghci --file --ignore-missing
         EOF
@@ -94,7 +94,7 @@ describe 'fresh' do
     end
 
     it 'errors with missing local file' do
-      add_to_file freshrc_path, 'fresh foo'
+      rc 'fresh foo'
       touch [fresh_local_path, 'bar']
 
       run_fresh stderr: <<-EOF.strip_heredoc
@@ -109,7 +109,7 @@ describe 'fresh' do
     it 'preserves existing compiled files when failing' do
       add_to_file shell_sh_path, 'existing shell.sh'
 
-      add_to_file freshrc_path, 'invalid'
+      rc 'invalid'
       run_fresh stderr: "#{freshrc_path}: line 1: invalid: command not found\n"
 
       expect(File.read(shell_sh_path)).to eq "existing shell.sh\n"
@@ -117,7 +117,7 @@ describe 'fresh' do
 
     describe 'using --file' do
       it 'builds generic files' do
-        add_to_file freshrc_path, <<-EOF.strip_heredoc
+        rc <<-EOF.strip_heredoc
           fresh lib/tmux.conf --file
           fresh lib/pryrc.rb --file=~/.pryrc --marker
           fresh config/git/colors --file=~/.gitconfig
@@ -185,7 +185,7 @@ describe 'fresh' do
       end
 
       it 'builds generic files with globbing' do
-        add_to_file freshrc_path, "fresh 'file*' --file"
+        rc "fresh 'file*' --file"
 
         add_to_file [fresh_local_path, 'file1'], 'file1'
         add_to_file [fresh_local_path, 'file2'], 'file2'
@@ -199,7 +199,7 @@ describe 'fresh' do
       end
 
       it 'links generic files to destination' do
-        add_to_file freshrc_path, <<-EOF.strip_heredoc
+        rc <<-EOF.strip_heredoc
           fresh lib/tmux.conf --file
           fresh lib/pryrc.rb --file=~/.pryrc
           fresh .gitconfig --file
@@ -224,7 +224,7 @@ describe 'fresh' do
       end
 
       it 'builds and links generic files with same basename' do
-        add_to_file freshrc_path, <<-EOF.strip_heredoc
+        rc <<-EOF.strip_heredoc
           fresh foo --file=~/.foo/file
           fresh bar --file=~/.bar/file
         EOF
@@ -244,7 +244,7 @@ describe 'fresh' do
       end
 
       it 'does not link generic files with relative paths' do
-        add_to_file freshrc_path, 'fresh foo-bar.zsh --file=vendor/foo/bar.zsh'
+        rc 'fresh foo-bar.zsh --file=vendor/foo/bar.zsh'
         touch [fresh_local_path, 'foo-bar.zsh']
 
         run_fresh
@@ -254,7 +254,7 @@ describe 'fresh' do
       end
 
       it 'does not allow relative paths above build dir' do
-        add_to_file freshrc_path, 'fresh foo-bar.zsh --file=../foo/bar.zsh'
+        rc 'fresh foo-bar.zsh --file=../foo/bar.zsh'
         touch [fresh_local_path, 'foo-bar.zsh']
 
         run_fresh stderr: <<-EOF.strip_heredoc
@@ -271,7 +271,7 @@ describe 'fresh' do
   describe 'remote files' do
     describe 'cloning' do
       it 'clones GitHub repos' do
-        add_to_file freshrc_path, 'fresh repo/name file'
+        rc 'fresh repo/name file'
         stub_git
 
         run_fresh
@@ -286,7 +286,7 @@ describe 'fresh' do
       end
 
       it 'clones other repos' do
-        add_to_file freshrc_path, <<-EOF
+        rc <<-EOF
           fresh git://example.com/one/two.git file
           fresh http://example.com/foo file
           fresh https://example.com/bar file
@@ -309,7 +309,7 @@ describe 'fresh' do
       end
 
       it 'clones github repos with full urls' do
-        add_to_file freshrc_path, <<-EOF
+        rc <<-EOF
           fresh git@github.com:ssh/test.git file
           fresh git://github.com/git/test.git file
           fresh http://github.com/http/test file
@@ -332,7 +332,7 @@ describe 'fresh' do
       end
 
       it 'does not clone existing repos' do
-        add_to_file freshrc_path, 'fresh repo/name file'
+        rc 'fresh repo/name file'
         touch [fresh_path, 'source/repo/name/file']
         stub_git
 
@@ -344,7 +344,7 @@ describe 'fresh' do
 
     describe 'building shell files' do
       it 'builds shell files from cloned github repos' do
-        add_to_file freshrc_path, 'fresh repo/name file'
+        rc 'fresh repo/name file'
         add_to_file [fresh_path, 'source/repo/name/file'], 'remote content'
 
         run_fresh
@@ -357,7 +357,7 @@ describe 'fresh' do
       end
 
       it 'builds shell files from cloned other repos' do
-        add_to_file freshrc_path, 'fresh git://example.com/foobar.git file'
+        rc 'fresh git://example.com/foobar.git file'
         add_to_file [fresh_path, 'source/example.com/foobar/file'], 'remote content'
 
         run_fresh
@@ -371,7 +371,7 @@ describe 'fresh' do
     end
 
     it 'warns if using a remote source that is your local dotfiles' do
-      add_to_file freshrc_path, <<-EOF.strip_heredoc
+      rc <<-EOF.strip_heredoc
         fresh repo/name file1
         fresh repo/name file2
       EOF
@@ -403,7 +403,7 @@ describe 'fresh' do
     end
 
     it 'does not fail if local dotfiles does not have a remote' do
-      add_to_file freshrc_path, 'fresh repo/name file'
+      rc 'fresh repo/name file'
       FileUtils.mkdir_p File.join(fresh_path, 'source/repo/name/.git')
       touch [fresh_path, 'source/repo/name/file']
 
@@ -417,7 +417,7 @@ describe 'fresh' do
 
     describe 'using --ref' do
       it 'builds' do
-        add_to_file freshrc_path, <<-EOF.strip_heredoc
+        rc <<-EOF.strip_heredoc
           fresh repo/name 'aliases/*' --ref=abc1237
           fresh repo/name ackrc --file --ref=1234567
           fresh repo/name sedmv --bin --ref=abcdefg
@@ -465,7 +465,7 @@ describe 'fresh' do
       end
 
       it 'errors if source file missing at ref' do
-        add_to_file freshrc_path, 'fresh repo/name bad-file --ref=abc1237'
+        rc 'fresh repo/name bad-file --ref=abc1237'
         FileUtils.mkdir_p File.join(fresh_path, 'source/repo/name')
         stub_git
 
@@ -486,7 +486,7 @@ describe 'fresh' do
 
       context 'with --ignore-missing' do
         it 'does not error if source file missing at ref with --ignore-missing' do
-          add_to_file freshrc_path, 'fresh repo/name bad-file --ref=abc1237 --ignore-missing'
+          rc 'fresh repo/name bad-file --ref=abc1237 --ignore-missing'
           FileUtils.mkdir_p File.join(fresh_path, 'source/repo/name')
           stub_git
 
@@ -499,7 +499,7 @@ describe 'fresh' do
         end
 
         it 'builds files with ref and ignore missing' do
-          add_to_file freshrc_path, <<-EOF.strip_heredoc
+          rc <<-EOF.strip_heredoc
             fresh repo/name ackrc --file --ref=abc1237 --ignore-missing
             fresh repo/name missing --file --ref=abc1237 --ignore-missing
           EOF
@@ -526,7 +526,7 @@ describe 'fresh' do
 
   describe 'ignoring subdirectories when globbing' do
     it 'from working tree' do
-      add_to_file freshrc_path, "fresh 'recursive-test/*'"
+      rc "fresh 'recursive-test/*'"
       %w[abc/def foo bar].each do |path|
         touch [fresh_local_path, 'recursive-test', path]
       end
@@ -540,7 +540,7 @@ describe 'fresh' do
     end
 
     it 'with ref' do
-      add_to_file freshrc_path, "fresh repo/name 'recursive-test/*' --ref=abc1237"
+      rc "fresh repo/name 'recursive-test/*' --ref=abc1237"
       stub_git
 
       run_fresh
@@ -561,7 +561,7 @@ describe 'fresh' do
       end
 
       it 'ignores hidden files' do
-        add_to_file freshrc_path, "fresh 'hidden-test/*'"
+        rc "fresh 'hidden-test/*'"
 
         run_fresh
 
@@ -571,7 +571,7 @@ describe 'fresh' do
       end
 
       it 'includes hidden files when explicitly referenced from working tree' do
-        add_to_file freshrc_path, "fresh 'hidden-test/.*'"
+        rc "fresh 'hidden-test/.*'"
 
         run_fresh
 
@@ -587,7 +587,7 @@ describe 'fresh' do
       end
 
       it 'ignores hidden files' do
-        add_to_file freshrc_path, "fresh repo/name 'hidden-test/*' --ref=abc1237"
+        rc "fresh repo/name 'hidden-test/*' --ref=abc1237"
 
         run_fresh
 
@@ -597,7 +597,7 @@ describe 'fresh' do
       end
 
       it 'includes hidden files when explicitly referenced with ref' do
-        add_to_file freshrc_path, "fresh repo/name 'hidden-test/.*' --ref=abc1237"
+        rc "fresh repo/name 'hidden-test/.*' --ref=abc1237"
 
         run_fresh
 
@@ -610,7 +610,7 @@ describe 'fresh' do
 
   describe 'ordering with .fresh-order when globbing' do
     it 'from working tree' do
-      add_to_file freshrc_path, "fresh 'order-test/*'"
+      rc "fresh 'order-test/*'"
       %w[a b c d e].each do |path|
         touch [fresh_local_path, 'order-test', path]
       end
@@ -632,7 +632,7 @@ describe 'fresh' do
     end
 
     it 'with ref' do
-      add_to_file freshrc_path, "fresh repo/name 'order-test/*' --ref=abc1237"
+      rc "fresh repo/name 'order-test/*' --ref=abc1237"
       FileUtils.mkdir_p File.join(fresh_path, 'source/repo/name')
       stub_git
 
