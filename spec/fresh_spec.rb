@@ -99,6 +99,76 @@ describe 'fresh' do
 
       expect(File.read(shell_sh_path)).to eq "existing shell.sh\n"
     end
+
+    describe 'using --file' do
+      it 'builds generic files' do
+        add_to_file freshrc_path, <<-EOF.strip_heredoc
+          fresh lib/tmux.conf --file
+          fresh lib/pryrc.rb --file=~/.pryrc --marker
+          fresh config/git/colors --file=~/.gitconfig
+          fresh config/git/rebase --file=~/.gitconfig
+          fresh config/\*.vim --file=~/.vimrc --marker=\\"
+        EOF
+
+        add_to_file [fresh_local_path, 'lib/tmux.conf'], <<-EOF.strip_heredoc
+          unbind C-b
+          set -g prefix C-a
+        EOF
+        add_to_file [fresh_local_path, 'lib/pryrc.rb'], <<-EOF.strip_heredoc
+          Pry.config.color = true
+          Pry.config.history.should_save = true
+        EOF
+        add_to_file [fresh_local_path, 'config/git/colors'], <<-EOF.strip_heredoc
+          [color]
+          ui = auto
+        EOF
+        add_to_file [fresh_local_path, 'config/git/rebase'], <<-EOF.strip_heredoc
+          [rebase]
+          autosquash = true
+        EOF
+        add_to_file [fresh_local_path, 'config/mappings.vim'], 'map Y y$'
+        add_to_file [fresh_local_path, 'config/global.vim'], 'set hidden'
+
+        run_fresh
+
+        expect_shell_sh_to be_default
+
+        expect(File.read(File.join(fresh_path, 'build/tmux.conf'))).to eq <<-EOF.strip_heredoc
+          unbind C-b
+          set -g prefix C-a
+        EOF
+        expect(File.read(File.join(fresh_path, 'build/pryrc'))).to eq <<-EOF.strip_heredoc
+          # fresh: lib/pryrc.rb
+
+          Pry.config.color = true
+          Pry.config.history.should_save = true
+        EOF
+        expect(File.read(File.join(fresh_path, 'build/gitconfig'))).to eq <<-EOF.strip_heredoc
+          [color]
+          ui = auto
+          [rebase]
+          autosquash = true
+        EOF
+        expect(File.read(File.join(fresh_path, 'build/vimrc'))).to eq <<-EOF.strip_heredoc
+          " fresh: config/global.vim
+
+          set hidden
+
+          " fresh: config/mappings.vim
+
+          map Y y$
+        EOF
+
+        %w[shell.sh tmux.conf pryrc gitconfig vimrc].each do |path|
+          path = File.join fresh_path, 'build', path
+          expect(File.exists? path).to be true
+
+          expect(File.executable? path).to be false
+          expect(File.world_readable? path).to be nil
+          expect(File.writable? path).to be false
+        end
+      end
+    end
   end
 
   describe 'remote files' do
