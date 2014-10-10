@@ -69,13 +69,15 @@ describe 'fresh' do
       expect_shell_sh_to be_default
     end
 
-    it 'builds local shell files with --ignore-missing' do
-      add_to_file freshrc_path, 'fresh aliases/haskell --ignore-missing'
-      FileUtils.mkdir_p fresh_local_path
+    describe 'using --ignore-missing' do
+      it 'builds' do
+        add_to_file freshrc_path, 'fresh aliases/haskell --ignore-missing'
+        FileUtils.mkdir_p fresh_local_path
 
-      run_fresh
+        run_fresh
 
-      expect_shell_sh_to be_default
+        expect_shell_sh_to be_default
+      end
     end
 
     it 'errors with missing local file' do
