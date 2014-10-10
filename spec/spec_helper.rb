@@ -46,13 +46,13 @@ def run_fresh(options = {})
     end
   end
 
-  if options[:stderr]
+  if options[:error]
     expect(@stdout).to be_empty
-    expect(@stderr).to eq options[:stderr]
+    expect(@stderr).to eq options[:error]
     expect(@exit_status).to be false
-  elsif options[:stdout]
+  elsif options[:success]
     expect(@stderr).to be_empty
-    expect(@stdout).to eq options[:stdout]
+    expect(@stdout).to eq options[:success]
     expect(@exit_status).to be true
   else
     expect(@stderr).to be_empty

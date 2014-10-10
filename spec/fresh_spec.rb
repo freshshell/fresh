@@ -97,7 +97,7 @@ describe 'fresh' do
       rc 'fresh foo'
       touch [fresh_local_path, 'bar']
 
-      run_fresh stderr: <<-EOF.strip_heredoc
+      run_fresh error: <<-EOF.strip_heredoc
         #{ERROR_PREFIX} Could not find "foo" source file.
         #{freshrc_path}:1: fresh foo
 
@@ -110,7 +110,7 @@ describe 'fresh' do
       file_add shell_sh_path, 'existing shell.sh'
 
       rc 'invalid'
-      run_fresh stderr: "#{freshrc_path}: line 1: invalid: command not found\n"
+      run_fresh error: "#{freshrc_path}: line 1: invalid: command not found\n"
 
       expect(File.read(shell_sh_path)).to eq "existing shell.sh\n"
     end
@@ -257,7 +257,7 @@ describe 'fresh' do
         rc 'fresh foo-bar.zsh --file=../foo/bar.zsh'
         touch [fresh_local_path, 'foo-bar.zsh']
 
-        run_fresh stderr: <<-EOF.strip_heredoc
+        run_fresh error: <<-EOF.strip_heredoc
           #{ERROR_PREFIX} Relative paths must be inside build dir.
           #{freshrc_path}:1: fresh foo-bar.zsh --file=../foo/bar.zsh
 
@@ -382,7 +382,7 @@ describe 'fresh' do
       end
       stub_git
 
-      run_fresh stdout: <<-EOF.strip_heredoc
+      run_fresh success: <<-EOF.strip_heredoc
         #{NOTE_PREFIX} You seem to be sourcing your local files remotely.
         #{freshrc_path}:1: fresh repo/name file1
 
@@ -469,7 +469,7 @@ describe 'fresh' do
         FileUtils.mkdir_p File.join(fresh_path, 'source/repo/name')
         stub_git
 
-        run_fresh stderr: <<-EOF.strip_heredoc
+        run_fresh error: <<-EOF.strip_heredoc
           #{ERROR_PREFIX} Could not find "bad-file" source file.
           #{freshrc_path}:1: fresh repo/name bad-file --ref=abc1237
 
