@@ -70,7 +70,6 @@ def add_to_file(path, content)
 
   File.open(path, 'a') do |file|
     file.write(content)
-    file.rewind
   end
 end
 
