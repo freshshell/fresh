@@ -2,6 +2,7 @@ require 'active_support/core_ext/kernel/reporting'
 require 'active_support/core_ext/string/strip.rb'
 require 'tmpdir'
 
+ORIGINAL_ENV = ENV.to_hash
 ERROR_PREFIX = "\e[4;31mError\e[0m:"
 NOTE_PREFIX = "\033[1;33mNote\033[0m:"
 FRESH_SUCCESS_LINE = "Your dot files are now \e[1;32mfresh\e[0m."
@@ -133,6 +134,7 @@ RSpec.configure do |config|
   end
 
   config.after do
+    ENV.replace(ORIGINAL_ENV)
     FileUtils.rm_r sandbox_path
     Dir.chdir @original_path
   end
