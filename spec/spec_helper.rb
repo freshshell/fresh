@@ -99,22 +99,25 @@ def shell_sh_marker_lines
   File.read(shell_sh_path).lines.grep(/^# fresh/).join
 end
 
-def expect_shell_sh_to(matcher)
+def expect_shell_sh
+  expect(File.executable? shell_sh_path).to be false
+  expect(File.writable? shell_sh_path).to be false
+
   empty_shell_sh = <<-EOF.strip_heredoc
     export PATH="\$HOME/bin:\$PATH"
     export FRESH_PATH="#{fresh_path}"
   EOF
 
-  if matcher.is_a?(RSpec::Matchers::BuiltIn::BePredicate) && matcher.expected == 'default'
-    expect(File.read(shell_sh_path)).to eq empty_shell_sh
-  elsif matcher.is_a?(RSpec::Matchers::BuiltIn::Eq)
-    expect(File.read(shell_sh_path)).to eq "#{empty_shell_sh}\n#{matcher.expected}"
-  else
-    raise "Invalid matcher: #{matcher}"
-  end
+  shell_sh_content_lines = File.read(shell_sh_path).lines
 
-  expect(File.executable? shell_sh_path).to be false
-  expect(File.writable? shell_sh_path).to be false
+  expect(shell_sh_content_lines[0..1].join).to eq empty_shell_sh
+
+  content = shell_sh_content_lines[3..-1]
+  if content
+    expect(content.join)
+  else
+    expect(Struct.new(:default?).new(:default? => true))
+  end
 end
 
 def format_url(url)

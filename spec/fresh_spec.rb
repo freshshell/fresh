@@ -12,7 +12,7 @@ describe 'fresh' do
 
       run_fresh
 
-      expect_shell_sh_to eq <<-EOF.strip_heredoc
+      expect_shell_sh.to eq <<-EOF.strip_heredoc
         # fresh: aliases/git
 
         alias gs='git status'
@@ -33,7 +33,7 @@ describe 'fresh' do
 
       run_fresh
 
-      expect_shell_sh_to eq <<-EOF.strip_heredoc
+      expect_shell_sh.to eq <<-EOF.strip_heredoc
         # fresh: aliases/foo bar
 
         SPACE
@@ -49,7 +49,7 @@ describe 'fresh' do
 
       run_fresh
 
-      expect_shell_sh_to eq <<-EOF.strip_heredoc
+      expect_shell_sh.to eq <<-EOF.strip_heredoc
         # fresh: aliases/file1
 
         file1
@@ -66,7 +66,7 @@ describe 'fresh' do
       run_fresh
 
       expect(File).to exist(shell_sh_path)
-      expect_shell_sh_to be_default
+      expect_shell_sh.to be_default
     end
 
     describe 'using --ignore-missing' do
@@ -76,7 +76,7 @@ describe 'fresh' do
 
         run_fresh
 
-        expect_shell_sh_to be_default
+        expect_shell_sh.to be_default
       end
 
       it 'does not create a file when single source is missing' do
@@ -146,7 +146,7 @@ describe 'fresh' do
 
         run_fresh
 
-        expect_shell_sh_to be_default
+        expect_shell_sh.to be_default
 
         expect(File.read(fresh_path + 'build/tmux.conf')).to eq <<-EOF.strip_heredoc
           unbind C-b
@@ -431,7 +431,7 @@ describe 'fresh' do
 
         run_fresh
 
-        expect_shell_sh_to eq <<-EOF.strip_heredoc
+        expect_shell_sh.to eq <<-EOF.strip_heredoc
           # fresh: repo/name file
 
           remote content
@@ -444,7 +444,7 @@ describe 'fresh' do
 
         run_fresh
 
-        expect_shell_sh_to eq <<-EOF.strip_heredoc
+        expect_shell_sh.to eq <<-EOF.strip_heredoc
           # fresh: git://example.com/foobar.git file
 
           remote content
@@ -529,7 +529,7 @@ describe 'fresh' do
           git show abcdefg:sedmv
         EOF
 
-        expect_shell_sh_to eq <<-EOF.strip_heredoc
+        expect_shell_sh.to eq <<-EOF.strip_heredoc
           # fresh: repo/name aliases/git.sh @ abc1237
 
           test data for abc1237:aliases/git.sh
