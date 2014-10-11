@@ -933,4 +933,130 @@ describe 'fresh' do
       EOF
     end
   end
+
+  it 'errors when linking bin files with relative paths' do
+    touch fresh_local_path + 'foobar'
+
+    rc 'fresh foobar --bin=foobar'
+    run_fresh error: <<-EOF.strip_heredoc
+      #{ERROR_PREFIX} --bin file paths cannot be relative.
+      #{freshrc_path}:1: fresh foobar --bin=foobar
+
+      You may need to run `fresh update` if you're adding a new line,
+      or the file you're referencing may have moved or been deleted.
+    EOF
+
+    rc_reset
+    rc 'fresh foobar --bin=../foobar'
+    run_fresh error_title: "#{ERROR_PREFIX} --bin file paths cannot be relative.\n"
+  end
+
+  it 'errors if existing symlink for bin does not point to a fresh path' do
+    rc 'fresh bin/sedmv --bin'
+    touch fresh_local_path + 'bin/sedmv'
+    FileUtils.mkdir_p File.expand_path('~/bin')
+    FileUtils.ln_s '/dev/null', File.expand_path('~/bin/sedmv')
+
+    run_fresh error: <<-EOF.strip_heredoc
+      #{ERROR_PREFIX} #{ENV['HOME']}/bin/sedmv already exists (pointing to /dev/null).
+      #{freshrc_path}:1: fresh bin/sedmv --bin
+
+      You may need to run \`fresh update\` if you're adding a new line,
+      or the file you're referencing may have moved or been deleted.
+    EOF
+
+    expect_readlink('~/bin/sedmv').to eq '/dev/null'
+  end
+
+  context 'with a pryrc file' do
+    before do
+      rc 'fresh pryrc --file'
+      touch fresh_local_path + 'pryrc'
+    end
+
+    it 'errors if existing symlink for file does not point to a fresh path' do
+      FileUtils.ln_s '/dev/null', File.expand_path('~/.pryrc')
+
+      run_fresh error: <<-EOF.strip_heredoc
+        #{ERROR_PREFIX} #{ENV['HOME']}/.pryrc already exists (pointing to /dev/null).
+        #{freshrc_path}:1: fresh pryrc --file
+
+        You may need to run \`fresh update\` if you're adding a new line,
+        or the file you're referencing may have moved or been deleted.
+      EOF
+
+      expect_readlink('~/.pryrc').to eq '/dev/null'
+    end
+
+    it 'errors if file exists' do
+      touch sandbox_path + 'home/.pryrc'
+
+      run_fresh error: <<-EOF.strip_heredoc
+        #{ERROR_PREFIX} #{ENV['HOME']}/.pryrc already exists.
+        #{freshrc_path}:1: fresh pryrc --file
+      EOF
+    end
+
+    it 'errors if directory is not writable' do
+      File.chmod 0444, sandbox_path + 'home'
+
+      run_fresh error: <<-EOF.strip_heredoc
+        #{ERROR_PREFIX} Could not create #{ENV['HOME']}/.pryrc. Do you have permission?
+        #{freshrc_path}:1: fresh pryrc --file
+      EOF
+    end
+
+    it 'replaces old symlinks pointing inside the fresh build directory' do
+      FileUtils.ln_s fresh_path + 'build/pryrc-old-name', File.expand_path('~/.pryrc')
+
+      run_fresh
+
+      expect_readlink('~/.pryrc').to eq (fresh_path + 'build/pryrc').to_s
+    end
+  end
+
+  it 'errors if directory cannot be created' do
+    rc 'fresh foo --file=~/.config/foo'
+    touch fresh_local_path + 'foo'
+
+    File.chmod 0444, sandbox_path + 'home'
+
+    run_fresh error: <<-EOF.strip_heredoc
+      #{ERROR_PREFIX} Could not create #{ENV['HOME']}/.config/foo. Do you have permission?
+      #{freshrc_path}:1: fresh foo --file=~/.config/foo
+    EOF
+  end
+
+  it 'does not error for symlinks created by fresh' do
+    rc 'fresh pryrc --file'
+    rc 'fresh bin/sedmv --bin'
+    touch fresh_local_path + 'pryrc'
+    touch fresh_local_path + 'bin/sedmv'
+
+    run_fresh # build symlinks
+    run_fresh # run fresh again to check symlinks
+  end
+
+  it 'errors if link destination is a file' do
+    touch fresh_local_path + 'gitconfig'
+    touch fresh_local_path + 'sedmv'
+    file_add File.expand_path('~/.gitconfig'), 'foo'
+    file_add File.expand_path('~/bin/sedmv'), 'bar'
+
+    rc 'fresh gitconfig --file'
+    run_fresh error: <<-EOF.strip_heredoc
+      #{ERROR_PREFIX} #{sandbox_path}/home/.gitconfig already exists.
+      #{freshrc_path}:1: fresh gitconfig --file
+    EOF
+    expect(File.read(File.expand_path('~/.gitconfig'))).to eq "foo\n"
+
+    rc_reset
+
+    rc 'fresh sedmv --bin'
+    run_fresh error: <<-EOF.strip_heredoc
+      #{ERROR_PREFIX} #{sandbox_path}/home/bin/sedmv already exists.
+      #{freshrc_path}:1: fresh sedmv --bin
+    EOF
+    expect(File.read(File.expand_path('~/bin/sedmv'))).to eq "bar\n"
+  end
 end

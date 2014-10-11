@@ -71,6 +71,10 @@ def rc(content)
   file_add freshrc_path, content
 end
 
+def rc_reset
+  FileUtils.rm freshrc_path
+end
+
 def file_add(path, content)
   path = File.join(path)
   FileUtils.mkdir_p File.dirname(path)
