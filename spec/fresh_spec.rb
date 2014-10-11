@@ -219,7 +219,7 @@ describe 'fresh' do
           %w[vim-colors-bclear.vim ~/.vim/colors/bclear.vim],
           %w[a-path-with-spaces ~/a\ path/with\ spaces],
         ].each do |build_file, symlink_destination|
-          expect(File.join(fresh_path, 'build', build_file)).to eq File.readlink(File.expand_path(symlink_destination))
+          expect_readlink(symlink_destination).to eq File.join(fresh_path, 'build', build_file)
         end
       end
 
@@ -239,7 +239,7 @@ describe 'fresh' do
           %w[foo-file ~/.foo/file],
           %w[bar-file ~/.bar/file],
         ].each do |build_file, symlink_destination|
-          expect(File.join(fresh_path, 'build', build_file)).to eq File.readlink(File.expand_path(symlink_destination))
+          expect_readlink(symlink_destination).to eq File.join(fresh_path, 'build', build_file)
         end
       end
 
@@ -313,8 +313,8 @@ describe 'fresh' do
               shell.sh
             ]
 
-            expect((fresh_path + 'build/foo').to_s).to eq File.readlink(File.expand_path('~/.foo'))
-            expect((fresh_path + 'build/other').to_s).to eq File.readlink(File.expand_path('~/.other'))
+            expect_readlink('~/.foo').to eq (fresh_path + 'build/foo').to_s
+            expect_readlink('~/.other').to eq (fresh_path + 'build/other').to_s
 
             # can traverse symlink
             expect(File).to exist File.expand_path('~/.other/file1')
@@ -697,7 +697,7 @@ describe 'fresh' do
 
         run_fresh
 
-        expect((fresh_path + 'build/foo').to_s).to eq File.readlink(File.expand_path('~/.foo'))
+        expect_readlink('~/.foo').to eq (fresh_path + 'build/foo').to_s
 
         expect(File.read(fresh_path + 'build/foo/file1')).to eq "file1\n"
         expect(File.read(fresh_path + 'build/foo/sub/file2')).to eq "file2\n"
@@ -715,7 +715,7 @@ describe 'fresh' do
 
         run_fresh
 
-        expect((fresh_path + 'build/foo').to_s).to eq File.readlink(File.expand_path('~/.foo'))
+        expect_readlink('~/.foo').to eq (fresh_path + 'build/foo').to_s
 
         expect(File.read(fresh_path + 'build/foo/ackrc')).to eq "test data for abc123:ackrc\n"
         expect(
