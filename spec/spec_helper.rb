@@ -120,6 +120,11 @@ def expect_shell_sh
   end
 end
 
+def expect_readlink(path)
+  path = File.expand_path path
+  expect(File.readlink path)
+end
+
 def format_url(url)
   "\033[4;34m#{url}\033[0m"
 end

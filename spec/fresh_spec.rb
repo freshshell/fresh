@@ -348,6 +348,85 @@ describe 'fresh' do
         end
       end
     end
+
+    describe 'using --bin' do
+      it 'builds bin files' do
+        rc 'fresh scripts/sedmv --bin'
+        rc 'fresh pidof.sh --bin=~/bin/pidof'
+        file_add fresh_local_path + 'scripts/sedmv', 'foo'
+        file_add fresh_local_path + 'pidof.sh', 'bar'
+
+        run_fresh
+
+        expect(File.read(fresh_path + 'build/bin/sedmv')).to eq "foo\n"
+        expect(File.read(fresh_path + 'build/bin/pidof')).to eq "bar\n"
+
+        [
+          fresh_path + 'build/bin/sedmv',
+          fresh_path + 'build/bin/pidof',
+        ].each do |path|
+          expect(File.executable? path).to be true
+          expect(File.writable? path).to be false
+        end
+      end
+
+      it 'builds bin files with globbing' do
+        rc "fresh 'file*' --bin"
+        %w[file1 file2 other].each { |path| file_add fresh_local_path + path, path }
+
+        run_fresh
+
+        expect(File).to exist fresh_path + 'build/bin/file1'
+        expect(File).to exist fresh_path + 'build/bin/file2'
+        expect(File).to_not exist fresh_path + 'build/bin/other'
+      end
+
+      it 'links bin files to destination' do
+        rc <<-EOF.strip_heredoc
+          fresh scripts/sedmv --bin
+          fresh pidof.sh --bin=~/bin/pidof
+          fresh gemdiff --bin=~/bin/scripts/gemdiff
+        EOF
+
+        %w[scripts/sedmv pidof.sh gemdiff].each do |path|
+          touch fresh_local_path + path
+        end
+
+        run_fresh
+
+        expect_readlink('~/bin/sedmv').to eq (fresh_path + 'build/bin/sedmv').to_s
+        expect_readlink('~/bin/pidof').to eq (fresh_path + 'build/bin/pidof').to_s
+        expect_readlink('~/bin/scripts/gemdiff').to eq (fresh_path + 'build/bin/gemdiff').to_s
+      end
+
+      it 'warns if concatenating bin files' do
+        rc <<-EOF.strip_heredoc
+          FRESH_NO_BIN_CONFLICT_CHECK=true
+          fresh gemdiff --bin
+          fresh scripts/gemdiff --bin
+          unset FRESH_NO_BIN_CONFLICT_CHECK
+          fresh sedmv --bin
+          fresh scripts/sedmv --bin
+        EOF
+        %w[scripts/sedmv sedmv scripts/gemdiff gemdiff].each do |path|
+          touch fresh_local_path + path
+        end
+
+        run_fresh success: <<-EOF.strip_heredoc
+          #{NOTE_PREFIX} Multiple sources concatenated into a single bin file.
+          #{freshrc_path}:6: fresh scripts/sedmv --bin
+
+          Typically bin files should not be concatenated together into one file.
+          "bin/sedmv" may not function as expected.
+
+          To disable this warning, add \`FRESH_NO_BIN_CONFLICT_CHECK=true\` in your freshrc file.
+
+          #{FRESH_SUCCESS_LINE}
+        EOF
+
+        expect_readlink('~/bin/sedmv').to eq (fresh_path + 'build/bin/sedmv').to_s
+      end
+    end
   end
 
   describe 'remote files' do
