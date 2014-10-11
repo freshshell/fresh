@@ -1,40 +1,5 @@
 #!/bin/bash
 
-it_runs_filters_on_files() {
-  mkdir -p $FRESH_LOCAL
-  echo "foo other_username bar" > $FRESH_LOCAL/aliases
-  echo "fresh aliases --filter='sed s/other_username/my_username/ | tr _ -'" > $FRESH_RCFILE
-
-  runFresh
-
-  assertFileMatches $FRESH_PATH/build/shell.sh <<EOF
-export PATH="\$HOME/bin:\$PATH"
-export FRESH_PATH="$FRESH_PATH"
-
-# fresh: aliases # sed s/other_username/my_username/ | tr _ -
-
-foo my-username bar
-EOF
-}
-
-it_runs_filters_on_files_locked_to_a_ref() {
-  mkdir -p $FRESH_LOCAL
-  echo "fresh aliases/git.sh --ref=abc1237 --filter='sed s/test/TEST/'" > $FRESH_RCFILE
-
-  stubGit
-
-  runFresh
-
-  assertFileMatches $FRESH_PATH/build/shell.sh <<EOF
-export PATH="\$HOME/bin:\$PATH"
-export FRESH_PATH="$FRESH_PATH"
-
-# fresh: aliases/git.sh @ abc1237 # sed s/test/TEST/
-
-TEST data for abc1237:aliases/git.sh
-EOF
-}
-
 it_errors_when_linking_bin_files_with_relative_paths() {
   mkdir -p $FRESH_LOCAL
   touch $FRESH_LOCAL/foobar

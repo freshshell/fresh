@@ -904,4 +904,33 @@ describe 'fresh' do
       EOF
     end
   end
+
+  describe 'using --filter' do
+    it 'runs filters on files' do
+      file_add fresh_local_path + 'aliases', 'foo other_username bar'
+      rc "fresh aliases --filter='sed s/other_username/my_username/ | tr _ -'"
+
+      run_fresh
+
+      expect_shell_sh.to eq <<-EOF.strip_heredoc
+        # fresh: aliases # sed s/other_username/my_username/ | tr _ -
+
+        foo my-username bar
+      EOF
+    end
+
+    it 'runs filters on files locked to a ref' do
+      FileUtils.mkdir_p fresh_local_path
+      rc "fresh aliases/git.sh --ref=abc1237 --filter='sed s/test/TEST/'"
+      stub_git
+
+      run_fresh
+
+      expect_shell_sh.to eq <<-EOF.strip_heredoc
+        # fresh: aliases/git.sh @ abc1237 # sed s/test/TEST/
+
+        TEST data for abc1237:aliases/git.sh
+      EOF
+    end
+  end
 end
