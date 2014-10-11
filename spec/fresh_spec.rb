@@ -315,6 +315,8 @@ describe 'fresh' do
 
             expect((fresh_path + 'build/foo').to_s).to eq File.readlink(File.expand_path('~/.foo'))
             expect((fresh_path + 'build/other').to_s).to eq File.readlink(File.expand_path('~/.other'))
+
+            # can traverse symlink
             expect(File).to exist File.expand_path('~/.other/file1')
           end
         end
