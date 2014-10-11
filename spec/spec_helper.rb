@@ -50,6 +50,12 @@ def run_fresh(options = {})
     expect(@stdout).to be_empty
     expect(@stderr).to eq options[:error]
     expect(@exit_status).to be false
+  elsif options[:error_title]
+    expect(@stdout).to be_empty
+    expect(
+      @stderr.lines.grep(/Error/).join
+    ).to eq options[:error_title]
+    expect(@exit_status).to be false
   elsif options[:success]
     expect(@stderr).to be_empty
     expect(@stdout).to eq options[:success]

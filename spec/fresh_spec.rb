@@ -600,6 +600,87 @@ describe 'fresh' do
         end
       end
     end
+
+    describe 'whole repos' do
+      before do
+        stub_git
+      end
+
+      it 'links directory of generic files for whole repo' do
+        rc 'fresh repo/name . --file=~/.foo/'
+
+        file_add fresh_path + 'source/repo/name/file1', 'file1'
+        file_add fresh_path + 'source/repo/name/sub/file2', 'file2'
+        touch fresh_path + 'source/repo/name/.git/some-file'
+        touch fresh_path + 'source/repo/name/.hidden-dir/some-file'
+
+        run_fresh
+
+        expect((fresh_path + 'build/foo').to_s).to eq File.readlink(File.expand_path('~/.foo'))
+
+        expect(File.read(fresh_path + 'build/foo/file1')).to eq "file1\n"
+        expect(File.read(fresh_path + 'build/foo/sub/file2')).to eq "file2\n"
+
+        expect(File).to_not exist fresh_path + 'build/foo/.git'
+        expect(File).to exist fresh_path + 'build/foo/.hidden-dir'
+
+        # can traverse symlink
+        expect(File).to exist File.expand_path('~/.foo/file1')
+        expect(File).to exist File.expand_path('~/.foo/sub/file2')
+      end
+
+      it 'links directory of generic files for whole repo with ref' do
+        rc 'fresh repo/name . --file=~/.foo/ --ref=abc123'
+
+        run_fresh
+
+        expect((fresh_path + 'build/foo').to_s).to eq File.readlink(File.expand_path('~/.foo'))
+
+        expect(File.read(fresh_path + 'build/foo/ackrc')).to eq "test data for abc123:ackrc\n"
+        expect(
+          File.read(fresh_path + 'build/foo/recursive-test/abc/def')
+        ).to eq "test data for abc123:recursive-test/abc/def\n"
+
+        # can traverse symlink
+        expect(File).to exist File.expand_path('~/.foo/ackrc')
+        expect(File).to exist File.expand_path('~/.foo/recursive-test/abc/def')
+      end
+
+      describe 'errors if trying to use whole repo with invalid arguments' do
+        it 'runs with good arguments' do
+          rc 'fresh repo/name . --file=~/.good/'
+          run_fresh
+        end
+
+        it 'errors with an invalid path to --file' do
+          rc 'fresh repo/name . --file=~/.bad-path'
+          run_fresh error_title: <<-EOF.strip_heredoc
+            #{ERROR_PREFIX} Whole repositories require destination to be a directory.
+          EOF
+        end
+
+        it 'errors when missing path to --file' do
+          rc 'fresh repo/name . --file'
+          run_fresh error_title: <<-EOF.strip_heredoc
+            #{ERROR_PREFIX} Whole repositories require destination to be a directory.
+          EOF
+        end
+
+        it 'errors when missing --file' do
+          rc 'fresh repo/name .'
+          run_fresh error_title: <<-EOF.strip_heredoc
+            #{ERROR_PREFIX} Whole repositories can only be sourced in file mode.
+          EOF
+        end
+
+        it 'errors when missing repo' do
+          rc 'fresh . --file=~/.bad-local/'
+          run_fresh error_title: <<-EOF.strip_heredoc
+            #{ERROR_PREFIX} Cannot source whole of local dotfiles.
+          EOF
+        end
+      end
+    end
   end
 
   describe 'ignoring subdirectories when globbing' do
