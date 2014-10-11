@@ -1059,4 +1059,56 @@ describe 'fresh' do
     EOF
     expect(File.read(File.expand_path('~/bin/sedmv'))).to eq "bar\n"
   end
+
+  it 'shows source of errors' do
+    stub_git
+    FileUtils.mkdir_p fresh_local_path
+
+    rc 'fresh bad-file'
+    run_fresh error: <<-EOF.strip_heredoc
+      #{ERROR_PREFIX} Could not find "bad-file" source file.
+      #{freshrc_path}:1: fresh bad-file
+
+      You may need to run \`fresh update\` if you're adding a new line,
+      or the file you're referencing may have moved or been deleted.
+    EOF
+
+    rc_reset
+    rc 'fresh repo/name bad-file --ref=abc123'
+    run_fresh error: <<-EOF.strip_heredoc
+      #{ERROR_PREFIX} Could not find "bad-file" source file.
+      #{freshrc_path}:1: fresh repo/name bad-file --ref=abc123
+
+      You may need to run \`fresh update\` if you're adding a new line,
+      or the file you're referencing may have moved or been deleted.
+      Have a look at the repo: <#{format_url 'https://github.com/repo/name'}>
+    EOF
+
+    rc_reset
+    rc 'fresh repo/name some-file --blah'
+    run_fresh error: <<-EOF.strip_heredoc
+      #{ERROR_PREFIX} Unknown option: --blah
+      #{freshrc_path}:1: fresh repo/name some-file --blah
+
+      You may need to run \`fresh update\` if you're adding a new line,
+      or the file you're referencing may have moved or been deleted.
+      Have a look at the repo: <#{format_url 'https://github.com/repo/name'}>
+    EOF
+
+    rc_reset
+    rc 'source ~/.freshrc.local'
+    file_add sandbox_path + 'home/.freshrc.local', <<-EOF.strip_heredoc
+      # local customisations
+
+      fresh pry.rb --file=~/.pryrc # ruby
+      fresh some-other-file
+    EOF
+    run_fresh error: <<-EOF.strip_heredoc
+      #{ERROR_PREFIX} Could not find "pry.rb" source file.
+      ~/.freshrc.local:3: fresh pry.rb --file=~/.pryrc # ruby
+
+      You may need to run \`fresh update\` if you're adding a new line,
+      or the file you're referencing may have moved or been deleted.
+    EOF
+  end
 end
