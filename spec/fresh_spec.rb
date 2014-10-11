@@ -265,6 +265,86 @@ describe 'fresh' do
           or the file you're referencing may have moved or been deleted.
         EOF
       end
+
+      describe 'directories of generic files' do
+        let(:files_in_build_directory) do
+          Dir[fresh_path + 'build/**/*'].
+            reject { |path| File.directory? path }.
+            map { |path| path.sub Regexp.new((fresh_path + 'build/').to_s), '' }
+        end
+
+        describe 'with local files in nested folders' do
+          before do
+            touch fresh_local_path + 'foo/bar/file1'
+            touch fresh_local_path + 'foo/bar/file2'
+            touch fresh_local_path + 'foo/file3'
+            touch fresh_local_path + 'foobar/file4'
+            touch fresh_local_path + 'foobar/file5'
+          end
+
+          it 'builds files' do
+            rc 'fresh foo --file=vendor/misc/foo/'
+            rc 'fresh foo/bar --file=vendor/other/'
+
+            run_fresh
+
+            expect(files_in_build_directory).to eq %w[
+              shell.sh
+              vendor/misc/foo/bar/file1
+              vendor/misc/foo/bar/file2
+              vendor/misc/foo/file3
+              vendor/other/file1
+              vendor/other/file2
+            ]
+          end
+
+          it 'links files' do
+            rc 'fresh foo --file=~/.foo/'
+            rc 'fresh foo/bar --file=~/.other/'
+
+            run_fresh
+
+            expect(files_in_build_directory).to eq %w[
+              foo/bar/file1
+              foo/bar/file2
+              foo/file3
+              other/file1
+              other/file2
+              shell.sh
+            ]
+
+            expect((fresh_path + 'build/foo').to_s).to eq File.readlink(File.expand_path('~/.foo'))
+            expect((fresh_path + 'build/other').to_s).to eq File.readlink(File.expand_path('~/.other'))
+            expect(File).to exist File.expand_path('~/.other/file1')
+          end
+        end
+
+        it 'builds with ref' do
+          rc 'fresh repo/name recursive-test --ref=abc1237 --file=vendor/test/'
+          FileUtils.mkdir_p fresh_path + 'source/repo/name'
+          stub_git
+
+          run_fresh
+
+          expect(git_log).to eq <<-EOF.strip_heredoc
+            cd #{fresh_path + 'source/repo/name'}
+            git ls-tree -r --name-only abc1237
+            cd #{fresh_path + 'source/repo/name'}
+            git show abc1237:recursive-test/abc/def
+            cd #{fresh_path + 'source/repo/name'}
+            git show abc1237:recursive-test/bar
+            cd #{fresh_path + 'source/repo/name'}
+            git show abc1237:recursive-test/foo
+          EOF
+
+          expect(files_in_build_directory).to eq %w[
+            shell.sh
+            vendor/test/abc/def
+            vendor/test/bar
+            vendor/test/foo
+          ]
+        end
+      end
     end
   end
 
