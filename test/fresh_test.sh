@@ -160,59 +160,6 @@ EXIT_STATUS=1
 EOF
 }
 
-it_shows_sources_for_fresh_lines() {
-  echo 'fresh foo/bar aliases/*' >> $FRESH_RCFILE
-  echo 'fresh foo/bar sedmv --bin --ref=abc123' >> $FRESH_RCFILE
-  echo 'fresh local-file' >> $FRESH_RCFILE
-
-  mkdir -p $FRESH_PATH/source/foo/bar/aliases/
-  touch $FRESH_PATH/source/foo/bar/aliases/{git.sh,ruby.sh}
-  mkdir -p $FRESH_LOCAL
-  touch $FRESH_LOCAL/local-file
-
-  stubGit
-
-  runFresh show
-
-  assertFileMatches $SANDBOX_PATH/git.log <<EOF
-cd $SANDBOX_PATH/fresh/source/foo/bar
-git log --pretty=%H -n 1 -- aliases/git.sh
-cd $SANDBOX_PATH/fresh/source/foo/bar
-git log --pretty=%H -n 1 -- aliases/ruby.sh
-cd $SANDBOX_PATH/fresh/source/foo/bar
-git ls-tree -r --name-only abc123
-EOF
-
-  assertFileMatches $SANDBOX_PATH/out.log <<EOF
-fresh foo/bar aliases/\\*
-<$(_format_url https://github.com/foo/bar/blob/1234567/aliases/git.sh)>
-<$(_format_url https://github.com/foo/bar/blob/1234567/aliases/ruby.sh)>
-
-fresh foo/bar sedmv --bin --ref=abc123
-<$(_format_url https://github.com/foo/bar/blob/abc123/sedmv)>
-
-fresh local-file
-<$(_format_url $FRESH_LOCAL/local-file)>
-EOF
-  assertFileMatches $SANDBOX_PATH/err.log <<EOF
-EOF
-}
-
-it_shows_git_urls_for_non_github_repos() {
-  echo fresh git://example.com/one/two.git file >> $FRESH_RCFILE
-
-  stubGit
-
-  runFresh show
-
-  assertFileMatches $SANDBOX_PATH/out.log <<EOF
-fresh git://example.com/one/two.git file
-<$(_format_url git://example.com/one/two.git)>
-EOF
-  assertFileMatches $SANDBOX_PATH/err.log <<EOF
-EOF
-}
-
 it_escapes_arguments() {
   (
     set -e

@@ -1588,4 +1588,49 @@ describe 'fresh' do
       expect(File).to_not exist fresh_path + 'source/abc'
     end
   end
+
+  describe 'show' do
+    it 'shows sources for fresh lines' do
+      rc <<-EOF
+        fresh foo/bar aliases/*
+        fresh foo/bar sedmv --bin --ref=abc123
+        fresh local-file
+      EOF
+      touch fresh_path + 'source/foo/bar/aliases/git.sh'
+      touch fresh_path + 'source/foo/bar/aliases/ruby.sh'
+      touch fresh_local_path + 'local-file'
+      stub_git
+
+      run_fresh command: 'show', success: <<-EOF.strip_heredoc
+        fresh foo/bar aliases/\\*
+        <#{format_url 'https://github.com/foo/bar/blob/1234567/aliases/git.sh'}>
+        <#{format_url 'https://github.com/foo/bar/blob/1234567/aliases/ruby.sh'}>
+
+        fresh foo/bar sedmv --bin --ref=abc123
+        <#{format_url 'https://github.com/foo/bar/blob/abc123/sedmv'}>
+
+        fresh local-file
+        <#{format_url fresh_local_path + 'local-file'}>
+      EOF
+
+      expect(git_log).to eq <<-EOF.strip_heredoc
+        cd #{sandbox_path + 'fresh/source/foo/bar'}
+        git log --pretty=%H -n 1 -- aliases/git.sh
+        cd #{sandbox_path + 'fresh/source/foo/bar'}
+        git log --pretty=%H -n 1 -- aliases/ruby.sh
+        cd #{sandbox_path + 'fresh/source/foo/bar'}
+        git ls-tree -r --name-only abc123
+      EOF
+    end
+
+    it 'shows git urls for non github repos' do
+      rc 'fresh git://example.com/one/two.git file'
+      stub_git
+
+      run_fresh command: 'show', success: <<-EOF.strip_heredoc
+        fresh git://example.com/one/two.git file
+        <#{format_url 'git://example.com/one/two.git'}>
+      EOF
+    end
+  end
 end
