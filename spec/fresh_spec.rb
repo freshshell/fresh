@@ -175,7 +175,7 @@ describe 'fresh' do
         EOF
 
         %w[shell.sh tmux.conf pryrc gitconfig vimrc].each do |path|
-          path = File.join fresh_path, 'build', path
+          path = fresh_path + 'build' + path
           expect(File).to exist(path)
 
           expect(File.executable? path).to be false
@@ -219,7 +219,7 @@ describe 'fresh' do
           %w[vim-colors-bclear.vim ~/.vim/colors/bclear.vim],
           %w[a-path-with-spaces ~/a\ path/with\ spaces],
         ].each do |build_file, symlink_destination|
-          expect_readlink(symlink_destination).to eq File.join(fresh_path, 'build', build_file)
+          expect_readlink(symlink_destination).to eq (fresh_path + 'build' + build_file).to_s
         end
       end
 
@@ -239,7 +239,7 @@ describe 'fresh' do
           %w[foo-file ~/.foo/file],
           %w[bar-file ~/.bar/file],
         ].each do |build_file, symlink_destination|
-          expect_readlink(symlink_destination).to eq File.join(fresh_path, 'build', build_file)
+          expect_readlink(symlink_destination).to eq (fresh_path + 'build' + build_file).to_s
         end
       end
 
