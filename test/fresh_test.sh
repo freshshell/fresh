@@ -1,30 +1,5 @@
 #!/bin/bash
 
-it_does_not_error_if_freshrc_has_bin_fresh() {
-  echo fresh bin/fresh --bin >> $FRESH_RCFILE
-  mkdir -p $FRESH_LOCAL/bin
-  touch $FRESH_LOCAL/bin/fresh
-
-  unset FRESH_NO_BIN_CHECK
-  runFresh
-}
-
-it_errors_if_freshrc_is_missing_bin_fresh() {
-  touch $FRESH_RCFILE
-
-  unset FRESH_NO_BIN_CHECK
-  runFresh fails
-  assertFalse 'does not build' '[ -d $FRESH_PATH/build ]'
-  assertTrue 'mentions solution' 'grep -q "fresh freshshell/fresh bin/fresh --bin" $SANDBOX_PATH/err.log'
-}
-
-it_allows_bin_fresh_error_to_be_disabled() {
-  touch $FRESH_RCFILE
-
-  export FRESH_NO_BIN_CHECK=true
-  runFresh
-}
-
 it_allows_default_bin_path_to_be_configured() {
   echo "FRESH_BIN_PATH=\"\$HOME/Applications/bin\"" >> $FRESH_RCFILE
   echo "fresh bin/fresh --bin" >> $FRESH_RCFILE

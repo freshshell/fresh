@@ -1390,4 +1390,35 @@ describe 'fresh' do
       expect(File.read(sandbox_path + 'fresh.log')).to eq "new\n"
     end
   end
+
+  describe 'environment variable config' do
+    describe 'FRESH_NO_BIN_CHECK' do
+      before do
+        ENV.delete('FRESH_NO_BIN_CHECK')
+      end
+
+      it 'does not error if freshrc has bin fresh' do
+        rc 'fresh bin/fresh --bin'
+        touch fresh_local_path + 'bin/fresh'
+
+        run_fresh
+      end
+
+      it 'errors if freshrc is missing bin fresh' do
+        run_fresh error: <<-EOF.strip_heredoc
+          #{ERROR_PREFIX} It looks you do not have fresh in your freshrc file. This could result
+          in difficulties running `fresh` later. You probably want to add a line like
+          the following using `fresh edit`:
+
+            fresh freshshell/fresh bin/fresh --bin
+
+          To disable this error, add `FRESH_NO_BIN_CHECK=true` in your freshrc file.
+        EOF
+      end
+
+      it 'allows bin fresh error to be disabled' do
+        ENV['FRESH_NO_BIN_CHECK'] = 'true'
+      end
+    end
+  end
 end
