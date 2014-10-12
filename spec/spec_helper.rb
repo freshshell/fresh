@@ -98,8 +98,12 @@ end
 
 def touch(path)
   path = File.join(path)
-  FileUtils.mkdir_p File.dirname(path)
+  mkdir File.dirname(path)
   FileUtils.touch path
+end
+
+def mkdir(path)
+  FileUtils.mkdir_p path
 end
 
 def stub_git

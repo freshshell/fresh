@@ -160,55 +160,6 @@ EXIT_STATUS=1
 EOF
 }
 
-it_cleans_dead_symlinks_from_home_and_bin() {
-  echo 'fresh alive --file' >> $FRESH_RCFILE
-  echo 'fresh alive --bin' >> $FRESH_RCFILE
-  echo 'fresh dead --file' >> $FRESH_RCFILE
-  echo 'fresh dead --bin' >> $FRESH_RCFILE
-  mkdir -p $FRESH_LOCAL
-  touch $FRESH_LOCAL/{alive,dead}
-  runFresh
-  rm -f $FRESH_PATH/build/{dead,bin/dead}
-  ln -s no_such_file ~/.other
-  ln -s no_such_file ~/bin/other
-
-  runFresh clean
-
-  assertTrue '~/.alive still exists' '[ -L ~/.alive ]'
-  assertTrue '~/bin/alive still exists' '[ -L ~/bin/alive ]'
-  assertFalse '~/.dead no longer exists' '[ -L ~/.dead ]'
-  assertFalse '~/bin/dead no longer exists' '[ -L ~/bin/dead ]'
-  assertTrue '~/.other still exists' '[ -L ~/.other ]'
-  assertTrue '~/bin/other still exists' '[ -L ~/bin/other ]'
-
-  assertFileMatches $SANDBOX_PATH/out.log <<EOF
-Removing ~/.dead
-Removing ~/bin/dead
-EOF
-  assertFileMatches $SANDBOX_PATH/err.log <<EOF
-EOF
-}
-
-it_cleans_repositories_no_longer_referenced_by_freshrc() {
-  echo 'fresh foo/bar file' >> $FRESH_RCFILE
-  echo 'fresh git://example.com/foobar.git file' >> $FRESH_RCFILE
-  mkdir -p $FRESH_PATH/source/{foo/bar,foo/baz,abc/def,example.com/foobar}/.git
-
-  runFresh clean
-
-  assertTrue 'foo/bar still exists' '[ -d "$FRESH_PATH/source/foo/bar/.git" ]'
-  assertFalse 'foo/baz was cleaned' '[ -d "$FRESH_PATH/source/foo/baz/.git" ]'
-  assertFalse 'abc/def was cleaned' '[ -d "$FRESH_PATH/source/abc/def" ]'
-  assertFalse 'abc (empty parent) was cleaned' '[ -d "$FRESH_PATH/source/abc" ]'
-
-  assertFileMatches $SANDBOX_PATH/out.log <<EOF
-Removing source abc/def
-Removing source foo/baz
-EOF
-  assertFileMatches $SANDBOX_PATH/err.log <<EOF
-EOF
-}
-
 it_shows_sources_for_fresh_lines() {
   echo 'fresh foo/bar aliases/*' >> $FRESH_RCFILE
   echo 'fresh foo/bar sedmv --bin --ref=abc123' >> $FRESH_RCFILE

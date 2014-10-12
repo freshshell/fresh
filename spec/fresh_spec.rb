@@ -1531,4 +1531,61 @@ describe 'fresh' do
       EOF
     end
   end
+
+  describe 'clean' do
+    it 'cleans dead symlinks from home and bin' do
+      rc <<-EOF
+        fresh alive --file
+        fresh alive --bin
+        fresh dead --file
+        fresh dead --bin
+      EOF
+
+      touch fresh_local_path + 'alive'
+      touch fresh_local_path + 'dead'
+
+      run_fresh
+
+      FileUtils.rm fresh_path + 'build/dead'
+      FileUtils.rm fresh_path + 'build/bin/dead'
+
+      FileUtils.ln_s 'no_such_file', File.expand_path('~/.other')
+      FileUtils.ln_s 'no_such_file', File.expand_path('~/bin/other')
+
+      run_fresh command: 'clean', success: <<-EOF.strip_heredoc
+        Removing ~/.dead
+        Removing ~/bin/dead
+      EOF
+
+      expect(File.symlink? File.expand_path('~/.alive')).to be true
+      expect(File.symlink? File.expand_path('~/bin/alive')).to be true
+
+      expect(File.symlink? File.expand_path('~/.dead')).to be false
+      expect(File.symlink? File.expand_path('~/bin/dead')).to be false
+
+      expect(File.symlink? File.expand_path('~/.other')).to be true
+      expect(File.symlink? File.expand_path('~/bin/other')).to be true
+    end
+
+    it 'cleans repositories no longer referenced by freshrc' do
+      rc <<-EOF
+        fresh foo/bar file
+        fresh git://example.com/foobar.git file
+      EOF
+
+      %w[foo/bar foo/baz abc/def example.com/foobar].each do |path|
+        mkdir fresh_path + 'source' + path + '.git'
+      end
+
+      run_fresh command: 'clean', success: <<-EOF.strip_heredoc
+        Removing source abc/def
+        Removing source foo/baz
+      EOF
+
+      expect(File).to exist fresh_path + 'source/foo/bar/.git'
+      expect(File).to_not exist fresh_path + 'source/foo/baz/.git'
+      expect(File).to_not exist fresh_path + 'source/abc/def/.git'
+      expect(File).to_not exist fresh_path + 'source/abc'
+    end
+  end
 end
