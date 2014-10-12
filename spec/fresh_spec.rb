@@ -1885,4 +1885,46 @@ describe 'fresh' do
       )
     end
   end
+
+  describe 'private functions' do
+    let(:log_path) { sandbox_path + 'out.log' }
+
+    def run_private_function(command, exit_status = true)
+      exit_status = system 'bash', '-c', <<-EOF
+        set -e
+        source bin/fresh
+        #{command} > #{log_path}
+      EOF
+      expect(exit_status).to be exit_status
+    end
+
+    describe '_escape' do
+      it 'escapes arguments' do
+        run_private_function "_escape foo 'bar baz'"
+        expect(File.read(log_path)).to eq "foo bar\\ baz\n"
+      end
+    end
+
+    describe '_confirm' do
+      it 'confirms query positive' do
+        run_private_function "echo y | _confirm 'Test question'"
+        expect(File.read(log_path)).to eq 'Test question [Y/n]? '
+      end
+
+      it 'confirms query negative' do
+        run_private_function "echo n | _confirm 'Test question'", false
+        expect(File.read(log_path)).to eq 'Test question [Y/n]? '
+      end
+
+      it 'confirms query default' do
+        run_private_function "echo | _confirm 'Test question'"
+        expect(File.read(log_path)).to eq 'Test question [Y/n]? '
+      end
+
+      it 'confirms query invalid' do
+        run_private_function %Q{echo -e "blah\ny" | _confirm 'Test question'}
+        expect(File.read(log_path)).to eq 'Test question [Y/n]? Test question [Y/n]? '
+      end
+    end
+  end
 end
