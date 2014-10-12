@@ -998,7 +998,7 @@ describe 'fresh' do
     end
 
     it 'errors if directory is not writable' do
-      File.chmod 0444, sandbox_path + 'home'
+      FileUtils.chmod '-w', sandbox_path + 'home'
 
       run_fresh error: <<-EOF.strip_heredoc
         #{ERROR_PREFIX} Could not create #{ENV['HOME']}/.pryrc. Do you have permission?
@@ -1019,7 +1019,7 @@ describe 'fresh' do
     rc 'fresh foo --file=~/.config/foo'
     touch fresh_local_path + 'foo'
 
-    File.chmod 0444, sandbox_path + 'home'
+    FileUtils.chmod '-w', sandbox_path + 'home'
 
     run_fresh error: <<-EOF.strip_heredoc
       #{ERROR_PREFIX} Could not create #{ENV['HOME']}/.config/foo. Do you have permission?
