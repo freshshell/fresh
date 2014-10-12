@@ -270,7 +270,7 @@ describe 'fresh' do
         let(:files_in_build_directory) do
           Dir[fresh_path + 'build/**/*'].
             reject { |path| File.directory? path }.
-            map { |path| path.sub Regexp.new((fresh_path + 'build/').to_s), '' }
+            map { |path| path.sub Regexp.new((fresh_path + 'build/').to_s), '' }.sort
         end
 
         describe 'with local files in nested folders' do
