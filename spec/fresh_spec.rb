@@ -1453,4 +1453,15 @@ describe 'fresh' do
       end
     end
   end
+
+  describe 'fresh_after_build' do
+    it 'runs fresh after build' do
+      rc "fresh_after_build() { echo test after_build; }"
+
+      run_fresh success: <<-EOF.strip_heredoc
+        test after_build
+        #{FRESH_SUCCESS_LINE}
+      EOF
+    end
+  end
 end
