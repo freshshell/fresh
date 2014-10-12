@@ -50,7 +50,11 @@ end
 def run_fresh(options = {})
   @stdout = capture(:stdout) do
     @stderr = capture(:stderr) do
-      @exit_status = system(*['fresh', Array(options[:command])].flatten.compact)
+      @exit_status = if options[:full_command]
+        system(options[:full_command])
+      else
+        system(*['fresh', Array(options[:command])].flatten.compact)
+      end
     end
   end
 
@@ -66,7 +70,11 @@ def run_fresh(options = {})
     expect(@exit_status).to be (options[:exit_status].nil? ? false : options[:exit_status])
   elsif options[:success]
     expect(@stderr).to be_empty
-    expect(@stdout).to eq options[:success]
+    if options[:success].is_a? Regexp
+      expect(@stdout).to match options[:success]
+    else
+      expect(@stdout).to eq options[:success]
+    end
     expect(@exit_status).to be (options[:exit_status].nil? ? true : options[:exit_status])
   else
     expect(@stderr).to be_empty

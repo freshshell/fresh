@@ -1633,4 +1633,180 @@ describe 'fresh' do
       EOF
     end
   end
+
+  describe 'adding lines to freshrc interactively' do
+    it 'for local files' do
+      rc 'fresh existing'
+      touch fresh_path + 'source/user/repo/file'
+      touch fresh_local_path + 'existing'
+      touch fresh_local_path + 'new file'
+
+      run_fresh(
+        full_command: 'yes | fresh new\ file',
+        success: <<-EOF.strip_heredoc)
+          Add `fresh new\\ file` to #{freshrc_path} [Y/n]? Adding `fresh new\\ file` to #{freshrc_path}...
+          #{FRESH_SUCCESS_LINE}
+        EOF
+
+      expect(File.read(freshrc_path)).to eq <<-EOF.strip_heredoc
+        fresh existing
+        fresh new\\ file
+      EOF
+    end
+
+    it 'for new remotes' do
+      rc 'fresh existing'
+      touch fresh_local_path + 'existing'
+      stub_git
+
+      run_fresh(
+        full_command: 'yes | fresh user/repo file',
+        success: <<-EOF.strip_heredoc)
+          Add `fresh user/repo file` to #{freshrc_path} [Y/n]? Adding `fresh user/repo file` to #{freshrc_path}...
+          #{FRESH_SUCCESS_LINE}
+        EOF
+
+      expect(File.read(freshrc_path)).to eq <<-EOF.strip_heredoc
+        fresh existing
+        fresh user/repo file
+      EOF
+      expect(git_log).to eq <<-EOF.strip_heredoc
+        cd #{Dir.pwd}
+        git clone https://github.com/user/repo #{fresh_path}/source/user/repo
+      EOF
+    end
+
+    it 'for new remotes by url' do
+      stub_git
+
+      run_fresh(
+        full_command: 'yes | fresh https://github.com/user/repo/blob/master/file',
+        success: <<-EOF.strip_heredoc)
+          Add `fresh user/repo file` to #{freshrc_path} [Y/n]? Adding `fresh user/repo file` to #{freshrc_path}...
+          #{FRESH_SUCCESS_LINE}
+        EOF
+
+      expect(File.read(freshrc_path)).to eq <<-EOF.strip_heredoc
+        fresh user/repo file
+      EOF
+      expect(git_log).to eq <<-EOF.strip_heredoc
+        cd #{Dir.pwd}
+        git clone https://github.com/user/repo #{fresh_path}/source/user/repo
+      EOF
+    end
+
+    it 'for existing remotes and updates if the file does not exist' do
+      file_add fresh_path + 'source/user/repo/.git/commands', 'touch "$FRESH_PATH/source/user/repo/file"'
+      stub_git
+
+      run_fresh(
+        full_command: 'yes | fresh https://github.com/user/repo/blob/master/file',
+        success: <<-EOF.strip_heredoc)
+          Add \`fresh user/repo file\` to #{freshrc_path} [Y/n]? Adding \`fresh user/repo file\` to #{freshrc_path}...
+          * Updating user/repo
+          | Current branch master is up to date.
+          #{FRESH_SUCCESS_LINE}
+        EOF
+
+      expect(File.read(freshrc_path)).to eq <<-EOF.strip_heredoc
+        fresh user/repo file
+      EOF
+      expect(git_log).to eq <<-EOF.strip_heredoc
+        cd #{fresh_path + 'source/user/repo'}
+        git pull --rebase
+      EOF
+    end
+
+    it 'without updating existing repo if the file exists' do
+      mkdir fresh_path + 'source/user/repo/.git'
+      touch fresh_path + 'source/user/repo/file'
+      stub_git
+
+      run_fresh(
+        full_command: 'yes | fresh user/repo file',
+        success: <<-EOF.strip_heredoc)
+          Add \`fresh user/repo file\` to #{freshrc_path} [Y/n]? Adding \`fresh user/repo file\` to #{freshrc_path}...
+          #{FRESH_SUCCESS_LINE}
+        EOF
+
+      expect(File.read(freshrc_path)).to eq <<-EOF.strip_heredoc
+        fresh user/repo file
+      EOF
+      expect(File).to_not exist git_log_path
+    end
+
+    it 'does not add lines to freshrc if declined' do
+      rc 'fresh existing'
+      touch fresh_local_path + 'existing'
+      touch fresh_local_path + 'new'
+
+      run_fresh(
+        full_command: 'yes n | fresh new',
+        success: <<-EOF.strip_heredoc)
+          Add \`fresh new\` to #{freshrc_path} [Y/n]? #{NOTE_PREFIX} Use \`fresh edit\` to manually edit your #{freshrc_path}.
+        EOF
+
+      expect(File.read(freshrc_path)).to eq <<-EOF.strip_heredoc
+        fresh existing
+      EOF
+    end
+
+    describe 'from github URLs' do
+      def expect_fresh_add_args(input, output)
+        run_fresh(
+          full_command: "yes n | fresh #{input}",
+          success: %r{`#{output}`}
+        )
+      end
+
+      it 'auto adds --bin' do
+        expect_fresh_add_args(
+          'https://github.com/twe4ked/catacomb/blob/master/bin/catacomb',
+          'fresh twe4ked/catacomb bin/catacomb --bin'
+        )
+      end
+
+      it '--bin will not duplicate' do
+        expect_fresh_add_args(
+          'https://github.com/twe4ked/catacomb/blob/master/bin/catacomb --bin',
+          'fresh twe4ked/catacomb bin/catacomb --bin'
+        )
+      end
+
+      it 'works out --ref' do
+        expect_fresh_add_args(
+          'https://github.com/twe4ked/catacomb/blob/a62f448/bin/catacomb',
+          'fresh twe4ked/catacomb bin/catacomb --bin --ref=a62f448'
+        )
+      end
+
+      it 'auto add --file' do
+        expect_fresh_add_args(
+          'https://github.com/twe4ked/dotfiles/blob/master/config/pryrc',
+          'fresh twe4ked/dotfiles config/pryrc --file'
+        )
+      end
+
+      it '--file will not duplicate' do
+        expect_fresh_add_args(
+          'https://github.com/twe4ked/dotfiles/blob/master/config/pryrc --file',
+          'fresh twe4ked/dotfiles config/pryrc --file'
+        )
+      end
+
+      it 'auto adds --file preserves other options' do
+        expect_fresh_add_args(
+          'https://github.com/twe4ked/dotfiles/blob/master/config/pryrc --marker',
+          'fresh twe4ked/dotfiles config/pryrc --marker --file'
+        )
+      end
+
+      it "doesn't add --bin or --file to other files" do
+        expect_fresh_add_args(
+          'https://github.com/twe4ked/dotfiles/blob/master/shell/aliases/git.sh',
+          'fresh twe4ked/dotfiles shell/aliases/git.sh'
+        )
+      end
+    end
+  end
 end
