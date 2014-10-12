@@ -1,15 +1,5 @@
 #!/bin/bash
 
-it_path_export_to_be_disabled() {
-  export FRESH_NO_PATH_EXPORT=1
-  runFresh
-  unset FRESH_NO_PATH_EXPORT
-
-  assertFileMatches $FRESH_PATH/build/shell.sh <<EOF
-export FRESH_PATH="$FRESH_PATH"
-EOF
-}
-
 it_runs_fresh_after_build() {
   echo "fresh_after_build() { echo test after_build; }" >> $FRESH_RCFILE
 

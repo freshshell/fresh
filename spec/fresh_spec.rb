@@ -1441,5 +1441,16 @@ describe 'fresh' do
         EOF
       end
     end
+
+    describe 'FRESH_NO_PATH_EXPORT' do
+      it 'does not output a $PATH if enabled' do
+        ENV['FRESH_NO_PATH_EXPORT'] = '1'
+        run_fresh
+
+        expect(File.read(shell_sh_path)).to eq <<-EOF.strip_heredoc
+          export FRESH_PATH="#{fresh_path}"
+        EOF
+      end
+    end
   end
 end
