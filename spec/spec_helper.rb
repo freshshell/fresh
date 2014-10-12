@@ -35,8 +35,16 @@ def git_log_path
   Pathname.new sandbox_path + 'git.log'
 end
 
+def curl_log_path
+  Pathname.new sandbox_path + 'curl.log'
+end
+
 def git_log
   File.read git_log_path
+end
+
+def curl_log
+  File.read curl_log_path
 end
 
 def run_fresh(options = {})
@@ -97,6 +105,37 @@ end
 def stub_git
   spec_bin_path = File.join(File.dirname(__FILE__), 'support', 'bin')
   ENV['PATH'] = [spec_bin_path, ENV['PATH']].join(':')
+end
+
+def stub_curl(*args)
+  error = if args.first.is_a?(Hash) && args.first[:error]
+    args.first[:error]
+  end
+
+  template = <<-ERB.strip_heredoc
+    #!/bin/bash -e
+
+    echo curl >> <%= curl_log_path %>
+
+    for ARG in "$@"; do
+      echo "$ARG" >> <%= curl_log_path %>
+    done
+
+    <% if error %>
+      echo "<%= error %>" >&2
+      exit 1
+    <% else %>
+      <% args.each do |arg| %>
+        echo "<%= arg %>"
+      <% end %>
+    <% end %>
+  ERB
+
+  curl_path = bin_path + 'curl'
+  File.open(curl_path, 'a') do |file|
+    file.write ERB.new(template).result(binding)
+  end
+  FileUtils.chmod '+x', curl_path
 end
 
 def shell_sh_marker_lines

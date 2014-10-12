@@ -1464,4 +1464,71 @@ describe 'fresh' do
       EOF
     end
   end
+
+  describe 'search' do
+    it 'searches directory for keywords' do
+      stub_curl 'foo', 'bar baz'
+
+      run_fresh command: %w[search foo bar], success: <<-EOF.strip_heredoc
+        foo
+        bar baz
+      EOF
+
+      expect(curl_log).to eq <<-EOF.strip_heredoc
+        curl
+        -sS
+        http://api.freshshell.com/directory
+        --get
+        --data-urlencode
+        q=foo bar
+      EOF
+    end
+
+    it 'shows error if no search query given' do
+      stub_curl
+
+      run_fresh(
+        command: 'search',
+        error: "#{ERROR_PREFIX} No search query given.\n"
+      )
+
+      expect(File).to_not exist curl_log_path
+    end
+
+    it 'shows error if search has no results' do
+      stub_curl
+
+      run_fresh(
+        command: %w[search blah],
+        error: "#{ERROR_PREFIX} No results.\n"
+      )
+
+      expect(curl_log).to eq <<-EOF.strip_heredoc
+        curl
+        -sS
+        http://api.freshshell.com/directory
+        --get
+        --data-urlencode
+        q=blah
+      EOF
+    end
+
+    it 'shows error if search api call fails' do
+      stub_curl error: 'Could not connect.'
+
+      run_fresh(
+        command: %w[search blah],
+        error: "Could not connect.\n"
+      )
+
+      expect(curl_log).to eq <<-EOF.strip_heredoc
+        curl
+        -sS
+        http://api.freshshell.com/directory
+        --get
+        --data-urlencode
+        q=blah
+      EOF
+    end
+  end
 end

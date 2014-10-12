@@ -59,28 +59,6 @@ stubGit() {
   cp ../../spec/support/bin/git $SANDBOX_PATH/bin/git
 }
 
-stubCurl() {
-  cat > $SANDBOX_PATH/bin/curl <<EOF
-#!/bin/bash -e
-echo curl >> $SANDBOX_PATH/curl.log
-for ARG in "\$@"; do
-  echo "\$ARG" >> $SANDBOX_PATH/curl.log
-done
-EOF
-if [[ "$1" == '--fail' ]]; then
-shift
-  cat >> $SANDBOX_PATH/bin/curl <<EOF
-echo "$*" >&2
-exit 1
-EOF
-else
-for LINE in "$@"; do
-  echo "echo \"$LINE\"" >> $SANDBOX_PATH/bin/curl
-done
-fi
-  chmod +x $SANDBOX_PATH/bin/curl
-}
-
 _format_url() {
   echo $'\033[4;34m'"$1"$'\033[0m'
 }
