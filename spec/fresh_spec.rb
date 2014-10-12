@@ -1832,4 +1832,37 @@ describe 'fresh' do
       run_fresh command: 'edit', success: "#{Dir.pwd}/home/.dotfiles/freshrc\n"
     end
   end
+
+  describe 'fresh-options' do
+    it 'applies fresh options to multiple lines' do
+      rc <<-EOF
+        fresh-options --file=~/.vimrc --marker=\\"
+          fresh mappings.vim --filter='tr a x'
+          fresh autocmds.vim
+        fresh-options
+
+        fresh zshrc --file
+      EOF
+
+      file_add fresh_local_path + 'mappings.vim', 'mappings'
+      file_add fresh_local_path + 'autocmds.vim', 'autocmds'
+      file_add fresh_local_path + 'zshrc', 'zsh config'
+
+      run_fresh
+
+      expect(File.read(fresh_path + 'build/vimrc')).to eq <<-EOF.strip_heredoc
+        " fresh: mappings.vim # tr a x
+
+        mxppings
+
+        " fresh: autocmds.vim
+
+        autocmds
+      EOF
+
+      expect(File.read(fresh_path + 'build/zshrc')).to eq <<-EOF.strip_heredoc
+        zsh config
+      EOF
+    end
+  end
 end
