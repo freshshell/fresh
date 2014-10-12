@@ -1111,4 +1111,283 @@ describe 'fresh' do
       or the file you're referencing may have moved or been deleted.
     EOF
   end
+
+  describe 'update' do
+    it 'updates fresh files' do
+      FileUtils.mkdir_p fresh_path + 'source/repo/name/.git'
+      FileUtils.mkdir_p fresh_path + 'source/other_repo/other_name/.git'
+      stub_git
+
+      run_fresh command: 'update', success: <<-EOF.strip_heredoc
+        * Updating other_repo/other_name
+        | Current branch master is up to date.
+        * Updating repo/name
+        | Current branch master is up to date.
+        #{FRESH_SUCCESS_LINE}
+      EOF
+
+      expect(git_log).to eq <<-EOF.strip_heredoc
+        cd #{fresh_path + 'source/other_repo/other_name'}
+        git pull --rebase
+        cd #{fresh_path + 'source/repo/name'}
+        git pull --rebase
+      EOF
+    end
+
+    it 'updates fresh files for a specified GitHub user' do
+      FileUtils.mkdir_p fresh_path + 'source/twe4ked/dotfiles/.git'
+      FileUtils.mkdir_p fresh_path + 'source/twe4ked/scripts/.git'
+      FileUtils.mkdir_p fresh_path + 'source/jasoncodes/dotfiles/.git'
+      stub_git
+
+      run_fresh command: %w[update twe4ked], success: <<-EOF.strip_heredoc
+        * Updating twe4ked/dotfiles
+        | Current branch master is up to date.
+        * Updating twe4ked/scripts
+        | Current branch master is up to date.
+        #{FRESH_SUCCESS_LINE}
+      EOF
+
+      expect(git_log).to eq <<-EOF.strip_heredoc
+        cd #{fresh_path + 'source/twe4ked/dotfiles'}
+        git pull --rebase
+        cd #{fresh_path + 'source/twe4ked/scripts'}
+        git pull --rebase
+      EOF
+    end
+
+    it 'updates fresh files for a specified GitHub repo' do
+      FileUtils.mkdir_p fresh_path + 'source/twe4ked/dotfiles/.git'
+      FileUtils.mkdir_p fresh_path + 'source/twe4ked/dotfiles-old/.git'
+      FileUtils.mkdir_p fresh_path + 'source/twe4ked/scripts/.git'
+      FileUtils.mkdir_p fresh_path + 'source/jasoncodes/dotfiles/.git'
+      stub_git
+
+      run_fresh command: %w[update twe4ked/dotfiles], success: <<-EOF.strip_heredoc
+        * Updating twe4ked/dotfiles
+        | Current branch master is up to date.
+        #{FRESH_SUCCESS_LINE}
+      EOF
+
+      expect(git_log).to eq <<-EOF.strip_heredoc
+        cd #{fresh_path + 'source/twe4ked/dotfiles'}
+        git pull --rebase
+      EOF
+    end
+
+    context 'with local and fresh repo' do
+      before do
+        FileUtils.mkdir_p fresh_local_path + '.git'
+        FileUtils.mkdir_p fresh_path + 'source/freshshell/fresh/.git'
+        stub_git
+      end
+
+      it 'updates local repo with no args' do
+        run_fresh command: 'update', success: <<-EOF.strip_heredoc
+          * Updating local files
+          | Current branch master is up to date.
+          * Updating freshshell/fresh
+          | Current branch master is up to date.
+          #{FRESH_SUCCESS_LINE}
+        EOF
+
+        expect(git_log).to eq <<-EOF.strip_heredoc
+          cd #{fresh_local_path}
+          git rev-parse @{u}
+          cd #{fresh_local_path}
+          git status --porcelain
+          cd #{fresh_local_path}
+          git pull --rebase
+          cd #{fresh_path + 'source/freshshell/fresh'}
+          git pull --rebase
+        EOF
+      end
+
+      it 'only updates local repo with --local arg' do
+        run_fresh command: %w[update --local], success: <<-EOF.strip_heredoc
+          * Updating local files
+          | Current branch master is up to date.
+          #{FRESH_SUCCESS_LINE}
+        EOF
+
+        expect(git_log).to eq <<-EOF.strip_heredoc
+          cd #{fresh_local_path}
+          git rev-parse @{u}
+          cd #{fresh_local_path}
+          git status --porcelain
+          cd #{fresh_local_path}
+          git pull --rebase
+        EOF
+      end
+
+      it 'does not update local with other args' do
+        run_fresh command: %w[update freshshell], success: <<-EOF.strip_heredoc
+          * Updating freshshell/fresh
+          | Current branch master is up to date.
+          #{FRESH_SUCCESS_LINE}
+        EOF
+
+        expect(git_log).to eq <<-EOF.strip_heredoc
+          cd #{fresh_path + 'source/freshshell/fresh'}
+          git pull --rebase
+        EOF
+      end
+    end
+
+    it 'does not update local dirty local' do
+      touch fresh_local_path + '.git/dirty'
+      stub_git
+
+      run_fresh command: %w[update --local], exit_status: false, success: <<-EOF.strip_heredoc
+        #{NOTE_PREFIX} Not updating #{fresh_local_path} because it has uncommitted changes.
+      EOF
+
+      expect(git_log).to eq <<-EOF.strip_heredoc
+        cd #{fresh_local_path}
+        git rev-parse @{u}
+        cd #{fresh_local_path}
+        git status --porcelain
+      EOF
+    end
+
+    it 'errors if no matching sources to update' do
+      FileUtils.mkdir_p fresh_path + 'source'
+
+      run_fresh(
+        command: %w[update foobar],
+        error: "#{ERROR_PREFIX} No matching sources found.\n"
+      )
+    end
+
+    it 'errors if more than one argument is passed to update' do
+      FileUtils.mkdir_p fresh_path + 'source'
+
+      run_fresh command: %w[update twe4ked dotfiles], error: <<-EOF.strip_heredoc
+        #{ERROR_PREFIX} Invalid arguments.
+
+        usage: fresh update <filter>
+
+            The filter can be either a GitHub username or username/repo.
+      EOF
+    end
+
+    it 'shows a github compare url when updating remote' do
+      file_add fresh_path + 'source/jasoncodes/dotfiles/.git/output', <<-EOF.strip_heredoc
+        From https://github.com/jasoncodes/dotfiles
+           47ad84c..57b8b2b  master     -> origin/master
+        First, rewinding head to replay your work on top of it...
+        Fast-forwarded master to 57b8b2ba7482884169a187d46be63fb8f8f4146b.
+      EOF
+      stub_git
+
+      run_fresh command: 'update', success: <<-EOF.strip_heredoc
+        * Updating jasoncodes/dotfiles
+        | From https://github.com/jasoncodes/dotfiles
+        |    47ad84c..57b8b2b  master     -> origin/master
+        | First, rewinding head to replay your work on top of it...
+        | Fast-forwarded master to 57b8b2ba7482884169a187d46be63fb8f8f4146b.
+        | <#{format_url 'https://github.com/jasoncodes/dotfiles/compare/47ad84c...57b8b2b'}>
+        #{FRESH_SUCCESS_LINE}
+      EOF
+    end
+
+    it 'shows a github compare url when updating local' do
+      stub_git
+
+      file_add fresh_local_path + '.git/output', <<-EOF.strip_heredoc
+        From https://github.com/jasoncodes/dotfiles
+           47ad84c..57b8b2b  master     -> origin/master
+        First, rewinding head to replay your work on top of it...
+        Fast-forwarded master to 57b8b2ba7482884169a187d46be63fb8f8f4146b.
+      EOF
+
+      run_fresh command: %w[update --local], success: <<-EOF.strip_heredoc
+        * Updating local files
+        | From https://github.com/jasoncodes/dotfiles
+        |    47ad84c..57b8b2b  master     -> origin/master
+        | First, rewinding head to replay your work on top of it...
+        | Fast-forwarded master to 57b8b2ba7482884169a187d46be63fb8f8f4146b.
+        | <#{format_url 'https://github.com/jasoncodes/dotfiles/compare/47ad84c...57b8b2b'}>
+        #{FRESH_SUCCESS_LINE}
+      EOF
+    end
+
+    it 'shows no url when updating other repos' do
+      stub_git
+
+      file_add fresh_path + 'source/gitorious.org/willgit-mainline/.git/output', <<-EOF.strip_heredoc
+        From git://gitorious.org/willgit/mainline
+           67444ba..a2322a5  master     -> origin/master
+      EOF
+
+      run_fresh command: 'update', success: <<-EOF.strip_heredoc
+        * Updating gitorious.org/willgit-mainline
+        | From git://gitorious.org/willgit/mainline
+        |    67444ba..a2322a5  master     -> origin/master
+        #{FRESH_SUCCESS_LINE}
+      EOF
+    end
+
+    it 'logs update output' do
+      FileUtils.mkdir_p fresh_local_path + '.git'
+      FileUtils.mkdir_p fresh_path + 'source/repo/name/.git'
+      FileUtils.mkdir_p fresh_path + 'source/other_repo/other_name/.git'
+      stub_git
+
+      run_fresh command: 'update', success: <<-EOF.strip_heredoc
+        * Updating local files
+        | Current branch master is up to date.
+        * Updating other_repo/other_name
+        | Current branch master is up to date.
+        * Updating repo/name
+        | Current branch master is up to date.
+        #{FRESH_SUCCESS_LINE}
+      EOF
+
+      log_files = Dir[fresh_path + 'logs/*']
+
+      expect(log_files.count).to eq 1
+      expect(log_files.first).to match %r{#{fresh_path + 'logs/update'}-\d{4}-\d{2}-\d{2}-\d{6}\.log}
+      expect(File.read(log_files.first)).to eq <<-EOF.strip_heredoc
+        * Updating local files
+        | Current branch master is up to date.
+        * Updating other_repo/other_name
+        | Current branch master is up to date.
+        * Updating repo/name
+        | Current branch master is up to date.
+      EOF
+    end
+
+    it 'does not run build if update fails' do
+      rc 'fresh aliases'
+      file_add fresh_local_path + 'aliases', "alias gs='git status'"
+      FileUtils.mkdir_p fresh_path + 'source/repo/name1/.git'
+      FileUtils.mkdir_p fresh_path + 'source/repo/name2/.git'
+      touch fresh_path + 'source/repo/name1/.git/failure'
+      stub_git
+
+      run_fresh command: 'update', exit_status: false, success: <<-EOF.strip_heredoc
+          * Updating repo/name1
+          | Current branch master is up to date.
+        EOF
+      expect(File).to_not exist (fresh_path + 'build/shell.sh').to_s
+    end
+
+    it 'builds after update with latest binary' do
+      rc 'fresh bin/\* --bin'
+      file_add fresh_local_path + 'bin/fresh', 'echo new >> "$SANDBOX_PATH/fresh.log"'
+      file_add fresh_local_path + 'bin/other', 'echo bad >> "$SANDBOX_PATH/fresh.log"'
+
+      FileUtils.mkdir_p fresh_path + 'source'
+      FileUtils.mkdir_p fresh_path + 'source/freshshell/fresh/.git'
+      stub_git
+
+      run_fresh command: 'update', success: <<-EOF.strip_heredoc
+        * Updating freshshell/fresh
+        | Current branch master is up to date.
+      EOF
+
+      expect(File.read(sandbox_path + 'fresh.log')).to eq "new\n"
+    end
+  end
 end

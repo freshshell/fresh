@@ -42,28 +42,28 @@ end
 def run_fresh(options = {})
   @stdout = capture(:stdout) do
     @stderr = capture(:stderr) do
-      @exit_status = system('fresh')
+      @exit_status = system(*['fresh', Array(options[:command])].flatten.compact)
     end
   end
 
   if options[:error]
     expect(@stdout).to be_empty
     expect(@stderr).to eq options[:error]
-    expect(@exit_status).to be false
+    expect(@exit_status).to be (options[:exit_status].nil? ? false : options[:exit_status])
   elsif options[:error_title]
     expect(@stdout).to be_empty
     expect(
       @stderr.lines.grep(/Error/).join
     ).to eq options[:error_title]
-    expect(@exit_status).to be false
+    expect(@exit_status).to be (options[:exit_status].nil? ? false : options[:exit_status])
   elsif options[:success]
     expect(@stderr).to be_empty
     expect(@stdout).to eq options[:success]
-    expect(@exit_status).to be true
+    expect(@exit_status).to be (options[:exit_status].nil? ? true : options[:exit_status])
   else
     expect(@stderr).to be_empty
     expect(@stdout).to eq "#{FRESH_SUCCESS_LINE}\n"
-    expect(@exit_status).to be true
+    expect(@exit_status).to be (options[:exit_status].nil? ? true : options[:exit_status])
   end
 end
 
