@@ -1420,5 +1420,26 @@ describe 'fresh' do
         ENV['FRESH_NO_BIN_CHECK'] = 'true'
       end
     end
+
+    describe 'FRESH_BIN_PATH' do
+      it 'allows default bin path to be configured' do
+        rc <<-EOF
+          FRESH_BIN_PATH="$HOME/Applications/bin"
+          fresh bin/fresh --bin
+        EOF
+        file_add fresh_local_path + 'bin/fresh', 'test file'
+
+        run_fresh
+
+        fresh_bin_path = File.join(ENV['HOME'], 'Applications/bin/fresh')
+        expect(File).to exist fresh_bin_path
+        expect(File.read(fresh_bin_path)).to eq "test file\n"
+        expect_readlink(fresh_bin_path).to eq (fresh_path + 'build/bin/fresh').to_s
+        expect(File.read(shell_sh_path)).to eq <<-EOF.strip_heredoc
+          export PATH="$HOME/Applications/bin:$PATH"
+          export FRESH_PATH="#{fresh_path}"
+        EOF
+      end
+    end
   end
 end
