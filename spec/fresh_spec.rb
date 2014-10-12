@@ -1865,4 +1865,24 @@ describe 'fresh' do
       EOF
     end
   end
+
+  describe 'subcommands' do
+    it 'runs subcommands' do
+      bin = sandbox_path + 'bin/fresh-foo'
+      file_add bin, 'echo foobar'
+      FileUtils.chmod '+x', bin
+
+      run_fresh(
+        command: 'foo',
+        success: "foobar\n"
+      )
+    end
+
+    it 'errors for unknown commands' do
+      run_fresh(
+        command: 'foo',
+        error: "#{ERROR_PREFIX} Unknown command: foo\n"
+      )
+    end
+  end
 end
