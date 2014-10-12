@@ -1926,5 +1926,170 @@ describe 'fresh' do
         expect(File.read(log_path)).to eq 'Test question [Y/n]? Test question [Y/n]? '
       end
     end
+
+    describe '_parse_fresh_dsl_args' do
+      def expect_parse_fresh_dsl_args(command)
+        @stdout = capture(:stdout) do
+          @stderr = capture(:stderr) do
+            exit_status = system 'bash', '-c', <<-EOF
+              set -e
+              source bin/fresh
+              _dsl_fresh_options # init defaults
+              _parse_fresh_dsl_args #{command}
+              echo REPO_NAME="$REPO_NAME"
+              echo FILE_NAME="$FILE_NAME"
+              echo MODE="$MODE"
+              echo MODE_ARG="$MODE_ARG"
+              echo REF="$REF"
+              echo MARKER="$MARKER"
+              echo FILTER="$FILTER"
+            EOF
+            puts "EXIT_STATUS=#{exit_status ? 0 : 1}"
+          end
+        end
+        expect(@stderr + @stdout)
+      end
+
+      it 'parses fresh dsl args' do
+        expect_parse_fresh_dsl_args('aliases/git.sh').to eq <<-EOF.strip_heredoc
+          REPO_NAME=
+          FILE_NAME=aliases/git.sh
+          MODE=
+          MODE_ARG=
+          REF=
+          MARKER=
+          FILTER=
+          EXIT_STATUS=0
+        EOF
+
+        expect_parse_fresh_dsl_args('twe4ked/dotfiles lib/tmux.conf --file=~/.tmux.conf').to eq <<-EOF.strip_heredoc
+          REPO_NAME=twe4ked/dotfiles
+          FILE_NAME=lib/tmux.conf
+          MODE=file
+          MODE_ARG=~/.tmux.conf
+          REF=
+          MARKER=
+          FILTER=
+          EXIT_STATUS=0
+        EOF
+
+        expect_parse_fresh_dsl_args('jasoncodes/dotfiles .gitconfig --file').to eq <<-EOF.strip_heredoc
+          REPO_NAME=jasoncodes/dotfiles
+          FILE_NAME=.gitconfig
+          MODE=file
+          MODE_ARG=
+          REF=
+          MARKER=
+          FILTER=
+          EXIT_STATUS=0
+        EOF
+
+        expect_parse_fresh_dsl_args('sedmv --bin').to eq <<-EOF.strip_heredoc
+          REPO_NAME=
+          FILE_NAME=sedmv
+          MODE=bin
+          MODE_ARG=
+          REF=
+          MARKER=
+          FILTER=
+          EXIT_STATUS=0
+        EOF
+
+        expect_parse_fresh_dsl_args('scripts/pidof.sh --bin=~/bin/pidof').to eq <<-EOF.strip_heredoc
+          REPO_NAME=
+          FILE_NAME=scripts/pidof.sh
+          MODE=bin
+          MODE_ARG=~/bin/pidof
+          REF=
+          MARKER=
+          FILTER=
+          EXIT_STATUS=0
+        EOF
+
+        expect_parse_fresh_dsl_args('twe4ked/dotfiles lib/tmux.conf --file=~/.tmux.conf --ref=abc1237').to eq <<-EOF.strip_heredoc
+          REPO_NAME=twe4ked/dotfiles
+          FILE_NAME=lib/tmux.conf
+          MODE=file
+          MODE_ARG=~/.tmux.conf
+          REF=abc1237
+          MARKER=
+          FILTER=
+          EXIT_STATUS=0
+        EOF
+
+        expect_parse_fresh_dsl_args('tmux.conf --file --marker').to eq <<-EOF.strip_heredoc
+          REPO_NAME=
+          FILE_NAME=tmux.conf
+          MODE=file
+          MODE_ARG=
+          REF=
+          MARKER=#
+          FILTER=
+          EXIT_STATUS=0
+        EOF
+
+        expect_parse_fresh_dsl_args(%Q{vimrc --file --marker='"'}).to eq <<-EOF.strip_heredoc
+          REPO_NAME=
+          FILE_NAME=vimrc
+          MODE=file
+          MODE_ARG=
+          REF=
+          MARKER="
+          FILTER=
+          EXIT_STATUS=0
+        EOF
+
+        expect_parse_fresh_dsl_args(%Q{vimrc --file --filter='sed s/nmap/nnoremap/'}).to eq <<-EOF.strip_heredoc
+          REPO_NAME=
+          FILE_NAME=vimrc
+          MODE=file
+          MODE_ARG=
+          REF=
+          MARKER=
+          FILTER=sed s/nmap/nnoremap/
+          EXIT_STATUS=0
+        EOF
+
+        expect_parse_fresh_dsl_args('foo --file --marker=').to eq <<-EOF.strip_heredoc
+          #{ERROR_PREFIX} Marker not specified.
+          EXIT_STATUS=1
+        EOF
+
+        expect_parse_fresh_dsl_args('foo --bin --marker').to eq <<-EOF.strip_heredoc
+          #{ERROR_PREFIX} --marker is only valid with --file.
+          EXIT_STATUS=1
+        EOF
+
+        expect_parse_fresh_dsl_args(%Q{foo --marker=';'}).to eq <<-EOF.strip_heredoc
+          #{ERROR_PREFIX} --marker is only valid with --file.
+          EXIT_STATUS=1
+        EOF
+
+        expect_parse_fresh_dsl_args('foo --file --ref').to eq <<-EOF.strip_heredoc
+          #{ERROR_PREFIX} You must specify a Git reference.
+          EXIT_STATUS=1
+        EOF
+
+        expect_parse_fresh_dsl_args('foo --filter').to eq <<-EOF.strip_heredoc
+          #{ERROR_PREFIX} You must specify a filter program.
+          EXIT_STATUS=1
+        EOF
+
+        expect_parse_fresh_dsl_args('foo --file --bin').to eq <<-EOF.strip_heredoc
+          #{ERROR_PREFIX} Cannot have more than one mode.
+          EXIT_STATUS=1
+        EOF
+
+        expect_parse_fresh_dsl_args(nil).to eq <<-EOF.strip_heredoc
+          #{ERROR_PREFIX} Filename is required
+          EXIT_STATUS=1
+        EOF
+
+        expect_parse_fresh_dsl_args('foo bar baz').to eq <<-EOF.strip_heredoc
+          #{ERROR_PREFIX} Expected 1 or 2 args.
+          EXIT_STATUS=1
+        EOF
+      end
+    end
   end
 end
