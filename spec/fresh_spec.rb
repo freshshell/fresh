@@ -1111,6 +1111,31 @@ describe 'fresh' do
     EOF
   end
 
+  it 'shows progress' do
+    rc <<-EOF
+      fresh foobar
+      fresh foobarbaz --bin
+
+      fresh-options --file
+        fresh foo
+        fresh bar
+        fresh baz/foo
+      fresh-options
+
+      fresh_after_build() {
+        true
+      }
+    EOF
+    %w[foobar foobarbaz foo bar baz/foo].each do |path|
+      touch fresh_local_path + path
+    end
+
+    run_fresh(
+      show_progress: true,
+      success: "\r 20% complete...\r 40% complete...\r 60% complete...\r 80% complete...\r100% complete...#{FRESH_SUCCESS_LINE}\n"
+    )
+  end
+
   describe 'update' do
     it 'updates fresh files' do
       FileUtils.mkdir_p fresh_path + 'source/repo/name/.git'

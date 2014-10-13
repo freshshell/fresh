@@ -50,7 +50,7 @@ def curl_log
 end
 
 def run_fresh(options = {})
-  options.assert_valid_keys :command, :full_command, :exit_status, :success, :error, :error_title
+  options.assert_valid_keys :command, :full_command, :exit_status, :success, :error, :error_title, :show_progress
   @stdout = capture(:stdout) do
     @stderr = capture(:stderr) do
       @exit_status = if options[:full_command]
@@ -60,6 +60,8 @@ def run_fresh(options = {})
       end
     end
   end
+
+  @stdout = remove_progress_info(@stdout) unless options[:show_progress]
 
   if options[:error]
     expect(@stdout).to be_empty
@@ -184,6 +186,10 @@ end
 
 def format_url(url)
   "\033[4;34m#{url}\033[0m"
+end
+
+def remove_progress_info(string)
+  string.gsub /\r(\s|\d){3}% complete\.\.\./, ''
 end
 
 RSpec.configure do |config|

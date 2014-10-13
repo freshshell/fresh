@@ -95,7 +95,27 @@ _fresh_preamble() {
   fi
 }
 
+__INSTALLED_FRESH_LINES__=0
+if [[ -f "$FRESH_RCFILE" ]]; then
+  __TOTAL_FRESH_LINES__="$(grep "^\s*fresh " "$FRESH_RCFILE" | wc -l | bc)" || true
+else
+  __TOTAL_FRESH_LINES__=0
+fi
+
+_installation_progress() {
+  if [[ "$__TOTAL_FRESH_LINES__" == 0 ]]; then
+    PERCENTAGE=0
+  else
+    PERCENTAGE="$(echo "scale=2; $__INSTALLED_FRESH_LINES__/$__TOTAL_FRESH_LINES__ * 100" | bc)"
+  fi
+  echo -n $'\r'
+  echo -n "$(printf %3.0f "$PERCENTAGE")% complete..."
+}
+
 _dsl_install_fresh() {
+  __INSTALLED_FRESH_LINES__=$((__INSTALLED_FRESH_LINES__ + 1))
+  _installation_progress
+
   _set_dsl_caller
   _parse_fresh_dsl_args "$@"
 
