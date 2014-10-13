@@ -110,6 +110,9 @@ _installation_progress() {
   fi
   echo -n $'\r'
   echo -n "$(printf %3.0f "$PERCENTAGE")% complete..."
+  if [[ "$PERCENTAGE" = "100.00" ]]; then
+    echo -n $'\r'
+  fi
 }
 
 _dsl_install_fresh() {

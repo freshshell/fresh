@@ -189,7 +189,7 @@ def format_url(url)
 end
 
 def remove_progress_info(string)
-  string.gsub /\r(\s|\d){3}% complete\.\.\./, ''
+  string.gsub /\r?(\s|\d){3}% complete\.\.\.\r?/, ''
 end
 
 RSpec.configure do |config|

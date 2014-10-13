@@ -1132,7 +1132,7 @@ describe 'fresh' do
 
     run_fresh(
       show_progress: true,
-      success: "\r 20% complete...\r 40% complete...\r 60% complete...\r 80% complete...\r100% complete...#{FRESH_SUCCESS_LINE}\n"
+      success: "\r 20% complete...\r 40% complete...\r 60% complete...\r 80% complete...\r100% complete...\r#{FRESH_SUCCESS_LINE}\n"
     )
   end
 
