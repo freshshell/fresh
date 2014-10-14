@@ -3,6 +3,7 @@ require 'active_support/core_ext/string/strip'
 require 'active_support/core_ext/hash/keys'
 require 'tmpdir'
 require 'pry'
+require 'pty'
 
 ORIGINAL_ENV = ENV.to_hash
 ERROR_PREFIX = "\e[4;31mError\e[0m:"

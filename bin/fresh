@@ -103,6 +103,10 @@ else
 fi
 
 _installation_progress() {
+  if ! [[ -t 0 ]]; then
+    return
+  fi
+
   if [[ "$__TOTAL_FRESH_LINES__" == 0 ]]; then
     PERCENTAGE=0
   else

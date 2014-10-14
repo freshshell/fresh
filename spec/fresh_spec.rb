@@ -1111,29 +1111,41 @@ describe 'fresh' do
     EOF
   end
 
-  it 'shows progress' do
-    rc <<-EOF
-      fresh foobar
-      fresh foobarbaz --bin
+  describe 'progress' do
+    before do
+      rc <<-EOF
+        fresh foobar
+        fresh foobarbaz --bin
 
-      fresh-options --file
-        fresh foo
-        fresh bar
-        fresh baz/foo
-      fresh-options
+        fresh-options --file
+          fresh foo
+          fresh bar
+          fresh baz/foo
+        fresh-options
 
-      fresh_after_build() {
-        true
-      }
-    EOF
-    %w[foobar foobarbaz foo bar baz/foo].each do |path|
-      touch fresh_local_path + path
+        fresh_after_build() {
+          true
+        }
+      EOF
+      %w[foobar foobarbaz foo bar baz/foo].each do |path|
+        touch fresh_local_path + path
+      end
     end
 
-    run_fresh(
-      show_progress: true,
-      success: "\r 20% complete...\r 40% complete...\r 60% complete...\r 80% complete...\r100% complete...\r#{FRESH_SUCCESS_LINE}\n"
-    )
+    it 'shows progress' do
+      run_fresh(
+        show_progress: true,
+        success: "\r 20% complete...\r 40% complete...\r 60% complete...\r 80% complete...\r100% complete...\r#{FRESH_SUCCESS_LINE}\n"
+      )
+    end
+
+    it 'does not show progress when output is not a tty' do
+      master, slave = PTY.open
+      read, write = IO.pipe
+      spawn('fresh', :in => read, :out => slave)
+      expect(master.gets).to eq "#{FRESH_SUCCESS_LINE}\r\n"
+      [master, slave, read, write].map(&:close)
+    end
   end
 
   describe 'update' do
