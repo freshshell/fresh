@@ -1,5 +1,5 @@
 require 'active_support/core_ext/kernel/reporting'
-require 'active_support/core_ext/string/strip.rb'
+require 'active_support/core_ext/string/strip'
 require 'tmpdir'
 require 'pry'
 
