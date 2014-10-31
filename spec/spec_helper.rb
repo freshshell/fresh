@@ -155,8 +155,8 @@ def shell_sh_marker_lines
 end
 
 def expect_shell_sh
-  expect(File.executable? shell_sh_path).to be false
-  expect(File.writable? shell_sh_path).to be false
+  expect(shell_sh_path).to_not be_writable
+  expect(shell_sh_path).to_not be_executable
 
   empty_shell_sh = <<-EOF.strip_heredoc
     export PATH="\$HOME/bin:\$PATH"
@@ -178,6 +178,10 @@ end
 def expect_readlink(path)
   path = File.expand_path path
   expect(File.readlink path)
+end
+
+def expect_pathname(path)
+  expect(Pathname.new(File.expand_path(path)))
 end
 
 def format_url(url)

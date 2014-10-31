@@ -61,11 +61,11 @@ describe 'fresh' do
     end
 
     it 'creates empty output with no freshrc file' do
-      expect(File).to_not exist(shell_sh_path)
+      expect(shell_sh_path).to_not exist
 
       run_fresh
 
-      expect(File).to exist(shell_sh_path)
+      expect(shell_sh_path).to exist
       expect_shell_sh.to be_default
     end
 
@@ -88,8 +88,8 @@ describe 'fresh' do
 
         run_fresh
 
-        expect(File).to exist fresh_path + 'build/tmux.conf'
-        expect(File).to_not exist fresh_path + 'build/ghci'
+        expect(fresh_path + 'build/tmux.conf').to exist
+        expect(fresh_path + 'build/ghci').to_not exist
       end
     end
 
@@ -176,11 +176,10 @@ describe 'fresh' do
 
         %w[shell.sh tmux.conf pryrc gitconfig vimrc].each do |path|
           path = fresh_path + 'build' + path
-          expect(File).to exist(path)
-
-          expect(File.executable? path).to be false
-          expect(File.world_readable? path).to be nil
-          expect(File.writable? path).to be false
+          expect(path).to exist
+          expect(path).to_not be_executable
+          expect(path).to_not be_world_readable
+          expect(path).to_not be_writable
         end
       end
 
@@ -193,9 +192,9 @@ describe 'fresh' do
 
         run_fresh
 
-        expect(File).to exist fresh_path + 'build/file1'
-        expect(File).to exist fresh_path + 'build/file2'
-        expect(File).to_not exist fresh_path + 'build/other'
+        expect(fresh_path + 'build/file1').to exist
+        expect(fresh_path + 'build/file2').to exist
+        expect(fresh_path + 'build/other').to_not exist
       end
 
       it 'links generic files to destination' do
@@ -249,8 +248,8 @@ describe 'fresh' do
 
         run_fresh
 
-        expect(File).to exist fresh_path + 'build/vendor/foo/bar.zsh'
-        expect(File.symlink?('vendor/foo/bar.zsh')).to eq false
+        expect(fresh_path + 'build/vendor/foo/bar.zsh').to exist
+        expect_pathname('vendor/foo/bar.zsh').to_not be_symlink
       end
 
       it 'does not allow relative paths above build dir' do
@@ -317,7 +316,7 @@ describe 'fresh' do
             expect_readlink('~/.other').to eq (fresh_path + 'build/other').to_s
 
             # can traverse symlink
-            expect(File).to exist File.expand_path('~/.other/file1')
+            expect_pathname('~/.other/file1').to exist
           end
         end
 
@@ -365,8 +364,8 @@ describe 'fresh' do
           fresh_path + 'build/bin/sedmv',
           fresh_path + 'build/bin/pidof',
         ].each do |path|
-          expect(File.executable? path).to be true
-          expect(File.writable? path).to be false
+          expect(path).to be_executable
+          expect(path).to_not be_writable
         end
       end
 
@@ -376,9 +375,9 @@ describe 'fresh' do
 
         run_fresh
 
-        expect(File).to exist fresh_path + 'build/bin/file1'
-        expect(File).to exist fresh_path + 'build/bin/file2'
-        expect(File).to_not exist fresh_path + 'build/bin/other'
+        expect(fresh_path + 'build/bin/file1').to exist
+        expect(fresh_path + 'build/bin/file2').to exist
+        expect(fresh_path + 'build/bin/other').to_not exist
       end
 
       it 'links bin files to destination' do
@@ -499,7 +498,7 @@ describe 'fresh' do
 
         run_fresh
 
-        expect(File).to_not exist git_log_path
+        expect(git_log_path).to_not exist
       end
     end
 
@@ -676,8 +675,8 @@ describe 'fresh' do
             cd #{fresh_path + 'source/repo/name'}
             git ls-tree -r --name-only abc1237
           EOF
-          expect(File).to exist fresh_path + 'build/ackrc'
-          expect(File).to_not exist fresh_path + 'missing'
+          expect(fresh_path + 'build/ackrc').to exist
+          expect(fresh_path + 'missing').to_not exist
         end
       end
     end
@@ -702,12 +701,12 @@ describe 'fresh' do
         expect(File.read(fresh_path + 'build/foo/file1')).to eq "file1\n"
         expect(File.read(fresh_path + 'build/foo/sub/file2')).to eq "file2\n"
 
-        expect(File).to_not exist fresh_path + 'build/foo/.git'
-        expect(File).to exist fresh_path + 'build/foo/.hidden-dir'
+        expect(fresh_path + 'build/foo/.git').to_not exist
+        expect(fresh_path + 'build/foo/.hidden-dir').to exist
 
         # can traverse symlink
-        expect(File).to exist File.expand_path('~/.foo/file1')
-        expect(File).to exist File.expand_path('~/.foo/sub/file2')
+        expect_pathname('~/.foo/file1').to exist
+        expect_pathname('~/.foo/sub/file2').to exist
       end
 
       it 'links directory of generic files for whole repo with ref' do
@@ -723,8 +722,8 @@ describe 'fresh' do
         ).to eq "test data for abc123:recursive-test/abc/def\n"
 
         # can traverse symlink
-        expect(File).to exist File.expand_path('~/.foo/ackrc')
-        expect(File).to exist File.expand_path('~/.foo/recursive-test/abc/def')
+        expect_pathname('~/.foo/ackrc').to exist
+        expect_pathname('~/.foo/recursive-test/abc/def').to exist
       end
 
       describe 'errors if trying to use whole repo with invalid arguments' do
@@ -1370,7 +1369,7 @@ describe 'fresh' do
           * Updating repo/name1
           | Current branch master is up to date.
         EOF
-      expect(File).to_not exist (fresh_path + 'build/shell.sh').to_s
+      expect(fresh_path + 'build/shell.sh').to_not exist
     end
 
     it 'builds after update with latest binary' do
@@ -1432,7 +1431,7 @@ describe 'fresh' do
         run_fresh
 
         fresh_bin_path = File.join(ENV['HOME'], 'Applications/bin/fresh')
-        expect(File).to exist fresh_bin_path
+        expect_pathname(fresh_bin_path).to exist
         expect(File.read(fresh_bin_path)).to eq "test file\n"
         expect_readlink(fresh_bin_path).to eq (fresh_path + 'build/bin/fresh').to_s
         expect(File.read(shell_sh_path)).to eq <<-EOF.strip_heredoc
@@ -1492,7 +1491,7 @@ describe 'fresh' do
         error: "#{ERROR_PREFIX} No search query given.\n"
       )
 
-      expect(File).to_not exist curl_log_path
+      expect(curl_log_path).to_not exist
     end
 
     it 'shows error if search has no results' do
@@ -1557,14 +1556,14 @@ describe 'fresh' do
         Removing ~/bin/dead
       EOF
 
-      expect(File.symlink? File.expand_path('~/.alive')).to be true
-      expect(File.symlink? File.expand_path('~/bin/alive')).to be true
+      expect_pathname('~/.alive').to be_symlink
+      expect_pathname('~/bin/alive').to be_symlink
 
-      expect(File.symlink? File.expand_path('~/.dead')).to be false
-      expect(File.symlink? File.expand_path('~/bin/dead')).to be false
+      expect_pathname('~/.dead').to_not be_symlink
+      expect_pathname('~/bin/dead').to_not be_symlink
 
-      expect(File.symlink? File.expand_path('~/.other')).to be true
-      expect(File.symlink? File.expand_path('~/bin/other')).to be true
+      expect_pathname('~/.other').to be_symlink
+      expect_pathname('~/bin/other').to be_symlink
     end
 
     it 'cleans repositories no longer referenced by freshrc' do
@@ -1582,10 +1581,10 @@ describe 'fresh' do
         Removing source foo/baz
       EOF
 
-      expect(File).to exist fresh_path + 'source/foo/bar/.git'
-      expect(File).to_not exist fresh_path + 'source/foo/baz/.git'
-      expect(File).to_not exist fresh_path + 'source/abc/def/.git'
-      expect(File).to_not exist fresh_path + 'source/abc'
+      expect(fresh_path + 'source/foo/bar/.git').to exist
+      expect(fresh_path + 'source/foo/baz/.git').to_not exist
+      expect(fresh_path + 'source/abc/def/.git').to_not exist
+      expect(fresh_path + 'source/abc').to_not exist
     end
   end
 
@@ -1732,7 +1731,7 @@ describe 'fresh' do
       expect(File.read(freshrc_path)).to eq <<-EOF.strip_heredoc
         fresh user/repo file
       EOF
-      expect(File).to_not exist git_log_path
+      expect(git_log_path).to_not exist
     end
 
     it 'does not add lines to freshrc if declined' do
