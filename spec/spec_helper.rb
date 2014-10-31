@@ -1,6 +1,7 @@
 require 'active_support/core_ext/kernel/reporting'
 require 'active_support/core_ext/string/strip.rb'
 require 'tmpdir'
+require 'pry'
 
 ORIGINAL_ENV = ENV.to_hash
 ERROR_PREFIX = "\e[4;31mError\e[0m:"
