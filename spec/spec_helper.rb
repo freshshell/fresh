@@ -64,13 +64,13 @@ def run_fresh(options = {})
   if options[:error]
     expect(@stdout).to be_empty
     expect(@stderr).to eq options[:error]
-    expect(@exit_status).to be (options[:exit_status].nil? ? false : options[:exit_status])
+    expect(@exit_status).to eq options.fetch(:exit_status, false)
   elsif options[:error_title]
     expect(@stdout).to be_empty
     expect(
       @stderr.lines.grep(/Error/).join
     ).to eq options[:error_title]
-    expect(@exit_status).to be (options[:exit_status].nil? ? false : options[:exit_status])
+    expect(@exit_status).to eq options.fetch(:exit_status, false)
   elsif options[:success]
     expect(@stderr).to be_empty
     if options[:success].is_a? Regexp
@@ -78,11 +78,11 @@ def run_fresh(options = {})
     else
       expect(@stdout).to eq options[:success]
     end
-    expect(@exit_status).to be (options[:exit_status].nil? ? true : options[:exit_status])
+    expect(@exit_status).to eq options.fetch(:exit_status, true)
   else
     expect(@stderr).to be_empty
     expect(@stdout).to eq "#{FRESH_SUCCESS_LINE}\n"
-    expect(@exit_status).to be (options[:exit_status].nil? ? true : options[:exit_status])
+    expect(@exit_status).to eq options.fetch(:exit_status, true)
   end
 end
 
