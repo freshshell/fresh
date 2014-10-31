@@ -1,5 +1,6 @@
 require 'active_support/core_ext/kernel/reporting'
 require 'active_support/core_ext/string/strip'
+require 'active_support/core_ext/hash/keys'
 require 'tmpdir'
 require 'pry'
 
@@ -49,6 +50,7 @@ def curl_log
 end
 
 def run_fresh(options = {})
+  options.assert_valid_keys :command, :full_command, :exit_status, :success, :error, :error_title
   @stdout = capture(:stdout) do
     @stderr = capture(:stderr) do
       @exit_status = if options[:full_command]
@@ -121,9 +123,8 @@ def stub_git
 end
 
 def stub_curl(*args)
-  error = if args.first.is_a?(Hash) && args.first[:error]
-    args.first[:error]
-  end
+  options = (args.size == 1 && args.first.is_a?(Hash)) ? args.first : {}
+  options.assert_valid_keys :error
 
   template = <<-ERB.strip_heredoc
     #!/bin/bash -e
@@ -134,8 +135,8 @@ def stub_curl(*args)
       echo "$ARG" >> <%= curl_log_path %>
     done
 
-    <% if error %>
-      echo "<%= error %>" >&2
+    <% if options[:error] %>
+      echo "<%= options[:error] %>" >&2
       exit 1
     <% else %>
       <% args.each do |arg| %>
