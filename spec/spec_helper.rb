@@ -98,7 +98,7 @@ def file_add(path, content)
   path = File.join(path)
   FileUtils.mkdir_p File.dirname(path)
 
-  if !(content =~ /\n/)
+  unless content.include?("\n")
     content = "#{content}\n"
   end
 
