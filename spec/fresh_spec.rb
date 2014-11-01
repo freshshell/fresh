@@ -1417,6 +1417,7 @@ describe 'fresh' do
 
       it 'allows bin/fresh error to be disabled' do
         ENV['FRESH_NO_BIN_CHECK'] = 'true'
+        run_fresh
       end
     end
 
