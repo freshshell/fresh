@@ -1396,14 +1396,14 @@ describe 'fresh' do
         ENV.delete('FRESH_NO_BIN_CHECK')
       end
 
-      it 'does not error if freshrc has bin fresh' do
+      it 'does not error if freshrc has bin/fresh' do
         rc 'fresh bin/fresh --bin'
         touch fresh_local_path + 'bin/fresh'
 
         run_fresh
       end
 
-      it 'errors if freshrc is missing bin fresh' do
+      it 'errors if freshrc is missing bin/fresh' do
         run_fresh error: <<-EOF.strip_heredoc
           #{ERROR_PREFIX} It looks you do not have fresh in your freshrc file. This could result
           in difficulties running `fresh` later. You probably want to add a line like
@@ -1415,7 +1415,7 @@ describe 'fresh' do
         EOF
       end
 
-      it 'allows bin fresh error to be disabled' do
+      it 'allows bin/fresh error to be disabled' do
         ENV['FRESH_NO_BIN_CHECK'] = 'true'
       end
     end
