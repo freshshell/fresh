@@ -1452,6 +1452,21 @@ describe 'fresh' do
         EOF
       end
     end
+
+    it 'exposes FRESH_* environment to freshrc' do
+      rc 'echo rc=$FRESH_RCFILE'
+      rc 'echo path=$FRESH_PATH'
+      rc 'echo local=$FRESH_LOCAL'
+      rc 'echo bin=$FRESH_BIN_PATH'
+
+      run_fresh success: <<-EOF.strip_heredoc
+        rc=#{freshrc_path}
+        path=#{fresh_path}
+        local=#{fresh_local_path}
+        bin=#{sandbox_path + 'home/bin'}
+        #{FRESH_SUCCESS_LINE}
+      EOF
+    end
   end
 
   describe 'fresh_after_build' do
