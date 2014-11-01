@@ -1,1 +1,3 @@
 script: make test
+rvm:
+  - 2.1.1
