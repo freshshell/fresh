@@ -66,7 +66,7 @@ describe 'fresh' do
       run_fresh
 
       expect(shell_sh_path).to exist
-      expect_shell_sh.to be_default
+      expect_shell_sh.to eq ''
     end
 
     describe 'using --ignore-missing' do
@@ -76,7 +76,7 @@ describe 'fresh' do
 
         run_fresh
 
-        expect_shell_sh.to be_default
+        expect_shell_sh.to eq ''
       end
 
       it 'does not create a file when single source is missing' do
@@ -146,7 +146,7 @@ describe 'fresh' do
 
         run_fresh
 
-        expect_shell_sh.to be_default
+        expect_shell_sh.to eq ''
 
         expect(File.read(fresh_path + 'build/tmux.conf')).to eq <<-EOF.strip_heredoc
           unbind C-b

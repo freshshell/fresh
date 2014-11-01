@@ -169,12 +169,8 @@ def expect_shell_sh
 
   expect(shell_sh_content_lines[0..1].join).to eq empty_shell_sh
 
-  content = shell_sh_content_lines[3..-1]
-  if content
-    expect(content.join)
-  else
-    expect(Struct.new(:default?).new(:default? => true))
-  end
+  content = shell_sh_content_lines[3..-1] || []
+  expect(content.join)
 end
 
 def expect_readlink(path)
