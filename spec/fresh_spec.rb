@@ -69,6 +69,19 @@ describe 'fresh' do
       expect_shell_sh.to eq ''
     end
 
+    it 'errors with missing local file' do
+      rc 'fresh foo'
+      touch fresh_local_path + 'bar'
+
+      run_fresh error: <<-EOF.strip_heredoc
+        #{ERROR_PREFIX} Could not find "foo" source file.
+        #{freshrc_path}:1: fresh foo
+
+        You may need to run `fresh update` if you're adding a new line,
+        or the file you're referencing may have moved or been deleted.
+      EOF
+    end
+
     describe 'using --ignore-missing' do
       it 'builds' do
         rc 'fresh aliases/haskell --ignore-missing'
@@ -91,19 +104,6 @@ describe 'fresh' do
         expect(fresh_path + 'build/tmux.conf').to exist
         expect(fresh_path + 'build/ghci').to_not exist
       end
-    end
-
-    it 'errors with missing local file' do
-      rc 'fresh foo'
-      touch fresh_local_path + 'bar'
-
-      run_fresh error: <<-EOF.strip_heredoc
-        #{ERROR_PREFIX} Could not find "foo" source file.
-        #{freshrc_path}:1: fresh foo
-
-        You may need to run `fresh update` if you're adding a new line,
-        or the file you're referencing may have moved or been deleted.
-      EOF
     end
 
     it 'preserves existing compiled files when failing' do
