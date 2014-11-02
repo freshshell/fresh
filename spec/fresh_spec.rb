@@ -1469,13 +1469,48 @@ describe 'fresh' do
     end
   end
 
-  describe 'fresh_after_build' do
-    it 'runs fresh after build' do
+  describe 'callbacks' do
+    it 'displays a deprecation warning when using fresh after build' do
       rc "fresh_after_build() { echo test after_build; }"
 
+      run_fresh error: <<-EOF.strip_heredoc
+        #{ERROR_PREFIX} `fresh_after_build` has been replaced with an "after-finalize" callback.
+          Please update your freshrc to use the following syntax:
+
+              foo_bar() {
+                echo foo bar
+              }
+              fresh-callback after-finalize foo_bar
+      EOF
+    end
+
+    it 'runs fresh callbacks' do
+      rc <<-EOF
+        echo_test() { echo test callback; }
+        echo_test_two() { echo test callback two; }
+        fresh-callback after-build echo_test
+        fresh-callback after-build echo_test_two
+
+        echo_test_after_finalize() { echo test after-finalize; }
+        fresh-callback after-finalize echo_test_after_finalize
+      EOF
+
       run_fresh success: <<-EOF.strip_heredoc
-        test after_build
+        test callback
+        test callback two
+        test after-finalize
         #{FRESH_SUCCESS_LINE}
+      EOF
+    end
+
+    it 'errors if callback is passed an invalid type' do
+      rc "echo_test() { echo test callback; }"
+      rc "fresh-callback invalid-type echo_test"
+
+      run_fresh error: <<-EOF.strip_heredoc
+        #{ERROR_PREFIX} Invalid type "invalid-type" passed to callback.
+
+        Valid types are ["after-build", "after-finalize"]
       EOF
     end
   end
