@@ -1422,6 +1422,31 @@ describe 'fresh' do
     end
 
     describe 'FRESH_BIN_PATH' do
+      let(:path) do
+        capture(:stdout) do
+          system <<-EOF
+/bin/bash -c "$(
+cat <<'SH'
+  export PATH=/usr/bin
+  source #{shell_sh_path}
+  echo "$PATH" | tr ":" "\n"
+SH
+)"
+          EOF
+        end.split("\n")
+      end
+
+
+      it 'defaults to $HOME/bin' do
+        run_fresh
+
+        expect(path).to eq([
+          (sandbox_path + 'home/bin').to_s,
+          '/usr/bin'
+        ])
+        expect_shell_sh.to eq ''
+      end
+
       it 'allows default bin path to be configured' do
         rc <<-EOF
           FRESH_BIN_PATH="$HOME/Applications/bin"
@@ -1436,9 +1461,36 @@ describe 'fresh' do
         expect(File.read(fresh_bin_path)).to eq "test file\n"
         expect_readlink(fresh_bin_path).to eq (fresh_path + 'build/bin/fresh').to_s
         expect(File.read(shell_sh_path)).to eq <<-EOF.strip_heredoc
-          export PATH="$HOME/Applications/bin:$PATH"
+          __FRESH_BIN_PATH__=$HOME/Applications/bin; [[ ! $PATH =~ (^|:)$__FRESH_BIN_PATH__(:|$) ]] && export PATH="$__FRESH_BIN_PATH__:$PATH"
           export FRESH_PATH="#{fresh_path}"
         EOF
+
+        expect(path).to eq([
+          (sandbox_path + 'home/Applications/bin').to_s,
+          '/usr/bin'
+        ])
+      end
+
+      it 'does not duplicate FRESH_BIN_PATH in the PATH in subshells' do
+        run_fresh
+
+        path = capture(:stdout) do
+          system <<-EOF
+/bin/bash -c "$(
+cat <<'SH'
+  export PATH=/usr/bin
+  source #{shell_sh_path}
+  source #{shell_sh_path}
+  echo "$PATH" | tr ":" "\n"
+SH
+)"
+          EOF
+        end.split("\n")
+
+        expect(path).to eq([
+          (sandbox_path + 'home/bin').to_s,
+          '/usr/bin'
+        ])
       end
     end
 
