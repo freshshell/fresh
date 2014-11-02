@@ -349,7 +349,7 @@ _fresh_shell() {
 }
 
 _fresh_clean_path() {
-  sed -e 's/^~\///' -e 's/\/$//' -e 's/[/ ]/-/g' -e 's/^\.//'
+  sed -e 's/^~\///' -e 's/\/$//' -e 's/[/ ()]/-/g' -e 's/--*/-/g' -e 's/-$//' -e 's/^\.//'
 }
 
 _fresh_file() {
@@ -451,7 +451,7 @@ EOF
 _fresh_symlink() {
   if [[ -n "$SYMLINK_SOURCE" ]] && [[ -n "$SYMLINK_PATH" ]]; then
     SYMLINK_SOURCE="$FRESH_PATH/build/$SYMLINK_SOURCE"
-    SYMLINK_PATH="$(eval echo "$SYMLINK_PATH")"
+    SYMLINK_PATH="${SYMLINK_PATH/#~/$HOME}"
     if ! [ -L "$SYMLINK_PATH" ]; then
       if ! mkdir -p "$(dirname "$SYMLINK_PATH")" 2> /dev/null || ! ln -s "$SYMLINK_SOURCE" "$SYMLINK_PATH" 2> /dev/null; then
         SKIP_INFO=1

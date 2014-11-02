@@ -203,9 +203,9 @@ describe 'fresh' do
           fresh lib/pryrc.rb --file=~/.pryrc
           fresh .gitconfig --file
           fresh bclear.vim --file=~/.vim/colors/bclear.vim
-          fresh "with spaces" --file="~/a path/with spaces"
+          fresh "with spaces (and parentheses)" --file="~/a path/with spaces (and parentheses)"
         EOF
-        %w[lib/tmux.conf lib/pryrc.rb .gitconfig bclear.vim with\ spaces].each do |path|
+        %w[lib/tmux.conf lib/pryrc.rb .gitconfig bclear.vim with\ spaces\ (and\ parentheses)].each do |path|
           touch fresh_local_path + path
         end
 
@@ -216,7 +216,7 @@ describe 'fresh' do
           %w[pryrc ~/.pryrc],
           %w[gitconfig ~/.gitconfig],
           %w[vim-colors-bclear.vim ~/.vim/colors/bclear.vim],
-          %w[a-path-with-spaces ~/a\ path/with\ spaces],
+          %w[a-path-with-spaces-and-parentheses ~/a\ path/with\ spaces\ (and\ parentheses)],
         ].each do |build_file, symlink_destination|
           expect_readlink(symlink_destination).to eq (fresh_path + 'build' + build_file).to_s
         end
