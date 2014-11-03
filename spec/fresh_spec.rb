@@ -1461,7 +1461,7 @@ SH
         expect(File.read(fresh_bin_path)).to eq "test file\n"
         expect_readlink(fresh_bin_path).to eq (fresh_path + 'build/bin/fresh').to_s
         expect(File.read(shell_sh_path)).to eq <<-EOF.strip_heredoc
-          __FRESH_BIN_PATH__=$HOME/Applications/bin; [[ ! $PATH =~ (^|:)$__FRESH_BIN_PATH__(:|$) ]] && export PATH="$__FRESH_BIN_PATH__:$PATH"
+          __FRESH_BIN_PATH__=$HOME/Applications/bin; [[ ! $PATH =~ (^|:)$__FRESH_BIN_PATH__(:|$) ]] && export PATH="$__FRESH_BIN_PATH__:$PATH"; unset __FRESH_BIN_PATH__
           export FRESH_PATH="#{fresh_path}"
         EOF
 
@@ -1491,6 +1491,22 @@ SH
           (sandbox_path + 'home/bin').to_s,
           '/usr/bin'
         ])
+      end
+
+      it 'unsets the __FRESH_BIN_PATH__ variable' do
+        run_fresh
+        out = capture(:stdout) do
+          system <<-EOF
+/bin/bash -c "$(
+cat <<'SH'
+  source #{shell_sh_path}
+  echo "$__FRESH_BIN_PATH__"
+SH
+)"
+          EOF
+        end.chomp
+
+        expect(out).to eq ''
       end
     end
 
