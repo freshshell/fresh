@@ -35,6 +35,12 @@ Install [fresh](http://freshshell.com/) with the following:
 bash -c "`curl -sL get.freshshell.com`"
 ```
 
+or with [bpkg](https://github.com/bpkg/bpkg)
+
+```sh
+[sudo] bpkg install freshshell/fresh -g
+```
+
 This will:
 
 * Create a `~/.fresh` directory.
