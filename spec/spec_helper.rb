@@ -161,7 +161,7 @@ def expect_shell_sh
   expect(shell_sh_path).to_not be_executable
 
   empty_shell_sh = <<-EOF.strip_heredoc
-    export PATH="\$HOME/bin:\$PATH"
+    __FRESH_BIN_PATH__=$HOME/bin; [[ ! $PATH =~ (^|:)$__FRESH_BIN_PATH__(:|$) ]] && export PATH="$__FRESH_BIN_PATH__:$PATH"; unset __FRESH_BIN_PATH__
     export FRESH_PATH="#{fresh_path}"
   EOF
 
