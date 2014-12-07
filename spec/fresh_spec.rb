@@ -299,7 +299,7 @@ describe 'fresh' do
 
           it 'links files' do
             rc 'fresh foo --file=~/.foo/'
-            rc 'fresh foo/bar --file=~/.other/'
+            rc 'fresh foo/bar --file=~/.nested/target/'
 
             run_fresh
 
@@ -307,16 +307,17 @@ describe 'fresh' do
               foo/bar/file1
               foo/bar/file2
               foo/file3
-              other/file1
-              other/file2
+              nested-target/file1
+              nested-target/file2
               shell.sh
             ]
 
             expect_readlink('~/.foo').to eq (fresh_path + 'build/foo').to_s
-            expect_readlink('~/.other').to eq (fresh_path + 'build/other').to_s
+            expect_readlink('~/.nested/target').to eq (fresh_path + 'build/nested-target').to_s
 
             # can traverse symlink
-            expect_pathname('~/.other/file1').to exist
+            expect_pathname('~/.foo/bar/file1').to exist
+            expect_pathname('~/.nested/target/file1').to exist
           end
         end
 
