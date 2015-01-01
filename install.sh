@@ -13,7 +13,7 @@ if [ -d ~/.fresh/source/freshshell/fresh ]; then
   git pull --rebase
   cd "$OLDPWD"
 else
-  git clone https://github.com/freshshell/fresh ~/.fresh/source/freshshell/fresh
+  git clone "${FRESH_REPO:-https://github.com/freshshell/fresh}" ~/.fresh/source/freshshell/fresh
 fi
 
 FRESH_LOCAL="${FRESH_LOCAL:-$HOME/.dotfiles}"
