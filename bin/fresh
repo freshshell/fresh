@@ -89,7 +89,7 @@ _fresh_preamble() {
 
   local no_path_export fresh_path user_shell="$(getent passwd $LOGNAME | cut -d: -f7)"
   if [[ $user_shell == *"fish"* ]]; then 
-    no_path_export="set __FRESH_BIN_PATH__ (echo $FRESH_BIN_PATH | sed -e s@$HOME@\$HOME@
+    no_path_export="set __FRESH_BIN_PATH__ (echo $FRESH_BIN_PATH | sed -e s@$HOME@\$HOME@)
     if not contains \$__FRESH_BIN_PATH__ \$PATH 
       set -U fish_user_paths \$fish_user_paths \$__FRESH_BIN_PATH__
     end
