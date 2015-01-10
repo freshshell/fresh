@@ -87,9 +87,9 @@ fresh_after_build() {
 
 _fresh_preamble() {
 
-  local no_path_export fresh_path user_shell="$(getent passwd $LOGNAME | cut -d: -f7)"
+  local path_export fresh_path user_shell="$SHELL"
   if [[ $user_shell == *"fish"* ]]; then 
-    no_path_export="set __FRESH_BIN_PATH__ (echo $FRESH_BIN_PATH | sed -e s@$HOME@\$HOME@)
+    path_export="set __FRESH_BIN_PATH__ (echo $FRESH_BIN_PATH | sed -e s@$HOME@\$HOME@)
     if not contains \$__FRESH_BIN_PATH__ \$PATH 
       set -U fish_user_paths \$fish_user_paths \$__FRESH_BIN_PATH__
     end
@@ -97,14 +97,14 @@ _fresh_preamble() {
     "
     fresh_path="set -U FRESH_PATH=\"$FRESH_PATH\""
   else
-    no_path_export="__FRESH_BIN_PATH__="${FRESH_BIN_PATH/#$HOME/\$HOME}"; [[ ! \$PATH =~ (^|:)\$__FRESH_BIN_PATH__(:|\$) ]] && export PATH=\"\$__FRESH_BIN_PATH__:\$PATH\"; unset __FRESH_BIN_PATH__"
+    path_export="__FRESH_BIN_PATH__="${FRESH_BIN_PATH/#$HOME/\$HOME}"; [[ ! \$PATH =~ (^|:)\$__FRESH_BIN_PATH__(:|\$) ]] && export PATH=\"\$__FRESH_BIN_PATH__:\$PATH\"; unset __FRESH_BIN_PATH__"
     fresh_path="export FRESH_PATH=\"$FRESH_PATH\""
   fi
 
 
   if [ -z "${__FRESH_PREAMBLE_DONE__:-}" ]; then
     if [ -z "${FRESH_NO_PATH_EXPORT:-}" ]; then
-	echo "$no_path_export" >> "$FRESH_PATH/build.new/shell.sh"
+	echo "$path_export" >> "$FRESH_PATH/build.new/shell.sh"
     fi
     echo "$fresh_path" >> "$FRESH_PATH/build.new/shell.sh"
     __FRESH_PREAMBLE_DONE__=1
