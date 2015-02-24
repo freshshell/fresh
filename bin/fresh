@@ -175,7 +175,7 @@ EOF
     local REPO_DIR="$FRESH_PATH/source/$(_repo_name "$REPO_NAME")"
     mkdir -p "$(dirname "$REPO_DIR")"
     if ! [ -e "$REPO_DIR" ]; then
-      git clone "$(_repo_url "$REPO_NAME")" "$REPO_DIR"
+      git clone --depth 1 "$(_repo_url "$REPO_NAME")" "$REPO_DIR"
     fi
     SOURCE_DIR="$REPO_DIR"
   else
