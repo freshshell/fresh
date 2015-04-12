@@ -145,11 +145,15 @@ def stub_curl(*args)
     <% end %>
   ERB
 
-  curl_path = bin_path + 'curl'
-  File.open(curl_path, 'a') do |file|
-    file.write ERB.new(template).result(binding)
+  stub_bin_file 'curl', ERB.new(template).result(binding)
+end
+
+def stub_bin_file(name, content)
+  stub_path = bin_path + name
+  File.open(stub_path, 'a') do |file|
+    file.write content
   end
-  FileUtils.chmod '+x', curl_path
+  FileUtils.chmod '+x', stub_path
 end
 
 def shell_sh_marker_lines
