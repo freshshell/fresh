@@ -185,6 +185,18 @@ EOF
     fi
   fi
 
+  if [[ -n "$PRE" ]]; then
+    if [[ "$MODE" == bin ]]; then
+      (
+        cd "$SOURCE_DIR"
+        $PRE
+      )
+    else
+      SKIP_INFO=1
+      _fatal_error "The \`--pre\` and \`--make\` options can only be used with \`--bin\`."
+    fi
+  fi
+
   # check the source file exists
   if [[ $(find "$SOURCE_DIR" -path "$SOURCE_DIR/$FILE_NAME" | wc -l) -lt 1 ]]; then
     # but not if we are locking to a git ref
@@ -527,6 +539,7 @@ _parse_fresh_dsl_args() {
   REF="$DEFAULT_REF"
   MARKER="$DEFAULT_MARKER"
   FILTER="$DEFAULT_FILTER"
+  PRE=""
   IGNORE_MISSING="$DEFAULT_IGNORE_MISSING"
 
   while [ $# -gt 0 ]
@@ -563,6 +576,18 @@ _parse_fresh_dsl_args() {
         ;;
       --filter)
         _fatal_error "You must specify a filter program."
+        ;;
+      --pre=*)
+        PRE="$(echo "$1" | sed 's/^--[^=]*=*//')"
+        ;;
+      --pre)
+        _fatal_error "You must specify a pre program. You can use \`--make\` as a shortcut for \`--pre=make\`."
+        ;;
+      --make=*)
+        PRE="make $(echo "$1" | sed 's/^--[^=]*=*//')"
+        ;;
+      --make)
+        PRE="make"
         ;;
       --ignore-missing)
         IGNORE_MISSING="1"

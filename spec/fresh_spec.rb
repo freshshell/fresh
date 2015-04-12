@@ -934,6 +934,49 @@ describe 'fresh' do
     end
   end
 
+  describe '--pre' do
+    it 'runs a command before trying to link the file' do
+      rc 'fresh file_to_make --pre=make --bin'
+      FileUtils.mkdir_p fresh_local_path
+      stub_make 'echo foobarbaz > file_to_make'
+
+      run_fresh
+
+      file_to_make_path = fresh_path + 'build/bin/file_to_make'
+
+      expect(file_to_make_path).to exist
+      expect_readlink('~/bin/file_to_make').to eq file_to_make_path.to_s
+      expect(File.read file_to_make_path).to eq "foobarbaz\n"
+      expect(make_log).to eq "make\n"
+    end
+
+    it 'errors when used without --bin' do
+      rc 'fresh file_to_make --pre=make'
+
+      run_fresh error: <<-EOF.strip_heredoc
+        #{ERROR_PREFIX} The `--pre` and `--make` options can only be used with `--bin`.
+        #{freshrc_path}:1: fresh file_to_make --pre=make
+      EOF
+    end
+
+    it 'errors when used without a program'
+    it 'handles globbing'
+  end
+
+  describe '--make' do
+    it 'runs a command before trying to link the file' do
+      pending
+      rc 'fresh file_to_make --make --bin'
+      run_fresh
+    end
+
+    it 'allows a custom make command' do
+      pending
+      rc 'fresh file_to_make --make=install'
+      run_fresh
+    end
+  end
+
   it 'errors when linking bin files with relative paths' do
     touch fresh_local_path + 'foobar'
 

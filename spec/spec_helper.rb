@@ -41,12 +41,20 @@ def curl_log_path
   Pathname.new sandbox_path + 'curl.log'
 end
 
+def make_log_path
+  Pathname.new sandbox_path + 'make.log'
+end
+
 def git_log
   File.read git_log_path
 end
 
 def curl_log
   File.read curl_log_path
+end
+
+def make_log
+  File.read make_log_path
 end
 
 def run_fresh(options = {})
@@ -157,6 +165,22 @@ def stub_curl(*args)
   ERB
 
   stub_bin_file 'curl', ERB.new(template).result(binding)
+end
+
+def stub_make(*args)
+  template = <<-ERB.strip_heredoc
+    #!/bin/bash -e
+
+    echo make >> <%= make_log_path %>
+
+    for ARG in "$@"; do
+      echo "$ARG" >> <%= make_log_path %>
+    done
+
+    #{args.join("\n")}
+  ERB
+
+  stub_bin_file 'make', ERB.new(template).result(binding)
 end
 
 def stub_bin_file(name, content)
