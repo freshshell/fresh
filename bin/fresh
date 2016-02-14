@@ -284,9 +284,13 @@ _source_file_contents() {
   if [[ -n "$REF" ]]; then
     cd "$SOURCE_DIR"
     if [[ -n "$FILTER" ]]; then
-      git show "$REF:$SOURCE_FILE" | eval "$FILTER"
+      # Deal with special characters in source file name
+      local escape_string=$(echo $SOURCE_FILE | sed -e 's/^"//' -e 's/"$//' | sed -e 's/\$/\\$/g' -e 's/"/\\"/g')
+      eval "git show $REF:\"$escape_string\"" | eval "$FILTER"
     else
-      git show "$REF:$SOURCE_FILE"
+      # Deal with special characters in source file name
+      local escape_string=$(echo $SOURCE_FILE | sed -e 's/^"//' -e 's/"$//' | sed -e 's/\$/\\$/g' -e 's/"/\\"/g')
+      eval "git show $REF:\"$escape_string\""
     fi
     cd "$OLDPWD"
   else
