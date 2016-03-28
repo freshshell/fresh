@@ -161,15 +161,20 @@ def expect_shell_sh
   expect(shell_sh_path).to_not be_executable
 
   empty_shell_sh = <<-EOF.strip_heredoc
-    __FRESH_BIN_PATH__=$HOME/bin; [[ ! $PATH =~ (^|:)$__FRESH_BIN_PATH__(:|$) ]] && export PATH="$__FRESH_BIN_PATH__:$PATH"; unset __FRESH_BIN_PATH__
+    __FRESH_BIN_PATH__=$HOME/bin
+    case ":$PATH:" in
+    *:$__FRESH_BIN_PATH__:*) : ;;
+    *) export PATH="$__FRESH_BIN_PATH__:$PATH" ;;
+    esac
+    unset __FRESH_BIN_PATH__
     export FRESH_PATH="#{fresh_path}"
   EOF
 
   shell_sh_content_lines = File.read(shell_sh_path).lines
 
-  expect(shell_sh_content_lines[0..1].join).to eq empty_shell_sh
+  expect(shell_sh_content_lines[0..6].join).to eq empty_shell_sh
 
-  content = shell_sh_content_lines[3..-1] || []
+  content = shell_sh_content_lines[8..-1] || []
   expect(content.join)
 end
 
