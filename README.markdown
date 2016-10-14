@@ -32,7 +32,7 @@ added to the [directory].
 Install [fresh](http://freshshell.com/) with the following:
 
 ``` sh
-bash -c "`curl -sL get.freshshell.com`"
+bash -c "`curl -sL https://get.freshshell.com`"
 ```
 
 This will:
