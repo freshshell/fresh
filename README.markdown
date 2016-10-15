@@ -1,0 +1,3 @@
+# fresh
+
+https://freshshell.com/
