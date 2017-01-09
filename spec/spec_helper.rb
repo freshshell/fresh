@@ -127,7 +127,8 @@ def stub_curl(*args)
   options.assert_valid_keys :error
 
   template = <<-ERB.strip_heredoc
-    #!/bin/bash -e
+    #!/usr/bin/env bash
+    set -e
 
     echo curl >> <%= curl_log_path %>
 

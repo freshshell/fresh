@@ -1,4 +1,5 @@
-#!/bin/bash -e
+#!/usr/bin/env bash
+set -e
 
 FRESH_RCFILE="${FRESH_RCFILE:-$HOME/.freshrc}"
 FRESH_PATH="${FRESH_PATH:-$HOME/.fresh}"
