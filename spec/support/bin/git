@@ -1,4 +1,5 @@
-#!/bin/bash -e
+#!/usr/bin/env bash
+set -e
 
 echo cd "$(pwd)" >> $SANDBOX_PATH/git.log
 echo git "$@" >> $SANDBOX_PATH/git.log

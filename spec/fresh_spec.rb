@@ -1426,7 +1426,7 @@ describe 'fresh' do
       let(:path) do
         capture(:stdout) do
           system <<-EOF
-/bin/bash -c "$(
+/usr/bin/env bash -c "$(
 cat <<'SH'
   export PATH=/usr/bin
   source #{shell_sh_path}
@@ -1477,7 +1477,7 @@ SH
 
         path = capture(:stdout) do
           system <<-EOF
-/bin/bash -c "$(
+/usr/bin/env bash -c "$(
 cat <<'SH'
   export PATH=/usr/bin
   source #{shell_sh_path}
@@ -1498,7 +1498,7 @@ SH
         run_fresh
         out = capture(:stdout) do
           system <<-EOF
-/bin/bash -c "$(
+/usr/bin/env bash -c "$(
 cat <<'SH'
   source #{shell_sh_path}
   echo "$__FRESH_BIN_PATH__"
