@@ -680,6 +680,18 @@ describe 'fresh' do
           expect(fresh_path + 'missing').to_not exist
         end
       end
+
+      it 'errors if no ref is specified' do
+        rc 'fresh foo --file --ref'
+
+        run_fresh error: <<-EOF.strip_heredoc
+          #{ERROR_PREFIX} You must specify a Git reference.
+          #{freshrc_path}:1: fresh foo --file --ref
+
+          You may need to run `fresh update` if you're adding a new line,
+          or the file you're referencing may have moved or been deleted.
+        EOF
+      end
     end
 
     describe 'whole repos' do
@@ -2139,11 +2151,6 @@ SH
       end
 
       it 'parses fresh dsl args' do
-        expect_parse_fresh_dsl_args('foo --file --ref').to eq <<-EOF.strip_heredoc
-          #{ERROR_PREFIX} You must specify a Git reference.
-          EXIT_STATUS=1
-        EOF
-
         expect_parse_fresh_dsl_args('foo --filter').to eq <<-EOF.strip_heredoc
           #{ERROR_PREFIX} You must specify a filter program.
           EXIT_STATUS=1
