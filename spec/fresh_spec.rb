@@ -932,6 +932,25 @@ describe 'fresh' do
         TEST data for abc1237:aliases/git.sh
       EOF
     end
+
+    it 'runs filters that reference functions from the freshrc' do
+      file_add fresh_local_path + 'aliases', 'foo other_username bar'
+      rc <<-EOF.strip_heredoc
+        replace_username() {
+          sed s/other_username/my_username/ | tr _ -
+        }
+
+        fresh aliases --filter=replace_username
+      EOF
+
+      run_fresh
+
+      expect_shell_sh.to eq <<-EOF.strip_heredoc
+        # fresh: aliases # replace_username
+
+        foo my-username bar
+      EOF
+    end
   end
 
   it 'errors when linking bin files with relative paths' do
