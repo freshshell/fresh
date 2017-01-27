@@ -2120,6 +2120,18 @@ SH
     end
   end
 
+  it 'errors if more than one mode is specifed' do
+    rc 'fresh foo --file --bin'
+
+    run_fresh error: <<-EOF.strip_heredoc
+      #{ERROR_PREFIX} Cannot have more than one mode.
+      #{freshrc_path}:1: fresh foo --file --bin
+
+      You may need to run `fresh update` if you're adding a new line,
+      or the file you're referencing may have moved or been deleted.
+    EOF
+  end
+
   describe 'private functions' do
     let(:log_path) { sandbox_path + 'out.log' }
 
@@ -2163,11 +2175,6 @@ SH
       end
 
       it 'parses fresh dsl args' do
-        expect_parse_fresh_dsl_args('foo --file --bin').to eq <<-EOF.strip_heredoc
-          #{ERROR_PREFIX} Cannot have more than one mode.
-          EXIT_STATUS=1
-        EOF
-
         expect_parse_fresh_dsl_args(nil).to eq <<-EOF.strip_heredoc
           #{ERROR_PREFIX} Filename is required
           EXIT_STATUS=1
