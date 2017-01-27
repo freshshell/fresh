@@ -963,6 +963,18 @@ describe 'fresh' do
         foo my-username bar
       EOF
     end
+
+    it 'errors when no filter is specified' do
+      rc 'fresh foo --filter'
+
+      run_fresh error: <<-EOF.strip_heredoc
+        #{ERROR_PREFIX} You must specify a filter program.
+        #{freshrc_path}:1: fresh foo --filter
+
+        You may need to run `fresh update` if you're adding a new line,
+        or the file you're referencing may have moved or been deleted.
+      EOF
+    end
   end
 
   it 'errors when linking bin files with relative paths' do
@@ -2151,11 +2163,6 @@ SH
       end
 
       it 'parses fresh dsl args' do
-        expect_parse_fresh_dsl_args('foo --filter').to eq <<-EOF.strip_heredoc
-          #{ERROR_PREFIX} You must specify a filter program.
-          EXIT_STATUS=1
-        EOF
-
         expect_parse_fresh_dsl_args('foo --file --bin').to eq <<-EOF.strip_heredoc
           #{ERROR_PREFIX} Cannot have more than one mode.
           EXIT_STATUS=1
