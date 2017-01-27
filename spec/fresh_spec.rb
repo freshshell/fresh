@@ -2058,6 +2058,44 @@ SH
     end
   end
 
+  describe '--marker' do
+    it 'errors if --marker is empty' do
+      rc 'fresh foo --file --marker='
+
+      run_fresh error: <<-EOF.strip_heredoc
+        #{ERROR_PREFIX} Marker not specified.
+        #{freshrc_path}:1: fresh foo --file --marker=
+
+        You may need to run `fresh update` if you're adding a new line,
+        or the file you're referencing may have moved or been deleted.
+      EOF
+    end
+
+    it 'errors if --marker is used without --file' do
+      rc 'fresh foo --marker'
+
+      run_fresh error: <<-EOF.strip_heredoc
+        #{ERROR_PREFIX} --marker is only valid with --file.
+        #{freshrc_path}:1: fresh foo --marker
+
+        You may need to run `fresh update` if you're adding a new line,
+        or the file you're referencing may have moved or been deleted.
+      EOF
+    end
+
+    it 'errors if --marker is used with --bin' do
+      rc 'fresh foo --bin --marker'
+
+      run_fresh error: <<-EOF.strip_heredoc
+        #{ERROR_PREFIX} --marker is only valid with --file.
+        #{freshrc_path}:1: fresh foo --bin --marker
+
+        You may need to run `fresh update` if you're adding a new line,
+        or the file you're referencing may have moved or been deleted.
+      EOF
+    end
+  end
+
   describe 'private functions' do
     let(:log_path) { sandbox_path + 'out.log' }
 
@@ -2101,21 +2139,6 @@ SH
       end
 
       it 'parses fresh dsl args' do
-        expect_parse_fresh_dsl_args('foo --file --marker=').to eq <<-EOF.strip_heredoc
-          #{ERROR_PREFIX} Marker not specified.
-          EXIT_STATUS=1
-        EOF
-
-        expect_parse_fresh_dsl_args('foo --bin --marker').to eq <<-EOF.strip_heredoc
-          #{ERROR_PREFIX} --marker is only valid with --file.
-          EXIT_STATUS=1
-        EOF
-
-        expect_parse_fresh_dsl_args(%Q{foo --marker=';'}).to eq <<-EOF.strip_heredoc
-          #{ERROR_PREFIX} --marker is only valid with --file.
-          EXIT_STATUS=1
-        EOF
-
         expect_parse_fresh_dsl_args('foo --file --ref').to eq <<-EOF.strip_heredoc
           #{ERROR_PREFIX} You must specify a Git reference.
           EXIT_STATUS=1
