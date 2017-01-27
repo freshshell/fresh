@@ -2132,6 +2132,33 @@ SH
     EOF
   end
 
+  describe 'required args' do
+    it 'requires a filename' do
+      rc 'fresh'
+
+      run_fresh error: <<-EOF.strip_heredoc
+        #{ERROR_PREFIX} Filename is required
+        #{freshrc_path}:1: fresh
+
+        You may need to run `fresh update` if you're adding a new line,
+        or the file you're referencing may have moved or been deleted.
+      EOF
+    end
+
+    it 'errors with too many args' do
+      rc 'fresh foo bar baz'
+
+      run_fresh error: <<-EOF.strip_heredoc
+        #{ERROR_PREFIX} Expected 1 or 2 args.
+        #{freshrc_path}:1: fresh foo bar baz
+
+        You may need to run `fresh update` if you're adding a new line,
+        or the file you're referencing may have moved or been deleted.
+        Have a look at the repo: <#{format_url 'https://github.com/foo'}>
+      EOF
+    end
+  end
+
   describe 'private functions' do
     let(:log_path) { sandbox_path + 'out.log' }
 
@@ -2148,42 +2175,6 @@ SH
       it 'escapes arguments' do
         run_private_function "_escape foo 'bar baz'"
         expect(File.read(log_path)).to eq "foo bar\\ baz\n"
-      end
-    end
-
-    describe '_parse_fresh_dsl_args' do
-      def expect_parse_fresh_dsl_args(command)
-        @stdout = capture(:stdout) do
-          @stderr = capture(:stderr) do
-            exit_status = system 'bash', '-c', <<-EOF
-              set -e
-              source bin/fresh
-              _dsl_fresh_options # init defaults
-              _parse_fresh_dsl_args #{command}
-              echo REPO_NAME="$REPO_NAME"
-              echo FILE_NAME="$FILE_NAME"
-              echo MODE="$MODE"
-              echo MODE_ARG="$MODE_ARG"
-              echo REF="$REF"
-              echo MARKER="$MARKER"
-              echo FILTER="$FILTER"
-            EOF
-            puts "EXIT_STATUS=#{exit_status ? 0 : 1}"
-          end
-        end
-        expect(@stderr + @stdout)
-      end
-
-      it 'parses fresh dsl args' do
-        expect_parse_fresh_dsl_args(nil).to eq <<-EOF.strip_heredoc
-          #{ERROR_PREFIX} Filename is required
-          EXIT_STATUS=1
-        EOF
-
-        expect_parse_fresh_dsl_args('foo bar baz').to eq <<-EOF.strip_heredoc
-          #{ERROR_PREFIX} Expected 1 or 2 args.
-          EXIT_STATUS=1
-        EOF
       end
     end
   end
