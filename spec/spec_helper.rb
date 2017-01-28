@@ -7,7 +7,8 @@ require 'pry'
 ORIGINAL_ENV = ENV.to_hash
 ERROR_PREFIX = "\e[4;31mError\e[0m:"
 NOTE_PREFIX = "\033[1;33mNote\033[0m:"
-FRESH_SUCCESS_LINE = "Your dot files are now \e[1;32mfresh\e[0m."
+FRESH_HIGHLIGHTED = "\e[1;32mfresh\e[0m"
+FRESH_SUCCESS_LINE = "Your dot files are now #{FRESH_HIGHLIGHTED}."
 
 def sandbox_path
   @sandbox_path ||= Pathname.new(Dir.mktmpdir)
@@ -50,13 +51,15 @@ def curl_log
 end
 
 def run_fresh(options = {})
-  options.assert_valid_keys :command, :full_command, :exit_status, :success, :error, :error_title
+  options.assert_valid_keys :command, :full_command, :exit_status, :success, :error, :error_title, :env
+  env = options.fetch(:env, {})
+
   @stdout = capture(:stdout) do
     @stderr = capture(:stderr) do
       @exit_status = if options[:full_command]
-        system(options[:full_command])
+        system(env, options[:full_command])
       else
-        system(*['fresh', Array(options[:command])].flatten.compact)
+        system(env, *['fresh', Array(options[:command])].flatten.compact)
       end
     end
   end
