@@ -1505,7 +1505,12 @@ SH
         expect(File.read(fresh_bin_path)).to eq "test file\n"
         expect_readlink(fresh_bin_path).to eq (fresh_path + 'build/bin/fresh').to_s
         expect(File.read(shell_sh_path)).to eq <<-EOF.strip_heredoc
-          __FRESH_BIN_PATH__=$HOME/Applications/bin; [[ ! $PATH =~ (^|:)$__FRESH_BIN_PATH__(:|$) ]] && export PATH="$__FRESH_BIN_PATH__:$PATH"; unset __FRESH_BIN_PATH__
+          __FRESH_BIN_PATH__=$HOME/Applications/bin
+          case ":$PATH:" in
+          *:$__FRESH_BIN_PATH__:*) : ;;
+          *) export PATH="$__FRESH_BIN_PATH__:$PATH" ;;
+          esac
+          unset __FRESH_BIN_PATH__
           export FRESH_PATH="#{fresh_path}"
         EOF
 
