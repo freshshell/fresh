@@ -2026,6 +2026,38 @@ SH
     end
   end
 
+  describe 'help' do
+    it 'displays the help' do
+      %w[foo bar].each do |plugin|
+        path = bin_path + "fresh-#{plugin}"
+        touch path
+        FileUtils.chmod '+x', path
+      end
+
+      run_fresh command: 'help', env: {'PATH' => "#{bin_path}:/bin:/usr/bin"}, success: <<-EOF.strip_heredoc
+        Keep your dot files #{FRESH_HIGHLIGHTED}.
+
+        The following commands will install/update configuration files
+        as specified in your #{freshrc_path} file.
+
+        See #{format_url 'http://freshshell.com/readme'} for more documentation.
+
+        usage: fresh <command> [<args>]
+
+        Available commands:
+            install            Build shell configuration and relevant symlinks (default)
+            update [<filter>]  Update from source repos and rebuild
+            clean              Removes dead symlinks and source repos
+            search <query>     Search the fresh directory
+            edit               Open freshrc for editing
+            show               Show source references for freshrc lines
+            help               Show this help
+            bar                Run bar plugin
+            foo                Run foo plugin
+      EOF
+    end
+  end
+
   describe 'private functions' do
     let(:log_path) { sandbox_path + 'out.log' }
 
