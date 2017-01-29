@@ -680,6 +680,18 @@ describe 'fresh' do
           expect(fresh_path + 'missing').to_not exist
         end
       end
+
+      it 'errors if no ref is specified' do
+        rc 'fresh foo --file --ref'
+
+        run_fresh error: <<-EOF.strip_heredoc
+          #{ERROR_PREFIX} You must specify a Git reference.
+          #{freshrc_path}:1: fresh foo --file --ref
+
+          You may need to run `fresh update` if you're adding a new line,
+          or the file you're referencing may have moved or been deleted.
+        EOF
+      end
     end
 
     describe 'whole repos' do
@@ -949,6 +961,18 @@ describe 'fresh' do
         # fresh: aliases # replace_username
 
         foo my-username bar
+      EOF
+    end
+
+    it 'errors when no filter is specified' do
+      rc 'fresh foo --filter'
+
+      run_fresh error: <<-EOF.strip_heredoc
+        #{ERROR_PREFIX} You must specify a filter program.
+        #{freshrc_path}:1: fresh foo --filter
+
+        You may need to run `fresh update` if you're adding a new line,
+        or the file you're referencing may have moved or been deleted.
       EOF
     end
   end
@@ -2058,6 +2082,83 @@ SH
     end
   end
 
+  describe '--marker' do
+    it 'errors if --marker is empty' do
+      rc 'fresh foo --file --marker='
+
+      run_fresh error: <<-EOF.strip_heredoc
+        #{ERROR_PREFIX} Marker not specified.
+        #{freshrc_path}:1: fresh foo --file --marker=
+
+        You may need to run `fresh update` if you're adding a new line,
+        or the file you're referencing may have moved or been deleted.
+      EOF
+    end
+
+    it 'errors if --marker is used without --file' do
+      rc 'fresh foo --marker'
+
+      run_fresh error: <<-EOF.strip_heredoc
+        #{ERROR_PREFIX} --marker is only valid with --file.
+        #{freshrc_path}:1: fresh foo --marker
+
+        You may need to run `fresh update` if you're adding a new line,
+        or the file you're referencing may have moved or been deleted.
+      EOF
+    end
+
+    it 'errors if --marker is used with --bin' do
+      rc 'fresh foo --bin --marker'
+
+      run_fresh error: <<-EOF.strip_heredoc
+        #{ERROR_PREFIX} --marker is only valid with --file.
+        #{freshrc_path}:1: fresh foo --bin --marker
+
+        You may need to run `fresh update` if you're adding a new line,
+        or the file you're referencing may have moved or been deleted.
+      EOF
+    end
+  end
+
+  it 'errors if more than one mode is specifed' do
+    rc 'fresh foo --file --bin'
+
+    run_fresh error: <<-EOF.strip_heredoc
+      #{ERROR_PREFIX} Cannot have more than one mode.
+      #{freshrc_path}:1: fresh foo --file --bin
+
+      You may need to run `fresh update` if you're adding a new line,
+      or the file you're referencing may have moved or been deleted.
+    EOF
+  end
+
+  describe 'required args' do
+    it 'requires a filename' do
+      rc 'fresh'
+
+      run_fresh error: <<-EOF.strip_heredoc
+        #{ERROR_PREFIX} Filename is required
+        #{freshrc_path}:1: fresh
+
+        You may need to run `fresh update` if you're adding a new line,
+        or the file you're referencing may have moved or been deleted.
+      EOF
+    end
+
+    it 'errors with too many args' do
+      rc 'fresh foo bar baz'
+
+      run_fresh error: <<-EOF.strip_heredoc
+        #{ERROR_PREFIX} Expected 1 or 2 args.
+        #{freshrc_path}:1: fresh foo bar baz
+
+        You may need to run `fresh update` if you're adding a new line,
+        or the file you're referencing may have moved or been deleted.
+        Have a look at the repo: <#{format_url 'https://github.com/foo'}>
+      EOF
+    end
+  end
+
   describe 'private functions' do
     let(:log_path) { sandbox_path + 'out.log' }
 
@@ -2074,171 +2175,6 @@ SH
       it 'escapes arguments' do
         run_private_function "_escape foo 'bar baz'"
         expect(File.read(log_path)).to eq "foo bar\\ baz\n"
-      end
-    end
-
-    describe '_parse_fresh_dsl_args' do
-      def expect_parse_fresh_dsl_args(command)
-        @stdout = capture(:stdout) do
-          @stderr = capture(:stderr) do
-            exit_status = system 'bash', '-c', <<-EOF
-              set -e
-              source bin/fresh
-              _dsl_fresh_options # init defaults
-              _parse_fresh_dsl_args #{command}
-              echo REPO_NAME="$REPO_NAME"
-              echo FILE_NAME="$FILE_NAME"
-              echo MODE="$MODE"
-              echo MODE_ARG="$MODE_ARG"
-              echo REF="$REF"
-              echo MARKER="$MARKER"
-              echo FILTER="$FILTER"
-            EOF
-            puts "EXIT_STATUS=#{exit_status ? 0 : 1}"
-          end
-        end
-        expect(@stderr + @stdout)
-      end
-
-      it 'parses fresh dsl args' do
-        expect_parse_fresh_dsl_args('aliases/git.sh').to eq <<-EOF.strip_heredoc
-          REPO_NAME=
-          FILE_NAME=aliases/git.sh
-          MODE=
-          MODE_ARG=
-          REF=
-          MARKER=
-          FILTER=
-          EXIT_STATUS=0
-        EOF
-
-        expect_parse_fresh_dsl_args('twe4ked/dotfiles lib/tmux.conf --file=~/.tmux.conf').to eq <<-EOF.strip_heredoc
-          REPO_NAME=twe4ked/dotfiles
-          FILE_NAME=lib/tmux.conf
-          MODE=file
-          MODE_ARG=~/.tmux.conf
-          REF=
-          MARKER=
-          FILTER=
-          EXIT_STATUS=0
-        EOF
-
-        expect_parse_fresh_dsl_args('jasoncodes/dotfiles .gitconfig --file').to eq <<-EOF.strip_heredoc
-          REPO_NAME=jasoncodes/dotfiles
-          FILE_NAME=.gitconfig
-          MODE=file
-          MODE_ARG=
-          REF=
-          MARKER=
-          FILTER=
-          EXIT_STATUS=0
-        EOF
-
-        expect_parse_fresh_dsl_args('sedmv --bin').to eq <<-EOF.strip_heredoc
-          REPO_NAME=
-          FILE_NAME=sedmv
-          MODE=bin
-          MODE_ARG=
-          REF=
-          MARKER=
-          FILTER=
-          EXIT_STATUS=0
-        EOF
-
-        expect_parse_fresh_dsl_args('scripts/pidof.sh --bin=~/bin/pidof').to eq <<-EOF.strip_heredoc
-          REPO_NAME=
-          FILE_NAME=scripts/pidof.sh
-          MODE=bin
-          MODE_ARG=~/bin/pidof
-          REF=
-          MARKER=
-          FILTER=
-          EXIT_STATUS=0
-        EOF
-
-        expect_parse_fresh_dsl_args('twe4ked/dotfiles lib/tmux.conf --file=~/.tmux.conf --ref=abc1237').to eq <<-EOF.strip_heredoc
-          REPO_NAME=twe4ked/dotfiles
-          FILE_NAME=lib/tmux.conf
-          MODE=file
-          MODE_ARG=~/.tmux.conf
-          REF=abc1237
-          MARKER=
-          FILTER=
-          EXIT_STATUS=0
-        EOF
-
-        expect_parse_fresh_dsl_args('tmux.conf --file --marker').to eq <<-EOF.strip_heredoc
-          REPO_NAME=
-          FILE_NAME=tmux.conf
-          MODE=file
-          MODE_ARG=
-          REF=
-          MARKER=#
-          FILTER=
-          EXIT_STATUS=0
-        EOF
-
-        expect_parse_fresh_dsl_args(%Q{vimrc --file --marker='"'}).to eq <<-EOF.strip_heredoc
-          REPO_NAME=
-          FILE_NAME=vimrc
-          MODE=file
-          MODE_ARG=
-          REF=
-          MARKER="
-          FILTER=
-          EXIT_STATUS=0
-        EOF
-
-        expect_parse_fresh_dsl_args(%Q{vimrc --file --filter='sed s/nmap/nnoremap/'}).to eq <<-EOF.strip_heredoc
-          REPO_NAME=
-          FILE_NAME=vimrc
-          MODE=file
-          MODE_ARG=
-          REF=
-          MARKER=
-          FILTER=sed s/nmap/nnoremap/
-          EXIT_STATUS=0
-        EOF
-
-        expect_parse_fresh_dsl_args('foo --file --marker=').to eq <<-EOF.strip_heredoc
-          #{ERROR_PREFIX} Marker not specified.
-          EXIT_STATUS=1
-        EOF
-
-        expect_parse_fresh_dsl_args('foo --bin --marker').to eq <<-EOF.strip_heredoc
-          #{ERROR_PREFIX} --marker is only valid with --file.
-          EXIT_STATUS=1
-        EOF
-
-        expect_parse_fresh_dsl_args(%Q{foo --marker=';'}).to eq <<-EOF.strip_heredoc
-          #{ERROR_PREFIX} --marker is only valid with --file.
-          EXIT_STATUS=1
-        EOF
-
-        expect_parse_fresh_dsl_args('foo --file --ref').to eq <<-EOF.strip_heredoc
-          #{ERROR_PREFIX} You must specify a Git reference.
-          EXIT_STATUS=1
-        EOF
-
-        expect_parse_fresh_dsl_args('foo --filter').to eq <<-EOF.strip_heredoc
-          #{ERROR_PREFIX} You must specify a filter program.
-          EXIT_STATUS=1
-        EOF
-
-        expect_parse_fresh_dsl_args('foo --file --bin').to eq <<-EOF.strip_heredoc
-          #{ERROR_PREFIX} Cannot have more than one mode.
-          EXIT_STATUS=1
-        EOF
-
-        expect_parse_fresh_dsl_args(nil).to eq <<-EOF.strip_heredoc
-          #{ERROR_PREFIX} Filename is required
-          EXIT_STATUS=1
-        EOF
-
-        expect_parse_fresh_dsl_args('foo bar baz').to eq <<-EOF.strip_heredoc
-          #{ERROR_PREFIX} Expected 1 or 2 args.
-          EXIT_STATUS=1
-        EOF
       end
     end
   end
