@@ -1911,6 +1911,43 @@ SH
         )
       end
     end
+
+    describe 'confirmation prompt' do
+      it 'negative' do
+        touch fresh_path + 'source/user/repo/file'
+        touch fresh_local_path + 'new file'
+
+        run_fresh(
+          full_command: 'echo n | fresh new\ file',
+          success: <<-EOF.strip_heredoc)
+            Add `fresh new\\ file` to #{freshrc_path} [Y/n]? #{NOTE_PREFIX} Use `fresh edit` to manually edit your #{freshrc_path}.
+          EOF
+      end
+
+      it 'default' do
+        touch fresh_path + 'source/user/repo/file'
+        touch fresh_local_path + 'new file'
+
+        run_fresh(
+          full_command: 'echo | fresh new\ file',
+          success: <<-EOF.strip_heredoc)
+            Add `fresh new\\ file` to #{freshrc_path} [Y/n]? Adding `fresh new\\ file` to #{freshrc_path}...
+            #{FRESH_SUCCESS_LINE}
+          EOF
+      end
+
+      it 'invalid' do
+        touch fresh_path + 'source/user/repo/file'
+        touch fresh_local_path + 'new file'
+
+        run_fresh(
+          full_command: 'echo -e "blah\ny" | fresh new\ file',
+          success: <<-EOF.strip_heredoc)
+            Add `fresh new\\ file` to #{freshrc_path} [Y/n]? Add `fresh new\\ file` to #{freshrc_path} [Y/n]? Adding `fresh new\\ file` to #{freshrc_path}...
+            #{FRESH_SUCCESS_LINE}
+          EOF
+      end
+    end
   end
 
   describe 'edit' do
@@ -2005,28 +2042,6 @@ SH
       it 'escapes arguments' do
         run_private_function "_escape foo 'bar baz'"
         expect(File.read(log_path)).to eq "foo bar\\ baz\n"
-      end
-    end
-
-    describe '_confirm' do
-      it 'confirms query positive' do
-        run_private_function "echo y | _confirm 'Test question'"
-        expect(File.read(log_path)).to eq 'Test question [Y/n]? '
-      end
-
-      it 'confirms query negative' do
-        run_private_function "echo n | _confirm 'Test question'", false
-        expect(File.read(log_path)).to eq 'Test question [Y/n]? '
-      end
-
-      it 'confirms query default' do
-        run_private_function "echo | _confirm 'Test question'"
-        expect(File.read(log_path)).to eq 'Test question [Y/n]? '
-      end
-
-      it 'confirms query invalid' do
-        run_private_function %Q{echo -e "blah\ny" | _confirm 'Test question'}
-        expect(File.read(log_path)).to eq 'Test question [Y/n]? Test question [Y/n]? '
       end
     end
 
