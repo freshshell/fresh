@@ -146,6 +146,22 @@ fresh twe4ked/dotfiles config/tmux.conf --file
 Builds tmux configuration from both [jasoncodes/dotfiles] and [twe4ked/dotfiles]
 together into a single `~/.tmux.conf` output.
 
+#### Host specific parts
+
+This can also allow for host specific configs using standard shell syntax.  For example
+to have a different email address in your `~/.gitconfig` on your home and work machines
+you could have:
+
+``` sh
+fresh git/gitconfig.$(hostname) --file=~/.gitconfig
+fresh git/gitconfig
+```
+
+And then in your dotfiles you can have `git/gitconfig.workhostname` and 
+`git/gitconfig.homehostname`
+(The `$(hostname)` is standard bash syntax to run the `hostname` command and replace
+`$(hostname)` with the output from the `hostname` command.)
+
 #### Identifying source files in compiled output
 
 Shell files automatically include comments before each section.
