@@ -97,7 +97,7 @@ code {
   font-style: italic;
 }
 
-code.code-block {
+pre.code {
   color: #adadad;
   display: block;
   font-style: normal;
@@ -108,7 +108,7 @@ code.code-block {
 }
 
 @media only screen and (max-device-width: 480px) {
-  code.code-block {
+  pre.code {
     margin-left: 2ch;
   }
 }
