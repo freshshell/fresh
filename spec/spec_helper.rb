@@ -64,7 +64,11 @@ def run_fresh(options = {})
     end
   end
 
-  if options[:error]
+  if options[:success] && options[:error]
+    expect(@stdout).to eq options.fetch(:success)
+    expect(@stderr).to eq options.fetch(:error)
+    expect(@exit_status).to eq options.fetch(:exit_status)
+  elsif options[:error]
     expect(@stdout).to be_empty
     expect(@stderr).to eq options[:error]
     expect(@exit_status).to eq options.fetch(:exit_status, false)
