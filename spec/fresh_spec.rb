@@ -1258,7 +1258,7 @@ describe 'fresh' do
         stub_git
       end
 
-      it 'updates local repo with no args' do
+      it 'updates local and fresh repo with no args' do
         run_fresh command: 'update', success: <<-EOF.strip_heredoc
           * Updating local files
           | Current branch master is up to date.
