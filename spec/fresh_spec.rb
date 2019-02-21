@@ -2242,7 +2242,6 @@ SH
 
         You may need to run `fresh update` if you're adding a new line,
         or the file you're referencing may have moved or been deleted.
-        Have a look at the repo: <#{format_url 'https://github.com/foo'}>
       EOF
     end
   end
