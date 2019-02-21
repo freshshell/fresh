@@ -569,6 +569,7 @@ _parse_fresh_dsl_args() {
         IGNORE_MISSING="1"
         ;;
       -*)
+        REPO_NAME=
         _fatal_error "Unknown option: $1"
         ;;
       *)
