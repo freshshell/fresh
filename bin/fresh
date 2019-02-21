@@ -1,1022 +1,1267 @@
-#!/usr/bin/env bash
-set -e
+#!/usr/bin/env perl
 
-FRESH_RCFILE="${FRESH_RCFILE:-$HOME/.freshrc}"
-FRESH_PATH="${FRESH_PATH:-$HOME/.fresh}"
-FRESH_LOCAL="${FRESH_LOCAL:-$HOME/.dotfiles}"
-FRESH_BIN_PATH="${FRESH_BIN_PATH:-$HOME/bin}"
+use strict;
+use warnings FATAL => 'all';
 
-set -o pipefail
-set -o nounset
+use Carp qw(croak);
+use File::Temp qw(tempfile);
+use Text::ParseWords qw(shellwords quotewords);
+use Getopt::Long qw(GetOptionsFromArray :config posix_default permute no_ignore_case pass_through);
+use File::Path qw(make_path remove_tree);
+use File::Glob qw(bsd_glob);
+use File::Basename qw(dirname basename);
+use File::Find qw(find);
+use Cwd qw(getcwd chdir realpath);
+use POSIX qw(strftime);
+use sort 'stable';
 
-IN_RC_FILE=0
-SKIP_INFO=0
+my $FRESH_RCFILE = $ENV{FRESH_RCFILE} ||= "$ENV{HOME}/.freshrc";
+my $FRESH_PATH = $ENV{FRESH_PATH} ||= "$ENV{HOME}/.fresh";
+my $FRESH_LOCAL = $ENV{FRESH_LOCAL} ||= "$ENV{HOME}/.dotfiles";
+my $FRESH_BIN_PATH = $ENV{FRESH_BIN_PATH} ||= "$ENV{HOME}/bin";
+my $FRESH_NO_LOCAL_CHECK = $ENV{FRESH_NO_LOCAL_CHECK} ||= 1;
+my $FRESH_NO_PATH_EXPORT = $ENV{FRESH_NO_PATH_EXPORT};
 
-_prefix_match() {
-  local glob="$2*"
-  [[ "$1" == $glob ]] && echo "$1" | awk 'index($0,x)==1' RS= x="$2" | grep -q '^'
+sub parse_fresh_dsl_args {
+  my ($file, $line, $cmd, $args_ref, $default_options) = @_;
+
+  my %entry = (
+    file => $file,
+    line => $line,
+  );
+
+  my @args = @{$args_ref};
+
+  for my $arg (@args) {
+    if ($arg eq '--marker=') {
+      entry_error(\%entry, "Marker not specified.");
+    }
+  }
+
+  my %options = ();
+  GetOptionsFromArray(\@args, \%options, 'marker:s', 'file:s', 'bin:s', 'ref:s', 'filter:s', 'ignore-missing') or croak "Parse error at $entry{file}:$entry{line}\n";
+
+  $entry{options} = \%options;
+  if ($default_options) {
+    $entry{options} = {%$default_options, %{$entry{options}}};
+  }
+
+  if (defined($options{marker}) && !defined($options{file})) {
+    entry_error(\%entry, "--marker is only valid with --file.");
+  }
+
+  if (defined($options{ref}) && $options{ref} eq "") {
+    entry_error(\%entry, "You must specify a Git reference.");
+  }
+
+  if (defined($options{filter}) && $options{filter} eq "") {
+    entry_error(\%entry, "You must specify a filter program.");
+  }
+
+  if (defined($options{file}) && defined($options{bin})) {
+    entry_error(\%entry, "Cannot have more than one mode.");
+  }
+
+  if ($cmd eq 'fresh') {
+    for my $arg (@args) {
+      if ($arg =~ /^--/) {
+        entry_error(\%entry, "Unknown option: $arg");
+      }
+    }
+
+    if (@args == 0) {
+      entry_error(\%entry, "Filename is required");
+    } elsif (@args == 1) {
+      $entry{name} = $args[0];
+    } elsif (@args == 2) {
+      $entry{repo} = $args[0];
+      $entry{name} = $args[1];
+    } else {
+      entry_error(\%entry, "Expected 1 or 2 args.");
+    }
+
+    if (defined($entry{name}) && $entry{name} eq ".") {
+      if (defined($options{file}) && $options{file} !~ /\/$/) {
+        entry_error(\%entry, "Whole repositories require destination to be a directory.");
+      }
+
+      if (!defined($options{file})) {
+        entry_error(\%entry, "Whole repositories can only be sourced in file mode.");
+      }
+    }
+  } elsif ($cmd eq 'fresh-options') {
+    croak "fresh-options cannot have args" unless (@args == 0);
+  } else {
+    croak "Unknown command: $cmd";
+  }
+
+  return \%entry;
 }
 
-fresh_install() {
-  # create new output directory
-  umask 0077
-  [ ! -e "$FRESH_PATH/build.new" ] || rm -rf "$FRESH_PATH/build.new"
-  mkdir -p "$FRESH_PATH/build.new"
+sub read_freshrc {
+  my ($script_fh, $script_filename) = tempfile('fresh.XXXXXX', TMPDIR => 1, UNLINK => 1);
+  my ($output_fh, $output_filename) = tempfile('fresh.XXXXXX', TMPDIR => 1, UNLINK => 1);
 
-  _run_dsl install
+  print $script_fh <<'SH';
+  set -e
 
-  _fresh_preamble
+  _FRESH_RCFILE="$1"
+  _FRESH_OUTPUT="$2"
 
-  # safety check to ensure the user doesn't lock themselves out
-  if [[ -z "${FRESH_NO_BIN_CHECK:-}" ]] && [[ ! -x "$FRESH_PATH/build.new/bin/fresh" ]]; then
-    _fatal_error "It looks you do not have fresh in your freshrc file. This could result
-in difficulties running \`fresh\` later. You probably want to add a line like
-the following using \`fresh edit\`:
+  _output() {
+    local RC_LINE _ RC_FILE
+    read RC_LINE _ RC_FILE <<< "$(caller 1)"
+    printf "%s %s" $RC_FILE $RC_LINE >> "$_FRESH_OUTPUT"
+    for arg in "$@"; do
+      printf " %q" "$arg" >> "$_FRESH_OUTPUT"
+    done
+    echo >> "$_FRESH_OUTPUT"
+  }
+
+  _env() {
+    for NAME in "$@"; do
+      if declare -p "$NAME" &> /dev/null; then
+        _output env "$NAME" "$(eval "echo \"\$$NAME\"")"
+      fi
+    done
+  }
+
+  fresh() {
+    _env FRESH_BIN_PATH
+    _env FRESH_NO_BIN_CONFLICT_CHECK
+    _output fresh "$@"
+  }
+
+  fresh-options() {
+    _output fresh-options "$@"
+  }
+
+  if [ -e "$_FRESH_RCFILE" ]; then
+    source "$_FRESH_RCFILE"
+  fi
+SH
+
+  close $script_fh;
+
+  system('bash', $script_filename, $FRESH_RCFILE, $output_filename) == 0 or exit(1);
+
+  my @entries;
+  my %default_options;
+  my %env;
+
+  while (my $line = <$output_fh>) {
+    my @quoted_args = quotewords(' ', 1, $line);
+    shift(@quoted_args);
+    shift(@quoted_args);
+    my $freshrc_line = join(' ', @quoted_args);
+
+    my @args = shellwords($line);
+    my $file = shift(@args);
+    my $line = shift(@args);
+    my $cmd = shift(@args);
+
+    if ($cmd eq 'fresh') {
+      my $entry = parse_fresh_dsl_args($file, $line, $cmd, \@args, \%default_options);
+      $$entry{env} = {%env};
+      undef %env;
+      $$entry{freshrc_line} = $freshrc_line;
+      push @entries, $entry;
+    } elsif ($cmd eq 'fresh-options') {
+      my $entry = parse_fresh_dsl_args($file, $line, $cmd, \@args, undef);
+      %default_options = %{$$entry{options}};
+    } elsif ($cmd eq 'env') {
+      croak 'expected env to have 2 args' unless @args == 2;
+      $env{$args[0]} = $args[1];
+    } else {
+      croak "Unknown command: $cmd";
+    }
+  }
+  close $output_fh;
+
+  unlink $script_filename;
+  unlink $output_filename;
+
+  return @entries;
+}
+
+sub apply_filter {
+  my ($input, $cmd) = @_;
+
+  my ($script_fh, $script_filename) = tempfile('fresh.XXXXXX', TMPDIR => 1, UNLINK => 1);
+  my ($input_fh, $input_filename) = tempfile('fresh.XXXXXX', TMPDIR => 1, UNLINK => 1);
+  my ($output_fh, $output_filename) = tempfile('fresh.XXXXXX', TMPDIR => 1, UNLINK => 1);
+
+  print $script_fh <<'SH';
+  set -euo pipefail
+
+  _FRESH_RCFILE="$1"
+  _FRESH_INPUT="$2"
+  _FRESH_OUTPUT="$3"
+  _FRESH_FILTER="$4"
+
+  fresh() {
+    true
+  }
+
+  fresh-options() {
+    true
+  }
+
+  source "$_FRESH_RCFILE" &> /dev/null
+  cat "$_FRESH_INPUT" | eval "$_FRESH_FILTER" > "$_FRESH_OUTPUT"
+SH
+  close $script_fh;
+
+  print $input_fh $input;
+  close $input_fh;
+
+  system('bash', $script_filename, $FRESH_RCFILE, $input_filename, $output_filename, $cmd) == 0 or croak 'filter failed';
+
+  local $/ = undef;
+  my $output = <$output_fh>;
+  close $output_fh;
+
+  unlink $script_filename;
+  unlink $input_filename;
+  unlink $output_filename;
+
+  return $output;
+}
+
+sub run_callback {
+  my ($callback) = @_;
+
+  my ($script_fh, $script_filename) = tempfile('fresh.XXXXXX', TMPDIR => 1, UNLINK => 1);
+
+  print $script_fh <<'SH';
+  set -euo pipefail
+
+  _FRESH_RCFILE="$1"
+  _FRESH_CALLBACK="$2"
+
+  fresh() {
+    true
+  }
+
+  fresh-options() {
+    true
+  }
+
+  if [ -e "$_FRESH_RCFILE" ]; then
+    source "$_FRESH_RCFILE" &> /dev/null
+  fi
+
+  if declare -f "fresh_$_FRESH_CALLBACK" > /dev/null; then
+    eval "fresh_$_FRESH_CALLBACK"
+  fi
+SH
+  close $script_fh;
+
+  system('bash', $script_filename, $FRESH_RCFILE, $callback) == 0 or croak 'callback failed';
+
+  unlink $script_filename;
+}
+
+sub append {
+  my ($filename, $data) = @_;
+  make_path(dirname($filename));
+  open(my $fh, '>>', $filename) or croak "$!: $filename";
+  print $fh $data;
+  close $fh;
+}
+
+sub print_and_append {
+  my ($filename, $data) = @_;
+  print $data;
+  append $filename, $data;
+}
+
+sub readfile {
+  my ($filename) = @_;
+  if (open(my $fh, $filename)) {
+    local $/ = undef;
+    my $data = <$fh>;
+    close $fh;
+    return $data;
+  }
+}
+
+sub read_file_line {
+  my ($filename, $line_no) = @_;
+  if (open(my $fh, $filename)) {
+    my $line;
+    while (<$fh>) {
+      if ($. == $line_no) {
+        $line = $_;
+        last;
+      }
+    }
+    close $fh;
+    return $line;
+  }
+}
+
+sub read_cmd {
+  my @args = @_;
+
+  open(my $fh, '-|', @args) or croak "$!: @args";
+  local $/ = undef;
+  my $output = <$fh>;
+  close($fh);
+  $? == 0 or exit 1;
+
+  return $output;
+}
+
+sub read_cwd_cmd {
+  my $cwd = shift;
+  my @args = @_;
+
+  $cwd =~ s/(?!^)\/+$//;
+  my $old_cwd = getcwd();
+  chdir($cwd) or croak "$!: $cwd";
+
+  open(my $fh, '-|', @args) or croak "$!: @args";
+  local $/ = undef;
+  my $output = <$fh>;
+  close($fh);
+  $? == 0 or exit 1;
+
+  chdir($old_cwd) or croak "$!: $old_cwd";
+
+  return $output;
+}
+
+sub read_cwd_cmd_no_check_exit {
+  my $cwd = shift;
+  my @args = @_;
+
+  $cwd =~ s/(?!^)\/+$//;
+  my $old_cwd = getcwd();
+  chdir($cwd) or croak "$!: $cwd";
+
+  open(my $fh, '-|', @args) or croak "$!: @args";
+  local $/ = undef;
+  my $output = <$fh>;
+  close($fh);
+
+  chdir($old_cwd) or croak "$!: $old_cwd";
+
+  return $output;
+}
+
+sub format_url {
+  my ($url) = @_;
+  "\033[4;34m$url\033[0m"
+}
+
+sub note {
+  my ($msg) = @_;
+
+  print "\033[1;33mNote\033[0m: $msg\n";
+}
+
+sub entry_note {
+  my ($entry, $msg, $desc) = @_;
+
+  my $content = read_file_line($$entry{file}, $$entry{line});
+
+  print STDOUT <<EOF;
+\033[1;33mNote\033[0m: $msg
+$$entry{file}:$$entry{line}: $content
+$desc
+EOF
+}
+
+sub entry_error {
+  my ($entry, $msg, $options) = @_;
+
+  my $content = read_file_line($$entry{file}, $$entry{line});
+  chomp($content);
+
+  my $file = $$entry{file};
+  $file =~ s{^\Q$ENV{HOME}\E}{~};
+
+  print STDERR <<EOF;
+\033[4;31mError\033[0m: $msg
+$file:$$entry{line}: $content
+EOF
+  if (!$$options{skip_info}) {
+    print STDERR <<EOF;
+
+You may need to run `fresh update` if you're adding a new line,
+or the file you're referencing may have moved or been deleted.
+EOF
+  }
+  if ($$entry{repo}) {
+    my $url = repo_url($$entry{repo});
+    my $formatted_url = format_url($url);
+    print STDERR "Have a look at the repo: <$formatted_url>\n";
+  }
+  exit 1;
+}
+
+sub fatal_error {
+  my ($msg, $content) = @_;
+  $content ||= "";
+  chomp($msg);
+  print STDERR "\033[4;31mError\033[0m: $msg\n$content";
+  exit 1;
+}
+
+sub glob_filter {
+  my $glob = shift;
+  my @paths = @_;
+
+  my ($script_fh, $script_filename) = tempfile('fresh.XXXXXX', TMPDIR => 1, UNLINK => 1);
+  my ($output_fh, $output_filename) = tempfile('fresh.XXXXXX', TMPDIR => 1, UNLINK => 1);
+
+  print $script_fh <<'SH';
+  set -euo pipefail
+  IFS=$'\n'
+
+  GLOB="$1"
+  OUTPUT_FILE="$2"
+
+  while read LINE; do
+    if [[ "$LINE" == $GLOB ]]; then
+      if ! echo "${LINE#$GLOB}" | grep -q /; then
+        echo "$LINE"
+      fi
+    fi
+  done > "$OUTPUT_FILE"
+SH
+
+  close $script_fh;
+
+  open(my $input_fh, '|-', 'bash', $script_filename, $glob, $output_filename) or croak "$!";
+
+  foreach my $path (@paths) {
+    print $input_fh "$path\n";
+  }
+
+  close $input_fh;
+  $? == 0 or croak 'filter call failed';
+
+  my @matches;
+
+  while (my $line = <$output_fh>) {
+    chomp($line);
+    if (basename($line) !~ /^\./ || basename($glob) =~ /^\./) {
+      push(@matches, $line);
+    }
+  }
+
+  close $output_fh;
+
+  unlink $script_filename;
+  unlink $output_filename;
+
+  return @matches;
+}
+
+sub prefix_filter {
+  my $prefix = shift;
+  my @paths = @_;
+  my @matches;
+
+  foreach my $path (@paths) {
+    if (substr($path, 0, length($prefix)) eq $prefix) {
+      push(@matches, $path);
+    }
+  }
+
+  @matches;
+}
+
+sub remove_prefix {
+  my ($str, $prefix) = @_;
+  if (substr($str, 0, length($prefix)) eq $prefix) {
+    $str = substr($str, length($prefix));
+  }
+  return $str;
+}
+
+sub prefix_match {
+  my ($str, $prefix) = @_;
+  substr($str, 0, length($prefix)) eq $prefix;
+}
+
+sub make_entry_link {
+  my ($entry, $link_path, $link_target) = @_;
+  my $existing_target = readlink($link_path);
+
+  if (is_relative_path($link_path)) {
+    if ($link_path =~ /^\.\./) {
+      entry_error $entry, "Relative paths must be inside build dir.";
+    }
+    return
+  }
+
+  if (defined($existing_target)) {
+    if ($existing_target ne $link_target) {
+      if (prefix_match($existing_target, "$FRESH_PATH/build/") && -l $link_path) {
+        unlink($link_path);
+        symlink($link_target, $link_path);
+      } else {
+        entry_error $entry, "$link_path already exists (pointing to $existing_target).";
+      }
+    }
+  } elsif (-e $link_path) {
+    entry_error $entry, "$link_path already exists.", {skip_info => 1};
+  } else {
+    make_path(dirname($link_path), {error => \my $err});
+    if (@$err || !symlink($link_target, $link_path)) {
+      entry_error $entry, "Could not create $link_path. Do you have permission?", {skip_info => 1};
+    }
+  }
+}
+
+sub is_relative_path {
+  my ($path) = @_;
+  $path !~ /^[~\/]/
+}
+
+sub repo_url {
+  my ($repo) = @_;
+  if ($repo =~ /:/) {
+    $repo
+  } else {
+    "https://github.com/$repo"
+  }
+}
+
+sub repo_name {
+  my ($repo) = @_;
+
+  if ($repo =~ /:/) {
+    $repo =~ s/^.*@//;
+    $repo =~ s/^.*:\/\///;
+    $repo =~ s/:/\//;
+    $repo =~ s/\.git$//;
+  }
+
+  if ($repo =~ /github.com\//) {
+    $repo =~ s/^github\.com\///;
+    $repo
+  } else {
+    my @parts = split(/\//, $repo);
+    my $end = join('-', @parts[1..$#parts]);
+    "$parts[0]/$end"
+  }
+}
+
+sub repo_name_from_source_path {
+  my ($path) = @_;
+  my @parts = split(/\//, $path);
+  join('/', @parts[-2..-1]);
+}
+
+sub get_entry_prefix {
+  my ($entry) = @_;
+
+  my $prefix;
+  if ($$entry{repo}) {
+    if (-d "$FRESH_LOCAL/.git" && $FRESH_NO_LOCAL_CHECK) {
+      my $old_cwd = getcwd();
+      chdir($FRESH_LOCAL) or croak "$!: $FRESH_LOCAL";
+      my $upstream_branch = `git rev-parse --abbrev-ref --symbolic-full-name \@{u} 2> /dev/null`;
+      chdir($old_cwd) or croak "$!: $old_cwd";
+
+      my @parts = split(/\//, $upstream_branch);
+      my $upstream_remote = $parts[0];
+
+      if (defined($upstream_remote)) {
+        my $local_repo_url = read_cwd_cmd($FRESH_LOCAL, "git", "config", "--get", "remote.$upstream_remote.url");
+        chomp($local_repo_url);
+
+        my $local_repo_name = repo_name($local_repo_url);
+        my $source_repo_name = repo_name($$entry{repo});
+
+        if ($local_repo_name eq $source_repo_name) {
+          entry_note $entry, "You seem to be sourcing your local files remotely.", <<EOF;
+You can remove "$$entry{repo}" when sourcing from your local dotfiles repo (${FRESH_LOCAL}).
+Use `fresh file` instead of `fresh $$entry{repo} file`.
+
+To disable this warning, add `FRESH_NO_LOCAL_CHECK=true` in your freshrc file.
+EOF
+          $FRESH_NO_LOCAL_CHECK = 0;
+        }
+      }
+    }
+
+    my $repo_name = repo_name($$entry{repo});
+    my $repo_dir = "$FRESH_PATH/source/$repo_name";
+
+    if (! -d $repo_dir) {
+      make_path dirname($repo_dir);
+      system('git', 'clone', repo_url($$entry{repo}), $repo_dir) == 0 or croak 'git clone failed';
+    }
+
+    $prefix = "$repo_dir/";
+  } else {
+    if ($$entry{name} eq ".") {
+      fatal_error("Cannot source whole of local dotfiles.");
+    }
+
+    $prefix = "$FRESH_LOCAL/";
+  }
+
+  return $prefix;
+}
+
+sub get_entry_paths {
+  my ($entry, $prefix) = @_;
+
+  my @paths;
+
+  my $is_dir_target = defined($$entry{options}{file}) && $$entry{options}{file} =~ /\/$/;
+  my $is_external_target = defined($$entry{options}{file}) && $$entry{options}{file} =~ /^[\/~]/;
+
+  my $full_entry_name = "$prefix$$entry{name}";
+  my $base_entry_name = dirname($full_entry_name);
+
+  if ($$entry{options}{ref}) {
+    $base_entry_name = dirname($$entry{name});
+    @paths = split(/\n/, read_cwd_cmd($prefix, 'git', 'ls-tree', '-r', '--name-only', $$entry{options}{ref}));
+    if ($is_dir_target) {
+      if ($$entry{name} ne ".") {
+        @paths = prefix_filter("$$entry{name}/", @paths);
+      }
+    } else {
+      @paths = glob_filter("$$entry{name}", @paths);
+    }
+  } elsif ($is_dir_target) {
+    my $wanted = sub {
+      if ($$entry{name} eq ".") {
+        if (!prefix_match($_, "$full_entry_name/.git")) {
+          push @paths, $_;
+        }
+      } else {
+        push @paths, $_;
+      }
+    };
+    find({wanted => $wanted, no_chdir => 1}, $full_entry_name);
+  } else {
+    @paths = bsd_glob($full_entry_name);
+  }
+
+  my $fresh_order_data;
+  if ($$entry{options}{ref}) {
+    if ($$entry{name} =~ /\*/) {
+      my $dir = dirname($$entry{name});
+      $fresh_order_data = read_cwd_cmd($prefix, 'git', 'show', "$$entry{options}{ref}:$dir/.fresh-order");
+    }
+  } else {
+    $fresh_order_data = readfile($base_entry_name . '/.fresh-order');
+  }
+
+  @paths = sort @paths;
+
+  if ($fresh_order_data) {
+    my @order_lines = map { "$base_entry_name/$_" } split(/\n/, $fresh_order_data);
+    my $path_index = sub {
+      my ($path) = @_;
+      my ($index) = grep { $order_lines[$_] eq $path } 0..$#order_lines;
+      $index = 1e6 unless defined($index);
+      $index;
+    };
+    @paths = sort {
+      $path_index->($a) <=> $path_index->($b);
+    } @paths;
+  }
+
+  @paths = grep { basename($_) ne '.fresh-order' } @paths;
+
+  return @paths;
+}
+
+sub marker {
+  my ($entry, $name) = @_;
+  my $marker;
+
+  if (!defined($$entry{options}{file}) && !defined($$entry{options}{bin})) {
+    $marker = '#';
+  }
+
+  if (defined($$entry{options}{marker})) {
+    $marker = $$entry{options}{marker} || '#';
+  }
+
+  if (defined($marker)) {
+    $marker .= " fresh:";
+    if ($$entry{repo}) {
+      $marker .= " $$entry{repo}";
+    }
+    $marker .= " $name";
+    if ($$entry{options}{ref}) {
+      $marker .= " @ $$entry{options}{ref}";
+    }
+    my $filter = $$entry{options}{filter};
+    if ($filter) {
+      $marker .= " # $filter";
+    }
+  }
+
+  return $marker;
+}
+
+sub file_contents {
+  my ($entry, $prefix, $path) = @_;
+  my $data;
+
+  if ($$entry{options}{ref}) {
+    $data = read_cwd_cmd($prefix, 'git', 'show', "$$entry{options}{ref}:$path");
+  } else {
+    $data = readfile($path);
+  }
+
+  if (defined $data) {
+    my $filter = $$entry{options}{filter};
+    if ($filter) {
+      $data = apply_filter($data, $filter);
+    }
+  }
+
+  return $data;
+}
+
+sub fresh_install {
+  umask 0077;
+  remove_tree "$FRESH_PATH/build.new";
+  make_path "$FRESH_PATH/build.new";
+
+  my @entries = read_freshrc();
+
+  if (!defined($FRESH_NO_PATH_EXPORT)) {
+    my $bin_path = '$HOME/bin';
+    if ($entries[0] && $entries[0]{env}{FRESH_BIN_PATH}) {
+      $bin_path = $entries[0]{env}{FRESH_BIN_PATH};
+      $bin_path =~ s{^\Q$ENV{HOME}\E}{\$HOME};
+    }
+    append "$FRESH_PATH/build.new/shell.sh", '__FRESH_BIN_PATH__='.$bin_path.'; [[ ! $PATH =~ (^|:)$__FRESH_BIN_PATH__(:|$) ]] && export PATH="$__FRESH_BIN_PATH__:$PATH"; unset __FRESH_BIN_PATH__' . "\n";
+  }
+  append "$FRESH_PATH/build.new/shell.sh", "export FRESH_PATH=\"$FRESH_PATH\"\n";
+
+  for my $entry (@entries) {
+    my $prefix = get_entry_prefix($entry);
+
+    my @paths = get_entry_paths($entry, $prefix);
+
+    my $is_dir_target = defined($$entry{options}{file}) && $$entry{options}{file} =~ /\/$/;
+    my $is_external_target = defined($$entry{options}{file}) && $$entry{options}{file} =~ /^[\/~]/;
+
+    my $matched = 0;
+
+    for my $path (@paths) {
+      my $name = remove_prefix($path, $prefix);
+
+      my ($build_name, $link_path);
+
+      if (defined($$entry{options}{file})) {
+        $link_path = $$entry{options}{file} || '~/.' . (basename($name) =~ s/^\.//r);
+        $link_path =~ s{^~/}{$ENV{HOME}/};
+        $build_name = remove_prefix($link_path, $ENV{HOME}) =~ s/^\///r =~ s/^\.//r;
+        if ($is_external_target) {
+          $build_name = $build_name =~ s/(?<!^~)[\/ ()]+/-/gr =~ s/-$//r;
+        }
+        if ($is_dir_target) {
+          if ($$entry{name} eq ".") {
+            $build_name .= "/";
+          }
+          $build_name .= remove_prefix($name, $$entry{name});
+        }
+      } elsif (defined($$entry{options}{bin})) {
+        my $bin_path = $$entry{env}{FRESH_BIN_PATH} || '~/bin';
+        $link_path = $$entry{options}{bin} || $bin_path . '/' . basename($name);
+        $link_path =~ s{^~/}{$ENV{HOME}/};
+        if ($link_path !~ /^\//) {
+          entry_error $entry, '--bin file paths cannot be relative.';
+        }
+        $build_name = 'bin/' . basename($link_path);
+      } else {
+        $build_name = "shell.sh";
+      }
+
+      my $build_target = "$FRESH_PATH/build.new/$build_name";
+      my $data = file_contents($entry, $prefix, $path);
+
+      if (defined $data) {
+        $matched = 1;
+
+        if (!defined($$entry{env}{FRESH_NO_BIN_CONFLICT_CHECK}) || $$entry{env}{FRESH_NO_BIN_CONFLICT_CHECK} ne 'true') {
+          if (defined($$entry{options}{bin}) && -e $build_target) {
+            entry_note $entry, "Multiple sources concatenated into a single bin file.", <<EOF;
+Typically bin files should not be concatenated together into one file.
+"$build_name" may not function as expected.
+
+To disable this warning, add `FRESH_NO_BIN_CONFLICT_CHECK=true` in your freshrc file.
+EOF
+          }
+        }
+
+        my $marker = marker($entry, $name);
+        if (defined($marker)) {
+          append $build_target, "\n" if -e $build_target;
+          append $build_target, "$marker\n\n"
+        }
+        append $build_target, $data;
+
+        if (defined($$entry{options}{bin})) {
+          chmod 0700, $build_target;
+        }
+
+        if (defined($link_path) && !$is_dir_target) {
+          make_entry_link($entry, $link_path, "$FRESH_PATH/build/$build_name");
+        }
+      }
+    }
+    unless ($matched) {
+      unless ($$entry{options}{'ignore-missing'}) {
+        entry_error $entry, "Could not find \"$$entry{name}\" source file.";
+      }
+    }
+
+    if ($is_dir_target && $is_external_target) {
+      my $link_path = $$entry{options}{file} =~ s{^~/}{$ENV{HOME}/}r =~ s{/$}{}r;
+      my $build_name = $$entry{options}{file} =~ s/(?<!^~)[\/ ()]+/-/gr =~ s/-$//r;
+      $build_name = remove_prefix($build_name =~ s{^~/}{$ENV{HOME}/}r, $ENV{HOME}) =~ s/^\///r =~ s/^\.//r;
+      make_entry_link($entry, $link_path, "$FRESH_PATH/build/$build_name");
+    }
+  }
+
+  if (!defined($ENV{FRESH_NO_BIN_CHECK}) && !(-x "$FRESH_PATH/build.new/bin/fresh")) {
+    fatal_error <<EOF;
+It looks you do not have fresh in your freshrc file. This could result
+in difficulties running `fresh` later. You probably want to add a line like
+the following using `fresh edit`:
 
   fresh freshshell/fresh bin/fresh --bin
 
-To disable this error, add \`FRESH_NO_BIN_CHECK=true\` in your freshrc file."
-  fi
-
-  # output files should be read-only
-  find "$FRESH_PATH/build.new" -type f -exec chmod -w {} \;
-
-  # clean up any leftovers from previous runs
-  rm -rf "$FRESH_PATH/build.old"
-  rm -f "$FRESH_PATH/.tmp.old-bin"
-
-  # make room for the new build
-  if [[ -e "$FRESH_PATH/build" ]]; then
-    # move the running fresh binary to a safe place
-    # (Windows doesn't let us rename dirs with open files)
-    if [[ -e "$FRESH_PATH/build/bin/fresh" ]]; then
-      mv -f "$FRESH_PATH/build/bin/fresh" "$FRESH_PATH/.tmp.old-bin"
-    fi
-
-    # move the old build dir out of the way
-    mv "$FRESH_PATH/build" "$FRESH_PATH/build.old"
-
-    # keep the old build dir in a usable state until the new one is in place
-    if [[ -e "$FRESH_PATH/build.old/bin/fresh" ]]; then
-      mv -f "$FRESH_PATH/.tmp.old-bin" "$FRESH_PATH/build.old/bin/fresh"
-    fi
-  fi
-
-  # move the new build into place
-  mv "$FRESH_PATH/build.new" "$FRESH_PATH/build"
-
-  # remove the old still running fresh binary
-  # (we do this outside the build dir to avoid NFS unlink files getting in the way)
-  if [[ -e "$FRESH_PATH/build.old/bin/fresh" ]]; then
-    mv -f "$FRESH_PATH/build.old/bin/fresh" "$FRESH_PATH/.tmp.old-bin"
-    rm -f "$FRESH_PATH/.tmp.old-bin"
-  fi
-
-  # remove the old build dir
-  rm -rf "$FRESH_PATH/build.old"
-
-  fresh_after_build
-
-  # success!
-  echo $'Your dot files are now \033[1;32mfresh\033[0m.'
-}
-
-# placeholder method that can be overridden in your freshrc
-fresh_after_build() {
-  true
-}
-
-_fresh_preamble() {
-  if [ -z "${__FRESH_PREAMBLE_DONE__:-}" ]; then
-    if [ -z "${FRESH_NO_PATH_EXPORT:-}" ]; then
-      echo "__FRESH_BIN_PATH__="${FRESH_BIN_PATH/#$HOME/\$HOME}"; [[ ! \$PATH =~ (^|:)\$__FRESH_BIN_PATH__(:|\$) ]] && export PATH=\"\$__FRESH_BIN_PATH__:\$PATH\"; unset __FRESH_BIN_PATH__" >> "$FRESH_PATH/build.new/shell.sh"
-    fi
-    echo "export FRESH_PATH=\"$FRESH_PATH\"" >> "$FRESH_PATH/build.new/shell.sh"
-    __FRESH_PREAMBLE_DONE__=1
-  fi
-}
-
-_dsl_install_fresh() {
-  _set_dsl_caller
-  _parse_fresh_dsl_args "$@"
-
-  _fresh_preamble
-
-  _prepare_file_source
-
-  case "${MODE:-shell}" in
-    shell)
-      _fresh_shell
-      ;;
-    file)
-      _fresh_file
-      ;;
-    bin)
-      _fresh_bin
-      ;;
-    *)
-      _fatal_error "Unknown mode: $MODE"
-      ;;
-  esac
-}
-
-_repo_url() {
-  local REPO_NAME="$1"
-  if echo "$REPO_NAME" | grep -q :; then
-    echo "$REPO_NAME"
-  else
-    echo "https://github.com/$REPO_NAME"
-  fi
-}
-
-_repo_name() {
-  local REPO_NAME="$1"
-  if echo "$REPO_NAME" | grep -q :; then
-    REPO_NAME="$(echo "$REPO_NAME" | sed -e 's#^.*@##' -e 's#^.*://##' -e 's#:#/#' -e 's/\.git$//')"
-  fi
-  if [[ "$REPO_NAME" == github.com/* ]]; then
-    REPO_NAME="$(echo "$REPO_NAME" | sed 's#^github\.com/##')"
-  else
-    REPO_NAME="$(echo "$REPO_NAME" | cut -d/ -f1)/$(echo "$REPO_NAME" | cut -d/ -f2- | tr / -)"
-  fi
-  echo "$REPO_NAME"
-}
-
-_prepare_file_source() {
-  # clone or update source repo
-  if [ -n "$REPO_NAME" ]; then
-    if [ -d "$FRESH_LOCAL/.git" ] && [ -z "${FRESH_NO_LOCAL_CHECK:-}" ]; then
-      if [ -z "${LOCAL_REPO_URL:-}" ]; then
-        local UPSTREAM_BRANCH="$(cd "$FRESH_LOCAL" && git rev-parse --abbrev-ref --symbolic-full-name @{u} 2> /dev/null)"
-        local UPSTREAM_REMOTE="$(echo "$UPSTREAM_BRANCH" | cut -d/ -f1)"
-        if [ -n "$UPSTREAM_REMOTE" ]; then
-          LOCAL_REPO_URL="$(cd "$FRESH_LOCAL" && git config --get remote.$UPSTREAM_REMOTE.url)"
-        else
-          LOCAL_REPO_URL=
-        fi
-      fi
-      LOCAL_REPO_NAME="$(_repo_name "$LOCAL_REPO_URL")"
-      SOURCE_REPO_NAME="$(_repo_name "$REPO_NAME")"
-
-      if [[ "$LOCAL_REPO_NAME" == "$SOURCE_REPO_NAME" ]]; then
-        _note "You seem to be sourcing your local files remotely."
-        cat <<EOF
-$(_rc_file_line_reference)
-
-You can remove "$REPO_NAME" when sourcing from your local dotfiles repo (${FRESH_LOCAL/#$HOME/~}).
-Use \`fresh file\` instead of \`fresh $REPO_NAME file\`.
-
-To disable this warning, add \`FRESH_NO_LOCAL_CHECK=true\` in your freshrc file.
-
+To disable this error, add `FRESH_NO_BIN_CHECK=true` in your freshrc file.
 EOF
-        FRESH_NO_LOCAL_CHECK=1
-      fi
-    fi
+  }
 
-    local REPO_DIR="$FRESH_PATH/source/$(_repo_name "$REPO_NAME")"
-    mkdir -p "$(dirname "$REPO_DIR")"
-    if ! [ -e "$REPO_DIR" ]; then
-      git clone "$(_repo_url "$REPO_NAME")" "$REPO_DIR"
-    fi
-    SOURCE_DIR="$REPO_DIR"
-  else
-    SOURCE_DIR="$FRESH_LOCAL"
-    if [[ "$FILE_NAME" == '.' ]]; then
-      _fatal_error "Cannot source whole of local dotfiles."
-    fi
-  fi
+  system(qw(find), "$FRESH_PATH/build.new", qw(-type f -exec chmod -w {} ;)) == 0 or croak 'chmod failed';
 
-  # check the source file exists
-  if [[ $(find "$SOURCE_DIR" -path "$SOURCE_DIR/$FILE_NAME" | wc -l) -lt 1 ]]; then
-    # but not if we are locking to a git ref
-    # since we would be checking the working tree
-    if [[ ! -n "$REF" ]] && [[ "$FILE_NAME" != '.' ]] && [[ -z "$IGNORE_MISSING" ]]; then
-      _fatal_error "Could not find \"$FILE_NAME\" source file."
-    fi
-  fi
+  remove_tree "$FRESH_PATH/build.old";
+  rename "$FRESH_PATH/build", "$FRESH_PATH/build.old";
+  rename "$FRESH_PATH/build.new", "$FRESH_PATH/build";
+  remove_tree "$FRESH_PATH/build.old";
+
+  run_callback('after_build');
+
+  print "Your dot files are now \033[1;32mfresh\033[0m.\n"
 }
 
-_file_list() {
-  if [[ "$FILE_NAME" == '.' ]]; then
-    if [[ "$MODE" != file ]]; then
-      _fatal_error "Whole repositories can only be sourced in file mode."
-    fi
-    if [[ "$MODE_ARG" != */ ]]; then
-      _fatal_error "Whole repositories require destination to be a directory."
-    fi
-  fi
-  if [[ -n "$REF" ]]; then
-    cd "$SOURCE_DIR"
-    local MATCHED=0
-    local TEMP_ORDER_FILE="$(mktemp "${TMPDIR:-/tmp}/fresh.XXXXXX")"
-    if [[ "$FILE_NAME" == *\** ]]; then
-      (git show "$REF:$(dirname "$FILE_NAME")/.fresh-order") > "$TEMP_ORDER_FILE"
-    fi
-    while read FILE_PATH; do
-      if [[ "$FILE_NAME" == '.' ]]; then
-        echo "$FILE_PATH"
-        MATCHED=1
-      else
-        if [[ "$FILE_PATH" == $FILE_NAME ]]; then
-          if ! echo "${FILE_PATH#$FILE_NAME}" | grep -q /; then
-            if [[ "$(basename "$FILE_PATH")" != .* ]] || [[ "$(basename "$FILE_NAME")" == .* ]]; then
-              echo "$FILE_PATH"
-              MATCHED=1
-            fi
-          fi
-        fi
-        if _prefix_match "$FILE_PATH" "$FILE_NAME/"; then
-          echo "$FILE_PATH"
-          MATCHED=1
-        fi
-      fi
-    done < <(git ls-tree -r --name-only "$REF" | _file_list_sort "$(dirname "$FILE_NAME")" "$TEMP_ORDER_FILE")
-    rm "$TEMP_ORDER_FILE"
-    cd "$OLDPWD"
-    if [[ "$MATCHED" == 0 ]] && [[ -z "$IGNORE_MISSING" ]]; then
-      _fatal_error "Could not find \"$FILE_NAME\" source file."
-    fi
-  else
-    if [[ "$FILE_NAME" == '.' ]]; then
-      find "$SOURCE_DIR" -type f -not -path "$SOURCE_DIR/.git/*" | sort
-    else
-      local path_glob="$SOURCE_DIR/$FILE_NAME"
-      if basename "$FILE_NAME" | grep -q '^\.'; then
-        local not_name_glob=''
-      else
-        local not_name_glob='.*'
-      fi
-      if [[ -d $path_glob ]]; then
-        find "$path_glob" -type f -not -name "$not_name_glob"
-      else
-        find "$SOURCE_DIR" -path "$path_glob" -not -name "$not_name_glob" -type f | while read FILE_PATH; do
-          if ! echo "${FILE_PATH#$path_glob}" | grep -q /; then
-            echo "$FILE_PATH"
-          fi
-        done | _file_list_sort "$(dirname "$path_glob")" "$(dirname "$path_glob")/.fresh-order"
-      fi
-    fi
-  fi
+sub latest_binary_content {
+  for my $entry (read_freshrc()) {
+    my $prefix = get_entry_prefix($entry);
+    my @paths = get_entry_paths($entry, $prefix);
+
+    foreach my $path (@paths) {
+      if (defined($$entry{options}{bin}) && basename($path) eq "fresh") {
+        return file_contents($entry, $prefix, $path);
+      }
+    }
+  }
 }
 
-_file_list_sort() {
-  local PREFIX="$1"
-  local ORDER_FILE="$2"
-
-  if [[ -s "$ORDER_FILE" ]]; then
-    local TEMP_PATHS_FILE="$(mktemp "${TMPDIR:-/tmp}/fresh.XXXXXX")"
-    cat > "$TEMP_PATHS_FILE"
-
-    local TEMP_ORDER_FILE="$(mktemp "${TMPDIR:-/tmp}/fresh.XXXXXX")"
-    cat "$ORDER_FILE" | while read NAME; do
-      echo "$PREFIX/$NAME" >> "$TEMP_ORDER_FILE"
-    done
-
-    (grep -xFf "$TEMP_PATHS_FILE" "$TEMP_ORDER_FILE" || true)
-    (grep -vxFf "$TEMP_ORDER_FILE" "$TEMP_PATHS_FILE" || true) | sort
-
-    rm "$TEMP_PATHS_FILE" "$TEMP_ORDER_FILE"
-  else
-    sort
-  fi | (grep -v '\.fresh-order$' || true)
+sub fresh_install_with_latest_binary {
+  if (my $content = latest_binary_content()) {
+    my ($fresh_bin_fh, $fresh_bin_filename) = tempfile('fresh.XXXXXX', TMPDIR => 1, UNLINK => 1);
+    print $fresh_bin_fh $content;
+    close $fresh_bin_fh;
+    chmod 0700, $fresh_bin_filename;
+    system($fresh_bin_filename);
+    unlink $fresh_bin_filename;
+  } else {
+    fresh_install;
+  }
 }
 
-_source_file_contents() {
-  if [[ -n "$REF" ]]; then
-    cd "$SOURCE_DIR"
-    if [[ -n "$FILTER" ]]; then
-      git show "$REF:$SOURCE_FILE" | eval "$FILTER"
-    else
-      git show "$REF:$SOURCE_FILE"
-    fi
-    cd "$OLDPWD"
-  else
-    if [[ -n "$FILTER" ]]; then
-      cat "$SOURCE_FILE" | eval "$FILTER"
-    else
-      cat "$SOURCE_FILE"
-    fi
-  fi
+sub update_repo {
+  my ($path, $repo_display_name, $log_file) = @_;
+
+  print_and_append $log_file, "* Updating $repo_display_name\n";
+  my $git_log = read_cwd_cmd_no_check_exit($path, 'git', 'pull', '--rebase');
+
+  (my $pretty_git_log = $git_log) =~ s/^/| /gm;
+  print_and_append $log_file, "$pretty_git_log";
+
+  if ($git_log =~ /^From .*(:\/\/github.com\/|git\@github.com:)(.*)/) {
+    my $repo_name = $2;
+    $git_log =~ /^ {2,}([0-9a-f]{7,})\.\.([0-9a-f]{7,}) /gm;
+    if (defined($1) && defined($2)) {
+      my $compare_url =  format_url("https://github.com/$repo_name/compare/$1...$2");
+      print_and_append $log_file, "| <$compare_url>\n";
+    }
+  }
+
+  $? == 0 or exit(1);
 }
 
-_source_file_url() {
-  if [[ -n "$REPO_NAME" ]]; then
-    if echo "$REPO_NAME" | grep -q :; then
-      echo "$(_repo_url "$REPO_NAME")"
-    elif [[ -n "$REF" ]]; then
-      _github_blob_url "$REPO_NAME" "$REF" "$SOURCE_FILE"
-    else
-      local file="${SOURCE_FILE#$SOURCE_DIR/}"
-      cd "$SOURCE_DIR"
-      local ref="$(git log --pretty="%H" -n 1 -- "$file")"
-      cd "$OLDPWD"
-      _github_blob_url "$REPO_NAME" "$ref" "$file"
-    fi
-  else
-    echo "$SOURCE_FILE"
-  fi
-}
-
-_github_blob_url() {
-  local REPO_NAME="$1"
-  local REF="$2"
-  local BLOB_PATH="$3"
-  echo "https://github.com/$REPO_NAME/blob/$REF/$BLOB_PATH"
-}
-
-_file_marker() {
-  echo -n "$MARKER fresh:"
-  if [[ -n "$REPO_NAME" ]]; then
-    echo -n " $REPO_NAME"
-  fi
-  echo -n " ${SOURCE_FILE#$SOURCE_DIR/}"
-  if [[ -n "$REF" ]]; then
-    echo -n " @ $REF"
-  fi
-  if [[ -n "$FILTER" ]]; then
-    echo -n " # $FILTER"
-  fi
-  echo
-}
-
-_fresh_shell() {
-  _file_list | while read SOURCE_FILE
-  do
-    echo >> "$FRESH_PATH/build.new/shell.sh"
-    MARKER='#' _file_marker >> "$FRESH_PATH/build.new/shell.sh"
-    echo >> "$FRESH_PATH/build.new/shell.sh"
-    _source_file_contents >> "$FRESH_PATH/build.new/shell.sh"
-  done
-}
-
-_fresh_clean_path() {
-  sed -e 's/^~\///' -e 's/\/$//' -e 's/[/ ()]/-/g' -e 's/--*/-/g' -e 's/-$//' -e 's/^\.//'
-}
-
-_fresh_file() {
-  _file_list | while read SOURCE_FILE
-  do
-    if [ -n "$MODE_ARG" ]; then
-      if echo "$MODE_ARG" | grep -q '/$'; then
-        if [[ "$FILE_NAME" == '.' ]]; then
-          local base_path=
-        else
-          local base_path="$FILE_NAME/"
-        fi
-        if [[ -z "$REF" ]]; then
-          local base_path="$SOURCE_DIR/$base_path"
-        fi
-        if echo "$MODE_ARG" | grep -q '^[~/]'; then
-          local dest_dir="$(echo "$MODE_ARG" | _fresh_clean_path)"
-          DEST_NAME="$dest_dir/${SOURCE_FILE#$base_path}"
-          SYMLINK_SOURCE="$dest_dir"
-          SYMLINK_PATH="${MODE_ARG/%\//}"
-        else
-          DEST_NAME="$MODE_ARG${SOURCE_FILE#$base_path}"
-          SYMLINK_SOURCE=""
-          SYMLINK_PATH=""
-        fi
-      elif echo "$MODE_ARG" | grep -q '^[~/]'; then
-        DEST_NAME="$(echo "$MODE_ARG" | _fresh_clean_path)"
-        SYMLINK_SOURCE="$DEST_NAME"
-        SYMLINK_PATH="$MODE_ARG"
-      else
-        if echo "$MODE_ARG" | grep -q '^\.\.'; then
-          _fatal_error "Relative paths must be inside build dir."
-        fi
-        DEST_NAME="$MODE_ARG"
-        SYMLINK_SOURCE=""
-        SYMLINK_PATH=""
-      fi
-    else
-      DEST_NAME="$(basename "$SOURCE_FILE" | sed 's/^\.//')"
-      SYMLINK_SOURCE="$DEST_NAME"
-      SYMLINK_PATH="~/.$DEST_NAME"
-    fi
-
-    _fresh_output
-    _fresh_symlink
-  done
-}
-
-_fresh_bin() {
-  _file_list | while read SOURCE_FILE
-  do
-    if [ -n "$MODE_ARG" ]; then
-      if echo "$MODE_ARG" | grep -q '^[~/]'; then
-        DEST_NAME="bin/$(basename "$MODE_ARG")"
-        SYMLINK_SOURCE="$DEST_NAME"
-        SYMLINK_PATH="$MODE_ARG"
-      else
-        _fatal_error "--bin file paths cannot be relative."
-      fi
-    else
-      DEST_NAME="bin/$(basename "$SOURCE_FILE")"
-      SYMLINK_SOURCE="$DEST_NAME"
-      SYMLINK_PATH="$FRESH_BIN_PATH/$(basename "$SOURCE_FILE")"
-    fi
-
-    _fresh_output
-    chmod +x "$FRESH_PATH/build.new/$DEST_NAME"
-    _fresh_symlink
-  done
-}
-
-_fresh_output() {
-  mkdir -p "$(dirname "$FRESH_PATH/build.new/$DEST_NAME")"
-
-  if [[ -n "$MARKER" ]]; then
-    if [[ -e "$FRESH_PATH/build.new/$DEST_NAME" ]]; then
-      echo >> "$FRESH_PATH/build.new/$DEST_NAME"
-    fi
-    _file_marker >> "$FRESH_PATH/build.new/$DEST_NAME"
-    echo >> "$FRESH_PATH/build.new/$DEST_NAME"
-  fi
-
-  if [[ -e "$FRESH_PATH/build.new/$DEST_NAME" && "$MODE" == "bin" && "${FRESH_NO_BIN_CONFLICT_CHECK:-}" != "true" ]]; then
-    _note "Multiple sources concatenated into a single bin file."
-    cat <<EOF
-$(_rc_file_line_reference)
-
-Typically bin files should not be concatenated together into one file.
-"$DEST_NAME" may not function as expected.
-
-To disable this warning, add \`FRESH_NO_BIN_CONFLICT_CHECK=true\` in your freshrc file.
-
-EOF
-  fi
-
-  _source_file_contents >> "$FRESH_PATH/build.new/$DEST_NAME"
-}
-
-_fresh_symlink() {
-  if [[ -n "$SYMLINK_SOURCE" ]] && [[ -n "$SYMLINK_PATH" ]]; then
-    SYMLINK_SOURCE="$FRESH_PATH/build/$SYMLINK_SOURCE"
-    SYMLINK_PATH="${SYMLINK_PATH/#~/$HOME}"
-    if ! [ -L "$SYMLINK_PATH" ]; then
-      if ! mkdir -p "$(dirname "$SYMLINK_PATH")" 2> /dev/null || ! ln -s "$SYMLINK_SOURCE" "$SYMLINK_PATH" 2> /dev/null; then
-        SKIP_INFO=1
-        if [[ -e "$SYMLINK_PATH" ]]; then
-          _fatal_error "$SYMLINK_PATH already exists."
-        else
-          _fatal_error "Could not create $SYMLINK_PATH. Do you have permission?"
-        fi
-      fi
-    else
-      if [[ "$(readlink "$SYMLINK_PATH")" != "$SYMLINK_SOURCE" ]]; then
-        if [[ "$(readlink "$SYMLINK_PATH")" == "$FRESH_PATH"/build/* ]]; then
-          ln -sf "$SYMLINK_SOURCE" "$SYMLINK_PATH"
-        else
-          _fatal_error "$SYMLINK_PATH already exists (pointing to $(readlink "$SYMLINK_PATH"))."
-        fi
-      fi
-    fi
-  fi
-}
-
-_run_dsl() {
-  # define DSL functions
-  eval "fresh() { _dsl_$1_fresh \"\$@\"; }"
-  eval "fresh-options() { _dsl_fresh_options \"\$@\"; }"
-
-  # load the freshrc file
-  if [ -e "$FRESH_RCFILE" ]; then
-    IN_RC_FILE=1
-    fresh-options # init defaults
-    source "$FRESH_RCFILE"
-    IN_RC_FILE=0
-  fi
-
-  # remove DSL functions
-  unset -f fresh
-  unset -f fresh-options
-}
-
-_dsl_fresh_options() {
-  _set_dsl_caller
-
-  DEFAULT_MODE=
-  DEFAULT_MODE_ARG=
-  DEFAULT_REF=
-  DEFAULT_MARKER=
-  DEFAULT_FILTER=
-  DEFAULT_IGNORE_MISSING=
-
-  if [[ $# -gt 0 ]]; then
-    # __FRESH_OPTIONS__ placeholder as _parse_fresh_dsl_args expects a filename
-    _parse_fresh_dsl_args __FRESH_OPTIONS__ "$@"
-
-    DEFAULT_MODE="$MODE"
-    DEFAULT_MODE_ARG="$MODE_ARG"
-    DEFAULT_REF="$REF"
-    DEFAULT_MARKER="$MARKER"
-    DEFAULT_FILTER="$FILTER"
-    DEFAULT_IGNORE_MISSING="$IGNORE_MISSING"
-  fi
-}
-
-
-_set_dsl_caller() {
-  read RC_LINE _ RC_FILE <<< "$(caller 2)"
-}
-
-_parse_fresh_dsl_args() {
-  MODE="$DEFAULT_MODE"
-  MODE_ARG="$DEFAULT_MODE_ARG"
-  REPO_NAME=""
-  FILE_NAME=""
-  REF="$DEFAULT_REF"
-  MARKER="$DEFAULT_MARKER"
-  FILTER="$DEFAULT_FILTER"
-  IGNORE_MISSING="$DEFAULT_IGNORE_MISSING"
-
-  while [ $# -gt 0 ]
-  do
-    case "$1" in
-      --file|--file=*|--bin|--bin=*)
-        if [ -n "$MODE" ]; then
-          _fatal_error "Cannot have more than one mode."
-        fi
-        MODE="$(echo "$1" | sed -e 's/^--//' -e 's/=.*//')"
-        MODE_ARG="$(echo "$1" | sed 's/^--[^=]*=*//')"
-        ;;
-      --ref)
-        _fatal_error "You must specify a Git reference."
-        ;;
-      --ref=*)
-        REF="$(echo "$1" | sed 's/^--[^=]*=*//')"
-        ;;
-      --marker|--marker=*)
-        if [[ "$MODE" != file ]]; then
-          _fatal_error "--marker is only valid with --file."
-        fi
-        if [[ "$1" == --marker ]]; then
-          MARKER='#'
-        else
-          MARKER="$(echo "$1" | sed 's/^--[^=]*=*//')"
-          if [[ -z "$MARKER" ]]; then
-            _fatal_error "Marker not specified."
-          fi
-        fi
-        ;;
-      --filter=*)
-        FILTER="$(echo "$1" | sed 's/^--[^=]*=*//')"
-        ;;
-      --filter)
-        _fatal_error "You must specify a filter program."
-        ;;
-      --ignore-missing)
-        IGNORE_MISSING="1"
-        ;;
-      -*)
-        REPO_NAME=
-        _fatal_error "Unknown option: $1"
-        ;;
-      *)
-        if [ -n "$FILE_NAME" ]; then
-          if [ -n "$REPO_NAME" ]; then
-            _fatal_error "Expected 1 or 2 args."
-          fi
-          REPO_NAME="$FILE_NAME"
-          FILE_NAME="$1"
-        else
-          FILE_NAME="$1"
-        fi
-        ;;
-    esac
-    shift
-  done
-  if [ -z "$FILE_NAME" ]; then
-    _fatal_error "Filename is required"
-  fi
-}
-
-_dsl_fresh_bin_fresh() {
-  _set_dsl_caller
-  _parse_fresh_dsl_args "$@"
-  if [[ "$MODE" == bin ]]; then
-    _prepare_file_source
-    _file_list | while read SOURCE_FILE; do
-      if [[ "$(basename "$SOURCE_FILE")" == fresh ]]; then
-        _source_file_contents >> "$BIN_FILE_NAME"
-      fi
-    done
-  fi
-}
-
-fresh_install_with_latest_binary() {
-  BIN_FILE_NAME="$(mktemp "${TMPDIR:-/tmp}/fresh.XXXXXXXX")"
-  trap '{ rm -f "$BIN_FILE_NAME"; }' EXIT
-  _run_dsl fresh_bin
-
-  if [[ -s "$BIN_FILE_NAME" ]]; then
-    chmod +x "$BIN_FILE_NAME"
-    "$BIN_FILE_NAME" install
-  else
-    fresh_install
-  fi
-}
-
-fresh_update() {
-  if [[ $# -gt 1 ]]; then
-    _fatal_error "Invalid arguments.
+sub fresh_update {
+  if (0 + @_ > 1) {
+    fatal_error "Invalid arguments.", <<EOF;
 
 usage: fresh update <filter>
 
-    The filter can be either a GitHub username or username/repo."
-  fi
+    The filter can be either a GitHub username or username/repo.
+EOF
+  }
 
-  mkdir -p "$FRESH_PATH/logs"
-  local LOG_FILE="$FRESH_PATH/logs/update-$(date +%Y-%m-%d-%H%M%S).log"
 
-  if [[ $# == 0 ]] || [[ "$1" == "--local" ]]; then
-    (
-      set -e
-      [[ -e "$FRESH_LOCAL/.git" ]] || exit 0
+  make_path "$FRESH_PATH/logs";
+  my $date = strftime('%Y-%m-%d-%H%M%S', localtime);
+  my $log_file = "$FRESH_PATH/logs/update-$date.log";
 
-      if ! (cd $FRESH_LOCAL && git rev-parse @{u} &> /dev/null); then
-        _note "Not updating $FRESH_LOCAL because the current branch is non-tracking."
-        if [[ "${1:-}" == "--local" ]]; then
-          exit 1
-        fi
-      else
-        if [[ -n "$(cd $FRESH_LOCAL && git status --porcelain)" ]]; then
-          _note "Not updating $FRESH_LOCAL because it has uncommitted changes."
-          if [[ "${1:-}" == "--local" ]]; then
-            exit 1
-          fi
-        else
-          _update_repo "$FRESH_LOCAL" "local files"
-        fi
-      fi
-    )
-    [[ $? == 0 ]] || exit 1
+  my ($filter) = @_;
 
-    if [[ "${1:-}" == "--local" ]]; then
-      return
-    fi
-  fi
+  if ((!defined($filter) || $filter eq "--local") && -d "$FRESH_LOCAL/.git") {
+    if (system("cd ${\quotemeta($FRESH_LOCAL)} && git rev-parse \@{u} > /dev/null 2> /dev/null") != 0) {
+      note "Not updating $FRESH_LOCAL because the current branch is non-tracking.";
+      if (defined($filter) && $filter eq "--local") { # missing coverage?
+        exit(1);
+      }
+    } else {
+      my $git_status = read_cwd_cmd($FRESH_LOCAL, 'git', 'status', '--porcelain');
 
-  local FILTER="${1:-}"
-  if [[ -z "$FILTER" ]]; then
-    FILTER="*"
-  elif ! echo "$FILTER" | grep -q /; then
-    FILTER="$FILTER/*"
-  fi
+      if ($git_status eq "") {
+        update_repo($FRESH_LOCAL, 'local files', $log_file);
+      } else {
+        note "Not updating $FRESH_LOCAL because it has uncommitted changes.";
+        if (defined($filter) && $filter eq "--local") {
+          exit(1);
+        }
+      }
+    }
+  }
 
-  local MATCHED=0
-  while read DIR; do
-    local DIR="$(dirname "$DIR")"
-    local REPO_NAME="$(_repo_name_from_source_path "$DIR")"
-    [[ "$REPO_NAME" == $FILTER ]] || continue
-    MATCHED=1
-    _update_repo "$DIR" "$REPO_NAME"
-  done < <(find $FRESH_PATH/source -type d -name '.git' | sort)
-  if [[ "$MATCHED" == 0 ]]; then
-    _fatal_error "No matching sources found."
-  fi
+  if (defined($filter) && $filter eq "--local") {
+    return;
+  }
+
+  if (-d "$FRESH_PATH/source") {
+    my @paths;
+    my $wanted = sub {
+      /\.git\z/ && push @paths, dirname($_);
+    };
+    find({wanted => $wanted, no_chdir => 1}, "$FRESH_PATH/source");
+    @paths = sort @paths;
+
+    if (defined($filter)) {
+      if ($filter =~ /\//) {
+        @paths = glob_filter("*$filter", @paths);
+      } else {
+        @paths = glob_filter("*$filter/*", @paths);
+      }
+    }
+
+    if (!@paths) {
+      fatal_error("No matching sources found.");
+    }
+
+    foreach my $path (@paths) {
+      my $repo_name = repo_name_from_source_path($path);
+      update_repo($path, $repo_name, $log_file);
+    }
+  }
 }
 
-_update_repo() {
-  local DIR="$1"
-  local DISPLAY_NAME="$2"
+sub fresh_search {
+  if (0 + @_ == 0) {
+    fatal_error "No search query given."
+  }
 
-  echo "* Updating $DISPLAY_NAME" | tee -a "$LOG_FILE"
-  cd "$DIR"
-  local GIT_OUTPUT_FILE="$(mktemp "${TMPDIR:-/tmp}/fresh.XXXXXX")"
-  git pull --rebase 2>&1 | tee "$GIT_OUTPUT_FILE" | sed 's/^/| /' | tee -a "$LOG_FILE"
-  local GIT_RESULT="${PIPESTATUS[0]}"
-  if egrep -q '^From .*(://github.com/|git@github.com:)' "$GIT_OUTPUT_FILE"; then
-    local REPO_URL="$(egrep '^From .*(://github.com/|git@github.com:)' "$GIT_OUTPUT_FILE" | cut -d ' ' -f 2)"
-    local REPO_NAME="$(_repo_name "$REPO_URL")"
-    if [ -n "$REPO_NAME" ]; then
-      perl -n -e'/^ {2,}([0-9a-f]{7,})\.\.([0-9a-f]{7,}) / && print "| <'"$(_format_url "https://github.com/$REPO_NAME/compare/\$1...\$2")"'>\n"' "$GIT_OUTPUT_FILE" | tee -a "$LOG_FILE"
-    fi
-  fi
-  rm "$GIT_OUTPUT_FILE"
-  if [ "$GIT_RESULT" -ne 0 ]; then
-    _fatal_error "Update failed."
-  fi
-  cd "$OLDPWD"
+  my $args = join(' ', @_);
+  my $results = read_cmd('curl', '-sS', 'http://api.freshshell.com/directory', '--get', '--data-urlencode', "q=$args");
+
+  if ($results eq "") {
+    fatal_error "No results."
+  } else {
+    print $results;
+  }
 }
 
-_repo_name_from_source_path() {
-  echo "$1" | awk -F/ '{OFS="/"; print $(NF-1), $(NF-0)}'
+sub fresh_edit {
+  my $rcfile;
+  if (-l $FRESH_RCFILE ) {
+    $rcfile = realpath($FRESH_RCFILE);
+  } else {
+    $rcfile = $FRESH_RCFILE;
+  }
+  exec($ENV{EDITOR} || 'vi', $rcfile) == 0 or exit(1);
 }
 
-fresh_edit() {
-  if [[ -L "$FRESH_RCFILE" ]]; then
-    local RCFILE="$(realpath "$FRESH_RCFILE")"
-  else
-    local RCFILE="$FRESH_RCFILE"
-  fi
-  ${EDITOR:-vi} "$RCFILE"
+sub github_blob_url {
+  my ($repo_name, $ref, $blob_path) = @_;
+  return "https://github.com/$repo_name/blob/$ref/$blob_path";
 }
 
-fresh_search() {
-  if [[ "$#" -gt 0 ]]; then
-    RESULTS="$(curl -sS http://api.freshshell.com/directory --get --data-urlencode q="$*")"
-    if [[ -n "$RESULTS" ]]; then
-      echo "$RESULTS"
-    else
-      _fatal_error "No results."
-    fi
-  else
-    _fatal_error "No search query given."
-  fi
+sub source_file_url {
+  my ($entry, $path) = @_;
+
+  my $repo = $$entry{repo};
+  my $ref = $$entry{options}{ref};
+
+  if (defined($repo)) {
+    if ($repo =~ /:/) {
+      return repo_url($repo);
+    } elsif (defined($ref)) {
+      return github_blob_url($repo, $ref, $path)
+    } else {
+      my $prefix = get_entry_prefix($entry);
+      my $file = remove_prefix($path, $prefix);
+      $ref = read_cwd_cmd($prefix, "git", "log", "--pretty=%H", "-n", "1", "--", $file);
+      chomp($ref);
+      return github_blob_url($repo, $ref, $file);
+    }
+  } else {
+    return $path;
+  }
 }
 
-fresh_clean() {
-  _fresh_clean_symlinks ~
-  _fresh_clean_symlinks ~/bin
-  _fresh_clean_repos
+sub fresh_show {
+  my $count = 0;
+
+  for my $entry (read_freshrc()) {
+    print "\n" if ($count >= 1);
+
+    print $$entry{freshrc_line};
+
+    my $prefix = get_entry_prefix($entry);
+    my @paths = get_entry_paths($entry, $prefix);
+    foreach my $path (@paths) {
+      my $url = source_file_url($entry, $path);
+      print "<${\format_url($url)}>\n";
+    }
+
+    $count++;
+  }
 }
 
-_fresh_clean_symlinks() {
-  local BASE="$1"
-  if [[ -e "$BASE" ]]; then
-    local path_glob="$FRESH_PATH/build/*"
-    find "$BASE" -maxdepth 1 -type l | while read SYMLINK; do
-      DEST="$(readlink "$SYMLINK")"
-      if [[ $DEST == $path_glob ]] && ! [[ -e "$DEST" ]]; then
-        echo "Removing ${SYMLINK/#$HOME/~}"
-        rm "$SYMLINK"
-      fi
-    done
-  fi
+sub fresh_clean_repos {
+  if (-e "$FRESH_PATH/source") {
+    my %repo_names;
+    for my $entry (read_freshrc()) {
+      if ($$entry{repo}) {
+        $repo_names{repo_name($$entry{repo})} = 1;
+      }
+    }
+
+    my @dirs;
+    my $wanted = sub {
+      -d && /\.git$/ && push @dirs, dirname($_);
+    };
+    find({wanted => $wanted, no_chdir => 1}, "$FRESH_PATH/source");
+    @dirs = sort(@dirs);
+
+    for my $dir (@dirs) {
+      my $repo_name = repo_name_from_source_path($dir);
+
+      if (!exists($repo_names{$repo_name})) {
+        print "Removing source $repo_name\n";
+        remove_tree $dir;
+      }
+    }
+
+    system("find", "$FRESH_PATH/source", "-mindepth", "1", "-maxdepth", "1", "-type", "d", "-empty", "-not", "-name", ".*", "-exec", "rmdir", "{}", "\;") == 0 or exit(1);
+  }
 }
 
-_fresh_clean_repos() {
-  if [[ -e "$FRESH_PATH/source" ]]; then
-    REPO_NAME_FILE="$(mktemp "${TMPDIR:-/tmp}/fresh.XXXXXXXX")"
-    trap '{ rm -f "$REPO_NAME_FILE"; }' EXIT
-
-    _run_dsl clean
-
-    find "$FRESH_PATH/source" -type d -name '.git' | sort | while read DIR; do
-      local DIR="$(dirname "$DIR")"
-      local REPO_NAME="$(_repo_name_from_source_path "$DIR")"
-
-      if ! echo "$REPO_NAME" | grep -qF -f "$REPO_NAME_FILE"; then
-        echo "Removing source $REPO_NAME"
-        rm -rf "$DIR"
-      fi
-    done
-
-    find "$FRESH_PATH/source" -mindepth 1 -maxdepth 1 -type d -empty -not -name '.*' -exec rmdir {} \;
-  fi
+sub fresh_clean {
+  fresh_clean_symlinks($ENV{HOME});
+  fresh_clean_symlinks("$ENV{HOME}/bin");
+  fresh_clean_repos;
 }
 
-_dsl_clean_fresh() {
-  _set_dsl_caller
-  _parse_fresh_dsl_args "$@"
-  if [[ -n "$REPO_NAME" ]]; then
-    local REPO_DIR="$(_repo_name "$REPO_NAME")"
-    echo "$REPO_DIR" >> "$REPO_NAME_FILE"
-  fi
+sub fresh_clean_symlinks {
+  my ($base) = @_;
+
+  if (-e $base) {
+    my @symlinks;
+    my $wanted = sub {
+      -l && push @symlinks, $_;
+    };
+    my $nodirs = sub {
+      grep {! -d File::Spec->rel2abs($_, $base)} @_;
+    };
+    find({wanted => $wanted, no_chdir => 1, preprocess => $nodirs}, $base);
+
+    foreach my $symlink (@symlinks) {
+      my $dest = readlink($symlink);
+      if (prefix_match($dest, "$FRESH_PATH/build/") && ! -e $dest ) {
+        (my $display = $symlink) =~ s{^\Q$ENV{HOME}\E}{~};
+        print "Removing $display\n";
+        unlink($symlink);
+      }
+    }
+  }
 }
 
-fresh_show() {
-  LINE_COUNT=0
-  _run_dsl show
-}
-
-_dsl_show_fresh() {
-  _set_dsl_caller
-  LINE_COUNT=$((LINE_COUNT + 1))
-
-  if [[ $LINE_COUNT -gt 1 ]]; then
-    echo
-  fi
-
-  _escape fresh "$@"
-
-  _parse_fresh_dsl_args "$@"
-  _prepare_file_source
-
-  _file_list | while read SOURCE_FILE
-  do
-    echo "<$(_format_url "$(_source_file_url)")>"
-  done
-}
-
-fresh_help() {
-  echo $'Keep your dot files \033[1;32mfresh\033[0m.'
-cat <<EOF
+sub fresh_help {
+  print <<EOF;
+Keep your dot files \033[1;32mfresh\033[0m.
 
 The following commands will install/update configuration files
-as specified in your $(_freshrc_file) file.
+as specified in your $FRESH_RCFILE file.
 
-See $(_format_url http://freshshell.com/readme) for more documentation.
+See ${\format_url 'http://freshshell.com/readme'} for more documentation.
 
 usage: fresh <command> [<args>]
 
 Available commands:
-$(fresh_commands | sed -e 's/^/    /' -e 's/ #//')
+    install            Build shell configuration and relevant symlinks (default)
+    update [<filter>]  Update from source repos and rebuild
+    clean              Removes dead symlinks and source repos
+    search <query>     Search the fresh directory
+    edit               Open freshrc for editing
+    show               Show source references for freshrc lines
+    help               Show this help
 EOF
-}
 
-_parse_fresh_add_args() {
-  if [[ "$1" == https://github.com/* ]]; then
-    URL="$1"
-
-    LINE="$(echo "$URL" | sed -e 's#^https://github.com/##' -e 's#/blob/[^/]*/# #')"
-    shift
-    for ARG in "$@"; do
-      LINE="$LINE $ARG"
-    done
-
-    # if we only have the URL try to infer if we have a bin or config file
-    if ! echo "$@" | grep -q "\--bin\|\--file"; then
-      if echo "$URL" | grep -q "/bin/"; then
-        LINE="$LINE --bin"
-      elif echo "$URL" | grep -q "/config/"; then
-        LINE="$LINE --file"
-      fi
-    fi
-
-    REF="$(echo "$URL" | sed 's#^.*/blob/\([^/]*\)/.*$#\1#')"
-    if [[ "$REF" != "master" ]]; then
-      LINE="$LINE --ref=$REF"
-    fi
-    echo "$LINE"
-  else
-    _escape "$@"
-  fi
-}
-
-fresh_add() {
-  LINE="$(_parse_fresh_add_args "$@")"
-
-  if _confirm "Add \`fresh $LINE\` to $(_freshrc_file)"; then
-    echo "Adding \`fresh $LINE\` to $(_freshrc_file)..."
-    echo "fresh $LINE" >> "$FRESH_RCFILE"
-
-    _dsl_fresh_options # init defaults
-    eval _parse_fresh_dsl_args "$LINE"
-    local REPO_DIR="$(_repo_name "$REPO_NAME")"
-
-    if [[ -n "$REPO_NAME" ]] && [[ -d "$FRESH_PATH/source/$REPO_DIR" ]] && [[ ! -e "$FRESH_PATH/source/$REPO_DIR/$FILE_NAME" ]]; then
-      fresh_update "$REPO_DIR"
-    fi
-
-    fresh_install
-  else
-    _note "Use \`fresh edit\` to manually edit your $(_freshrc_file)."
-  fi
-}
-
-_escape() {
-  printf "%q" "$1"
-  shift
-  for arg in "$@"; do
-    printf " %q" "$arg"
-  done
-  echo
-}
-
-_confirm() {
-  echo -n "$1 [Y/n]? "
-  read answer
-  case $answer in
-    [Yy]*|"")
-      true
-      ;;
-    [Nn]*)
-      false
-      ;;
-    *)
-      _confirm "$1"
-      ;;
-  esac
-}
-
-_rc_file_line_reference() {
-  if [[ "$IN_RC_FILE" == 1 ]]; then
-    local DISPLAY_RC_FILE="${RC_FILE/#$HOME/~}"
-    local RC_CONTENT="$(head -$RC_LINE "$RC_FILE" | tail -1)"
-    echo "$DISPLAY_RC_FILE:$RC_LINE: $RC_CONTENT"
-  fi
-}
-
-_fatal_error() {
-  echo $'\033[4;31mError\033[0m:' "$1" >&2
-  if [[ "$IN_RC_FILE" == 1 ]]; then
-    echo "$(_rc_file_line_reference)" >&2
-    if ! [[ "$SKIP_INFO" == 1 ]]; then
-      cat >&2 <<EOF
-
-You may need to run \`fresh update\` if you're adding a new line,
-or the file you're referencing may have moved or been deleted.
-EOF
-    fi
-    if echo "$REPO_NAME" | grep -q /; then
-      echo "Have a look at the repo: <$(_format_url "$(_repo_url "$REPO_NAME")")>" >&2
-    fi
-  fi
-  exit 1
-}
-
-_note() {
-  echo $'\033[1;33mNote\033[0m:' "$1"
-}
-
-_format_url() {
-  echo $'\033[4;34m'"$1"$'\033[0m'
-}
-
-_prevent_invalid_arguments() {
-  if [ $# -gt 1 ]; then
-    _fatal_error "Invalid arguments"
-  fi
-}
-
-realpath() {
-  perl - "$@" <<PERL
-    use Cwd 'abs_path';
-
-    if (-e \$ARGV[0]) {
-      print abs_path(\$ARGV[0]) . "\n";
-    } else {
-      exit 1;
+  foreach my $path (split(/:/, $ENV{PATH})) {
+    my @matches = bsd_glob("$path/fresh-*");
+    foreach my $command_path (@matches) {
+      my $command = remove_prefix($command_path, "$path/fresh-");
+      printf "    %-18s %s\n", "$command", "Run $command plugin";
     }
-PERL
+  }
 }
 
-_freshrc_file() {
-  echo "${FRESH_RCFILE/#$HOME/~}"
+sub confirm {
+  my ($question) = @_;
+
+  print "$question [Y/n]? ";
+  my $answer = <STDIN> || "";
+  chomp($answer);
+
+  if ($answer eq "Y" || $answer eq "y" || $answer eq "") {
+    return 1;
+  } elsif ($answer eq "N" || $answer eq "n") {
+    return 0;
+  } else {
+    confirm($question);
+  }
 }
 
-fresh_commands() {
-  shopt -s nullglob
+sub escape {
+  my ($input) = @_;
 
-  cat <<EOF
-install            # Build shell configuration and relevant symlinks (default)
-update [<filter>]  # Update from source repos and rebuild
-clean              # Removes dead symlinks and source repos
-search <query>     # Search the fresh directory
-edit               # Open freshrc for editing
-show               # Show source references for freshrc lines
-help               # Show this help
-EOF
-  { for path in ${PATH//:/$'\n'}; do
-      for command in "${path}/fresh-"*; do
-        command="${command##*/fresh-}"
-        printf "%-19s# %s\n" "$command" "Run $command plugin"
-      done
-    done
-  } | sort | uniq
+  my $output = quotemeta($input);
+
+  # don't escape slashes
+  $output =~ s/\\\//\//g;
+
+  return $output;
 }
 
-main() {
-  case "${1:-}" in
-    help|--help|-h)
-      fresh_help
-      ;;
-    install|'')
-      _prevent_invalid_arguments "$@"
-      fresh_install
-      ;;
-    update|up)
-      shift
-      fresh_update "$@"
-      fresh_install_with_latest_binary
-      ;;
-    edit)
-      _prevent_invalid_arguments "$@"
-      fresh_edit
-      ;;
-    show)
-      _prevent_invalid_arguments "$@"
-      fresh_show
-      ;;
-    search)
-      shift
-      fresh_search "$@"
-      ;;
-    clean)
-      _prevent_invalid_arguments "$@"
-      fresh_clean
-      ;;
-    commands)
-      fresh_commands
-      ;;
-    *)
-      if [[ "$1" == */* ]] || [[ -e "$FRESH_LOCAL/$1" ]]; then
-        fresh_add "$@"
-      else
-        BIN_NAME="fresh-$1"
-        if which "$BIN_NAME" > /dev/null; then
-          shift
-          "$BIN_NAME" "$@"
-        else
-          _fatal_error "Unknown command: $1"
-        fi
-      fi
-      ;;
-  esac
+sub parse_fresh_add_args {
+  my @args = @_;
+
+  my $line;
+  if (prefix_match($args[0], "https://github.com/")) {
+    my $url = shift(@args);
+
+    ($line = $url) =~ s#^https://github.com/##;
+    $line =~ s#/blob/[^/]*/# #;
+
+    for my $arg (@args) {
+      $line = "$line $arg";
+    }
+
+    if (!grep( /--bin|--file/, @args)) {
+      if ($url =~ /bin\//) {
+        $line .= " --bin";
+      } elsif ($url =~ /config\//) {
+        $line .= " --file";
+      }
+    }
+
+    (my $ref = $url) =~ s#^.*/blob/([^/]*)/.*$#$1#;
+    if ("$ref" ne "master") {
+      $line = "$line --ref=$ref";
+    }
+  } else {
+    $line = escape(shift(@args));
+    for my $arg (@args) {
+      $line = "$line ${\escape($arg)}";
+    }
+  }
+
+  return $line;
 }
 
-if [ "$BASH_SOURCE" == "$0" ]; then
-  main "$@"
-fi
+sub fresh_add {
+  my @args = @_;
+
+  my $line = "fresh ${\parse_fresh_add_args(@args)}";
+
+  if (confirm("Add `$line` to $FRESH_RCFILE")) {
+    print "Adding `$line` to $FRESH_RCFILE...\n";
+    append $FRESH_RCFILE, "$line\n";
+
+    my @args_for_parse = shellwords($line);
+    shift(@args_for_parse);
+    my $entry = parse_fresh_dsl_args(undef, undef, 'fresh', \@args_for_parse, undef);
+
+    my $repo = $$entry{repo};
+
+    if (defined($repo) && -d "$FRESH_PATH/source/$repo" && ! -e "$FRESH_PATH/source/$repo/$$entry{name}") {
+      fresh_update($repo);
+    }
+
+    fresh_install;
+  } else {
+    note "Use `fresh edit` to manually edit your $FRESH_RCFILE."
+  }
+}
+
+sub prevent_invalid_arguments {
+  if (@_ > 0) {
+    fatal_error "Invalid arguments";
+  }
+}
+
+sub main {
+  my $arg = shift(@ARGV) || "install";
+
+  if ($arg eq "update" || $arg eq "up") {
+    fresh_update(@ARGV);
+    fresh_install_with_latest_binary;
+  } elsif ($arg eq "install") {
+    prevent_invalid_arguments(@ARGV);
+    fresh_install;
+  } elsif ($arg eq "edit") {
+    prevent_invalid_arguments(@ARGV);
+    fresh_edit;
+  } elsif ($arg eq "show") {
+    prevent_invalid_arguments(@ARGV);
+    fresh_show;
+  } elsif ($arg eq "clean") {
+    prevent_invalid_arguments(@ARGV);
+    fresh_clean;
+  } elsif ($arg eq "search") {
+    fresh_search(@ARGV);
+  } elsif ($arg eq "help") {
+    prevent_invalid_arguments(@ARGV);
+    fresh_help;
+  } else {
+    my $bin_name = "fresh-$arg";
+
+    if ($arg =~ /\// || -e "$FRESH_LOCAL/$arg") {
+      fresh_add($arg, @ARGV);
+    } else {
+      if (system("which ${\quotemeta($bin_name)} > /dev/null 2> /dev/null") == 0) {
+        exec($bin_name, @ARGV) or croak "$!";
+      } else {
+        fatal_error "Unknown command: $arg";
+      }
+    }
+  }
+}
+
+if (__FILE__ eq $0) {
+  main;
+}

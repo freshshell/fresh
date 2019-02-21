@@ -591,9 +591,9 @@ describe 'fresh' do
 
         expect(git_log).to eq <<-EOF.strip_heredoc
           cd #{fresh_path + 'source/repo/name'}
-          git show abc1237:aliases/.fresh-order
-          cd #{fresh_path + 'source/repo/name'}
           git ls-tree -r --name-only abc1237
+          cd #{fresh_path + 'source/repo/name'}
+          git show abc1237:aliases/.fresh-order
           cd #{fresh_path + 'source/repo/name'}
           git show abc1237:aliases/git.sh
           cd #{fresh_path + 'source/repo/name'}
@@ -900,9 +900,9 @@ describe 'fresh' do
 
       expect(git_log).to eq <<-EOF.strip_heredoc
         cd #{fresh_path + 'source/repo/name'}
-        git show abc1237:order-test/.fresh-order
-        cd #{fresh_path + 'source/repo/name'}
         git ls-tree -r --name-only abc1237
+        cd #{fresh_path + 'source/repo/name'}
+        git show abc1237:order-test/.fresh-order
         cd #{fresh_path + 'source/repo/name'}
         git show abc1237:order-test/d
         cd #{fresh_path + 'source/repo/name'}
@@ -2279,26 +2279,6 @@ SH
         You may need to run `fresh update` if you're adding a new line,
         or the file you're referencing may have moved or been deleted.
       EOF
-    end
-  end
-
-  describe 'private functions' do
-    let(:log_path) { sandbox_path + 'out.log' }
-
-    def run_private_function(command, exit_status = true)
-      exit_status = system 'bash', '-c', <<-EOF
-        set -e
-        source bin/fresh
-        #{command} > #{log_path}
-      EOF
-      expect(exit_status).to be exit_status
-    end
-
-    describe '_escape' do
-      it 'escapes arguments' do
-        run_private_function "_escape foo 'bar baz'"
-        expect(File.read(log_path)).to eq "foo bar\\ baz\n"
-      end
     end
   end
 end
