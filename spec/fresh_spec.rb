@@ -1505,8 +1505,11 @@ describe 'fresh' do
 
     it 'builds after update with latest binary' do
       rc 'fresh bin/\* --bin'
+      rc 'fresh fresh'
+      file_add fresh_local_path + 'fresh', 'echo non-bin >> "$SANDBOX_PATH/fresh.log"'
       file_add fresh_local_path + 'bin/fresh', 'echo new >> "$SANDBOX_PATH/fresh.log"'
       file_add fresh_local_path + 'bin/other', 'echo bad >> "$SANDBOX_PATH/fresh.log"'
+      file_add fresh_local_path + 'fresh', 'echo non-bin >> "$SANDBOX_PATH/fresh.log"'
 
       FileUtils.mkdir_p fresh_path + 'source'
       FileUtils.mkdir_p fresh_path + 'source/freshshell/fresh/.git'
