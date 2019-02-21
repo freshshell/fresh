@@ -798,8 +798,8 @@ describe 'fresh' do
       run_fresh
 
       expect(shell_sh_marker_lines).to eq <<-EOF.strip_heredoc
-          # fresh: repo/name recursive-test/bar @ abc1237
-          # fresh: repo/name recursive-test/foo @ abc1237
+        # fresh: repo/name recursive-test/bar @ abc1237
+        # fresh: repo/name recursive-test/foo @ abc1237
       EOF
     end
   end
