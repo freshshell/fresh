@@ -1376,6 +1376,12 @@ describe 'fresh' do
       EOF
     end
 
+    it 'does not error when there is no source directory' do
+      run_fresh(
+        command: %w[update],
+      )
+    end
+
     it 'errors if no matching sources to update' do
       FileUtils.mkdir_p fresh_path + 'source'
 
@@ -1812,6 +1818,13 @@ SH
       expect(fresh_path + 'source/foo/baz/.git').to_not exist
       expect(fresh_path + 'source/abc/def/.git').to_not exist
       expect(fresh_path + 'source/abc').to_not exist
+    end
+
+    it 'does not error when there is no source directory' do
+      run_fresh(
+        command: %w[clean],
+        success: '',
+      )
     end
 
     include_examples 'invalid arguments', 'clean'
