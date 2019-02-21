@@ -1299,6 +1299,46 @@ describe 'fresh' do
           git pull --rebase
         EOF
       end
+
+      it 'skips dirty local and updates fresh repo with no args' do
+        touch fresh_local_path + '.git/dirty'
+        stub_git
+
+        run_fresh command: 'update', success: <<-EOF.strip_heredoc
+          #{NOTE_PREFIX} Not updating #{fresh_local_path} because it has uncommitted changes.
+          * Updating freshshell/fresh
+          | Current branch master is up to date.
+          #{FRESH_SUCCESS_LINE}
+        EOF
+
+        expect(git_log).to eq <<-EOF.strip_heredoc
+          cd #{fresh_local_path}
+          git rev-parse @{u}
+          cd #{fresh_local_path}
+          git status --porcelain
+          cd #{fresh_path + 'source/freshshell/fresh'}
+          git pull --rebase
+        EOF
+      end
+
+      it 'skips untracked local and updates fresh repo with no args' do
+        touch fresh_local_path + '.git/untracked'
+        stub_git
+
+        run_fresh command: 'update', success: <<-EOF.strip_heredoc
+          #{NOTE_PREFIX} Not updating #{fresh_local_path} because the current branch is non-tracking.
+          * Updating freshshell/fresh
+          | Current branch master is up to date.
+          #{FRESH_SUCCESS_LINE}
+        EOF
+
+        expect(git_log).to eq <<-EOF.strip_heredoc
+          cd #{fresh_local_path}
+          git rev-parse @{u}
+          cd #{fresh_path + 'source/freshshell/fresh'}
+          git pull --rebase
+        EOF
+      end
     end
 
     it 'does not update local dirty local' do
@@ -1314,6 +1354,20 @@ describe 'fresh' do
         git rev-parse @{u}
         cd #{fresh_local_path}
         git status --porcelain
+      EOF
+    end
+
+    it 'does not update untracked local' do
+      touch fresh_local_path + '.git/untracked'
+      stub_git
+
+      run_fresh command: %w[update --local], exit_status: false, success: <<-EOF.strip_heredoc
+        #{NOTE_PREFIX} Not updating #{fresh_local_path} because the current branch is non-tracking.
+      EOF
+
+      expect(git_log).to eq <<-EOF.strip_heredoc
+        cd #{fresh_local_path}
+        git rev-parse @{u}
       EOF
     end
 
