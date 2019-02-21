@@ -1678,10 +1678,11 @@ SH
 
   describe 'fresh_after_build' do
     it 'runs fresh after build' do
-      rc "fresh_after_build() { echo test after_build; }"
+      rc "fresh_after_build() { echo test after_build; pwd; }"
 
       run_fresh success: <<-EOF.strip_heredoc
         test after_build
+        #{fresh_path}/build
         #{FRESH_SUCCESS_LINE}
       EOF
     end
