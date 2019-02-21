@@ -1975,6 +1975,22 @@ SH
       EOF
     end
 
+    it 'bails out on EOF' do
+      rc 'fresh existing'
+      touch fresh_local_path + 'existing'
+      touch fresh_local_path + 'new'
+
+      run_fresh(
+        full_command: 'fresh new < /dev/null',
+        success: "Add \`fresh new\` to #{freshrc_path} [Y/n]? ",
+        exit_status: false,
+      )
+
+      expect(File.read(freshrc_path)).to eq <<-EOF.strip_heredoc
+        fresh existing
+      EOF
+    end
+
     describe 'from github URLs' do
       def expect_fresh_add_args(input, output)
         run_fresh(
