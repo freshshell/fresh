@@ -1163,6 +1163,16 @@ describe 'fresh' do
     EOF
 
     rc_reset
+    rc 'fresh --blah'
+    run_fresh error: <<-EOF.strip_heredoc
+      #{ERROR_PREFIX} Unknown option: --blah
+      #{freshrc_path}:1: fresh --blah
+
+      You may need to run \`fresh update\` if you're adding a new line,
+      or the file you're referencing may have moved or been deleted.
+    EOF
+
+    rc_reset
     rc 'source ~/.freshrc.local'
     file_add sandbox_path + 'home/.freshrc.local', <<-EOF.strip_heredoc
       # local customisations
