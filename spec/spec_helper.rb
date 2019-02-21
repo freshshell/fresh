@@ -4,6 +4,8 @@ require 'active_support/core_ext/hash/keys'
 require 'tmpdir'
 require 'pry'
 
+require_relative 'support/shared_examples'
+
 ORIGINAL_ENV = ENV.to_hash
 ERROR_PREFIX = "\e[4;31mError\e[0m:"
 NOTE_PREFIX = "\033[1;33mNote\033[0m:"
