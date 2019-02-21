@@ -1519,6 +1519,17 @@ describe 'fresh' do
 
       expect(File.read(sandbox_path + 'fresh.log')).to eq "new\n"
     end
+
+    it 'updates with the shorthand command "up"' do
+      FileUtils.mkdir_p fresh_path + 'source/repo/name/.git'
+      stub_git
+
+      run_fresh command: 'up', success: <<-EOF.strip_heredoc
+        * Updating repo/name
+        | Current branch master is up to date.
+        #{FRESH_SUCCESS_LINE}
+      EOF
+    end
   end
 
   describe 'environment variable config' do
