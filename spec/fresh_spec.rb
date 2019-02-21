@@ -2096,6 +2096,28 @@ SH
       FileUtils.ln_s '.dotfiles/freshrc', File.expand_path('~/.freshrc')
       run_fresh command: 'edit', success: "#{Dir.pwd}/home/.dotfiles/freshrc\n"
     end
+
+    it 'edits with vi by default' do
+      ENV['EDITOR'] = nil
+
+      vi_path = bin_path + 'vi'
+      File.open(vi_path, 'a') do |file|
+        file.write <<-EOF.strip_heredoc
+          #!/bin/bash -e
+
+          echo START vi
+          echo $1
+          echo END vi
+        EOF
+      end
+      FileUtils.chmod '+x', vi_path
+
+      run_fresh command: 'edit', success: <<-EOF.strip_heredoc
+        START vi
+        #{File.expand_path '~/.freshrc'}
+        END vi
+      EOF
+    end
   end
 
   describe 'fresh-options' do
