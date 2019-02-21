@@ -1027,9 +1027,6 @@ describe 'fresh' do
     run_fresh error: <<-EOF.strip_heredoc
       #{ERROR_PREFIX} #{ENV['HOME']}/bin/sedmv already exists (pointing to /dev/null).
       #{freshrc_path}:1: fresh bin/sedmv --bin
-
-      You may need to run \`fresh update\` if you're adding a new line,
-      or the file you're referencing may have moved or been deleted.
     EOF
 
     expect_readlink('~/bin/sedmv').to eq '/dev/null'
@@ -1047,9 +1044,6 @@ describe 'fresh' do
       run_fresh error: <<-EOF.strip_heredoc
         #{ERROR_PREFIX} #{ENV['HOME']}/.pryrc already exists (pointing to /dev/null).
         #{freshrc_path}:1: fresh pryrc --file
-
-        You may need to run \`fresh update\` if you're adding a new line,
-        or the file you're referencing may have moved or been deleted.
       EOF
 
       expect_readlink('~/.pryrc').to eq '/dev/null'

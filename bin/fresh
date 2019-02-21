@@ -504,7 +504,7 @@ sub make_entry_link {
         unlink($link_path);
         symlink($link_target, $link_path);
       } else {
-        entry_error $entry, "$link_path already exists (pointing to $existing_target).";
+        entry_error $entry, "$link_path already exists (pointing to $existing_target).", {skip_info => 1};
       }
     }
   } elsif (-e $link_path) {
