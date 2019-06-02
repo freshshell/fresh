@@ -1074,7 +1074,7 @@ sub fresh_clean_repos {
 
 sub fresh_clean {
   fresh_clean_symlinks($ENV{HOME});
-  fresh_clean_symlinks("$ENV{HOME}/bin");
+  fresh_clean_symlinks($FRESH_BIN_PATH);
   fresh_clean_repos;
 }
 
