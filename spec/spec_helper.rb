@@ -122,6 +122,10 @@ def touch(path)
   FileUtils.touch path
 end
 
+def chmod(path_or_paths, mode)
+  FileUtils.chmod(mode, Array(path_or_paths))
+end
+
 def mkdir(path)
   FileUtils.mkdir_p path
 end

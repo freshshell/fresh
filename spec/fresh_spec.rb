@@ -265,6 +265,18 @@ describe 'fresh' do
         EOF
       end
 
+      it 'does not preserve executable bit for owner' do
+        touch fresh_local_path + 'foo/bin/file'
+        chmod fresh_local_path + 'foo/bin/file', 0o755
+
+        rc 'fresh foo/bin/file --file=~/file'
+
+        run_fresh
+
+        expect(fresh_path + 'build/file').to_not be_executable
+      end
+
+
       describe 'directories of generic files' do
         let(:files_in_build_directory) do
           Dir[fresh_path + 'build/**/*'].
@@ -279,6 +291,7 @@ describe 'fresh' do
             touch fresh_local_path + 'foo/file3'
             touch fresh_local_path + 'foobar/file4'
             touch fresh_local_path + 'foobar/file5'
+            touch fresh_local_path + 'foo/bin/file6'
           end
 
           it 'builds files' do
@@ -291,10 +304,23 @@ describe 'fresh' do
               shell.sh
               vendor/misc/foo/bar/file1
               vendor/misc/foo/bar/file2
+              vendor/misc/foo/bin/file6
               vendor/misc/foo/file3
               vendor/other/file1
               vendor/other/file2
             ]
+          end
+
+          it 'preserves executable bit for owner' do
+            chmod fresh_local_path + 'foo/bin/file6', 0o755
+
+            rc 'fresh foo --file=~/.foo/'
+
+            run_fresh
+
+            expect(fresh_path + 'build/foo/bin/file6').to_not be_writable
+            expect(fresh_path + 'build/foo/bin/file6').to be_executable
+            expect(fresh_path + 'build/foo/bar/file1').to_not be_executable
           end
 
           it 'links files' do
@@ -306,6 +332,7 @@ describe 'fresh' do
             expect(files_in_build_directory).to eq %w[
               foo/bar/file1
               foo/bar/file2
+              foo/bin/file6
               foo/file3
               nested-target/file1
               nested-target/file2
