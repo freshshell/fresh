@@ -809,7 +809,7 @@ EOF
         }
         append $build_target, $data;
 
-        if (defined($$entry{options}{bin})) {
+        if (defined($$entry{options}{bin}) || ($is_dir_target && -x $path)) {
           chmod 0700, $build_target;
         }
 
