@@ -1233,6 +1233,26 @@ describe 'fresh' do
       EOF
     end
 
+    it 'updates fresh files, but ignore files ending with .git' do
+      FileUtils.mkdir_p fresh_path + 'source/repo/name/.git'
+      FileUtils.mkdir_p fresh_path + 'source/repo/name/subdir'
+      touch fresh_path + 'source/repo/name/subdir/filea.git'
+      touch fresh_path + 'source/repo/name/subdir/fileb.git'
+      touch fresh_path + 'source/repo/name/subdir/filec.git'
+      stub_git
+
+      run_fresh command: 'update', success: <<-EOF.strip_heredoc
+        * Updating repo/name
+        | Current branch master is up to date.
+        #{FRESH_SUCCESS_LINE}
+      EOF
+
+      expect(git_log).to eq <<-EOF.strip_heredoc
+        cd #{fresh_path + 'source/repo/name'}
+        git pull --rebase
+      EOF
+    end
+
     it 'updates fresh files for a specified GitHub user' do
       FileUtils.mkdir_p fresh_path + 'source/twe4ked/dotfiles/.git'
       FileUtils.mkdir_p fresh_path + 'source/twe4ked/scripts/.git'
