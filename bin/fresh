@@ -947,7 +947,7 @@ EOF
   if (-d "$FRESH_PATH/source") {
     my @paths;
     my $wanted = sub {
-      /\.git\z/ && push @paths, dirname($_);
+      /\/\.git\z/ && push @paths, dirname($_);
     };
     find({wanted => $wanted, no_chdir => 1}, "$FRESH_PATH/source");
     @paths = sort @paths;

@@ -460,6 +460,7 @@ describe 'fresh' do
     describe 'cloning' do
       it 'clones GitHub repos' do
         rc 'fresh repo/name file'
+        rc 'fresh other_repo/other_name.git file'
         stub_git
 
         run_fresh
@@ -467,6 +468,8 @@ describe 'fresh' do
         expect(git_log).to eq <<-EOF.strip_heredoc
           cd #{Dir.pwd}
           git clone https://github.com/repo/name #{sandbox_path}/fresh/source/repo/name
+          cd #{Dir.pwd}
+          git clone https://github.com/other_repo/other_name.git #{sandbox_path}/fresh/source/other_repo/other_name.git
         EOF
         expect(
           File.read sandbox_path + 'fresh/source/repo/name/file'
@@ -1215,9 +1218,12 @@ describe 'fresh' do
     it 'updates fresh files' do
       FileUtils.mkdir_p fresh_path + 'source/repo/name/.git'
       FileUtils.mkdir_p fresh_path + 'source/other_repo/other_name/.git'
+      FileUtils.mkdir_p fresh_path + 'source/further_repo/further_name.git/.git'
       stub_git
 
       run_fresh command: 'update', success: <<-EOF.strip_heredoc
+        * Updating further_repo/further_name.git
+        | Current branch master is up to date.
         * Updating other_repo/other_name
         | Current branch master is up to date.
         * Updating repo/name
@@ -1226,8 +1232,30 @@ describe 'fresh' do
       EOF
 
       expect(git_log).to eq <<-EOF.strip_heredoc
+        cd #{fresh_path + 'source/further_repo/further_name.git'}
+        git pull --rebase
         cd #{fresh_path + 'source/other_repo/other_name'}
         git pull --rebase
+        cd #{fresh_path + 'source/repo/name'}
+        git pull --rebase
+      EOF
+    end
+
+    it 'updates fresh files, but ignore files ending with .git' do
+      FileUtils.mkdir_p fresh_path + 'source/repo/name/.git'
+      FileUtils.mkdir_p fresh_path + 'source/repo/name/subdir'
+      touch fresh_path + 'source/repo/name/subdir/filea.git'
+      touch fresh_path + 'source/repo/name/subdir/fileb.git'
+      touch fresh_path + 'source/repo/name/subdir/filec.git'
+      stub_git
+
+      run_fresh command: 'update', success: <<-EOF.strip_heredoc
+        * Updating repo/name
+        | Current branch master is up to date.
+        #{FRESH_SUCCESS_LINE}
+      EOF
+
+      expect(git_log).to eq <<-EOF.strip_heredoc
         cd #{fresh_path + 'source/repo/name'}
         git pull --rebase
       EOF
