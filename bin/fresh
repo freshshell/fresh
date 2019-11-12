@@ -761,11 +761,16 @@ sub fresh_install {
       my ($build_name, $link_path);
 
       if (defined($$entry{options}{file})) {
-        $link_path = $$entry{options}{file} || '~/.' . (basename($name) =~ s/^\.//r);
+        my $name_base = basename($name);
+        $name_base =~ s/^\.//;
+        $link_path = $$entry{options}{file} || '~/.' . $name_base;
         $link_path =~ s{^~/}{$ENV{HOME}/};
-        $build_name = remove_prefix($link_path, $ENV{HOME}) =~ s/^\///r =~ s/^\.//r;
+        $build_name = remove_prefix($link_path, $ENV{HOME});
+        $build_name =~ s/^\///;
+        $build_name =~ s/^\.//;
         if ($is_external_target) {
-          $build_name = $build_name =~ s/(?<!^~)[\/ ()]+/-/gr =~ s/-$//r;
+          $build_name =~ s/(?<!^~)[\/ ()]+/-/g;
+          $build_name =~ s/-$//;
         }
         if ($is_dir_target) {
           if ($$entry{name} eq ".") {
@@ -825,9 +830,16 @@ EOF
     }
 
     if ($is_dir_target && $is_external_target) {
-      my $link_path = $$entry{options}{file} =~ s{^~/}{$ENV{HOME}/}r =~ s{/$}{}r;
-      my $build_name = $$entry{options}{file} =~ s/(?<!^~)[\/ ()]+/-/gr =~ s/-$//r;
-      $build_name = remove_prefix($build_name =~ s{^~/}{$ENV{HOME}/}r, $ENV{HOME}) =~ s/^\///r =~ s/^\.//r;
+      my $link_path = $$entry{options}{file};
+      $link_path =~ s{^~/}{$ENV{HOME}/};
+      $link_path =~ s{/$}{};
+      my $build_name = $$entry{options}{file};
+      $build_name =~ s/(?<!^~)[\/ ()]+/-/g;
+      $build_name =~ s/-$//;
+      $build_name =~ s{^~/}{$ENV{HOME}/};
+      $build_name = remove_prefix($build_name, $ENV{HOME});
+      $build_name =~ s/^\///;
+      $build_name =~ s/^\.//;
       make_entry_link($entry, $link_path, "$FRESH_PATH/build/$build_name");
     }
   }
