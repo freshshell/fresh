@@ -2270,7 +2270,7 @@ SH
         FileUtils.chmod '+x', path
       end
 
-      run_fresh command: 'help', env: {'PATH' => "#{bin_path}:/bin:/usr/bin"}, success: <<-EOF.strip_heredoc
+      run_fresh command: 'help', env: {'PATH' => "#{bin_path}:/bin:/usr/bin:/usr/local/bin"}, success: <<-EOF.strip_heredoc
         Keep your dot files #{FRESH_HIGHLIGHTED}.
 
         The following commands will install/update configuration files
