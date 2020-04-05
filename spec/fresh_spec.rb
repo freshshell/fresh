@@ -2189,7 +2189,8 @@ SH
       vi_path = bin_path + 'vi'
       File.open(vi_path, 'a') do |file|
         file.write <<-EOF.strip_heredoc
-          #!/bin/bash -e
+          #!/usr/bin/env bash
+          set -e
 
           echo START vi
           echo $1
