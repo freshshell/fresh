@@ -2302,6 +2302,22 @@ SH
     end
 
     include_examples 'invalid arguments', 'help'
+
+    specify 'commands' do
+      run_fresh command: 'commands', env: run_env, success: <<-EOF.strip_heredoc
+        install            # Build shell configuration and relevant symlinks (default)
+        update [<filter>]  # Update from source repos and rebuild
+        clean              # Removes dead symlinks and source repos
+        search <query>     # Search the fresh directory
+        edit               # Open freshrc for editing
+        show               # Show source references for freshrc lines
+        help               # Show this help
+        bar                # Run bar plugin
+        foo                # Run foo plugin
+      EOF
+    end
+
+    include_examples 'invalid arguments', 'commands'
   end
 
   describe '--marker' do
