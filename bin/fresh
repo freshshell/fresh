@@ -280,12 +280,13 @@ sub print_and_append {
 
 sub readfile {
   my ($filename) = @_;
-  if (open(my $fh, $filename)) {
+  if ((-f $filename) && (open(my $fh, $filename))) {
     local $/ = undef;
     my $data = <$fh>;
     close $fh;
     return $data;
   }
+  return undef;
 }
 
 sub read_file_line {
