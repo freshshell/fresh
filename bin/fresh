@@ -1115,6 +1115,28 @@ sub fresh_clean_symlinks {
   }
 }
 
+sub get_commands {
+  my @commands;
+
+  push @commands, {name => 'install', args => '', description => 'Build shell configuration and relevant symlinks (default)'};
+  push @commands, {name => 'update', args => '[<filter>]', description => 'Update from source repos and rebuild'};
+  push @commands, {name => 'clean', args => '', description => 'Removes dead symlinks and source repos'};
+  push @commands, {name => 'search', args => '<query>', description => 'Search the fresh directory'};
+  push @commands, {name => 'edit', args => '', description => 'Open freshrc for editing'};
+  push @commands, {name => 'show', args => '', description => 'Show source references for freshrc lines'};
+  push @commands, {name => 'help', args => '', description => 'Show this help'};
+
+  foreach my $path (split(/:/, $ENV{PATH})) {
+    my @matches = bsd_glob("$path/fresh-*");
+    foreach my $command_path (@matches) {
+      my $name = remove_prefix($command_path, "$path/fresh-");
+      push @commands, {name => $name, args => '', description => "Run $name plugin"};
+    }
+  }
+
+  return @commands;
+}
+
 sub fresh_help {
   print <<EOF;
 Keep your dot files \033[1;32mfresh\033[0m.
@@ -1127,21 +1149,11 @@ See ${\format_url 'http://freshshell.com/readme'} for more documentation.
 usage: fresh <command> [<args>]
 
 Available commands:
-    install            Build shell configuration and relevant symlinks (default)
-    update [<filter>]  Update from source repos and rebuild
-    clean              Removes dead symlinks and source repos
-    search <query>     Search the fresh directory
-    edit               Open freshrc for editing
-    show               Show source references for freshrc lines
-    help               Show this help
 EOF
 
-  foreach my $path (split(/:/, $ENV{PATH})) {
-    my @matches = bsd_glob("$path/fresh-*");
-    foreach my $command_path (@matches) {
-      my $command = remove_prefix($command_path, "$path/fresh-");
-      printf "    %-18s %s\n", "$command", "Run $command plugin";
-    }
+  foreach my $command (get_commands()) {
+    printf "    %-18s %s\n", "$$command{name} $$command{args}", $$command{description};
+  }
   }
 }
 
