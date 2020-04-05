@@ -66,32 +66,34 @@ def run_fresh(options = {})
     end
   end
 
-  if options[:success] && options[:error]
-    expect(@stdout).to eq options.fetch(:success)
-    expect(@stderr).to eq options.fetch(:error)
-    expect(@exit_status).to eq options.fetch(:exit_status)
-  elsif options[:error]
-    expect(@stdout).to be_empty
-    expect(@stderr).to eq options[:error]
-    expect(@exit_status).to eq options.fetch(:exit_status, false)
-  elsif options[:error_title]
-    expect(@stdout).to be_empty
-    expect(
-      @stderr.lines.grep(/Error/).join
-    ).to eq options[:error_title]
-    expect(@exit_status).to eq options.fetch(:exit_status, false)
-  elsif options[:success]
-    expect(@stderr).to be_empty
-    if options[:success].is_a? Regexp
-      expect(@stdout).to match options[:success]
+  aggregate_failures do
+    if options[:success] && options[:error]
+      expect(@stdout).to eq options.fetch(:success)
+      expect(@stderr).to eq options.fetch(:error)
+      expect(@exit_status).to eq options.fetch(:exit_status)
+    elsif options[:error]
+      expect(@stdout).to be_empty
+      expect(@stderr).to eq options[:error]
+      expect(@exit_status).to eq options.fetch(:exit_status, false)
+    elsif options[:error_title]
+      expect(@stdout).to be_empty
+      expect(
+        @stderr.lines.grep(/Error/).join
+      ).to eq options[:error_title]
+      expect(@exit_status).to eq options.fetch(:exit_status, false)
+    elsif options[:success]
+      expect(@stderr).to be_empty
+      if options[:success].is_a? Regexp
+        expect(@stdout).to match options[:success]
+      else
+        expect(@stdout).to eq options[:success]
+      end
+      expect(@exit_status).to eq options.fetch(:exit_status, true)
     else
-      expect(@stdout).to eq options[:success]
+      expect(@stderr).to be_empty
+      expect(@stdout).to eq "#{FRESH_SUCCESS_LINE}\n"
+      expect(@exit_status).to eq options.fetch(:exit_status, true)
     end
-    expect(@exit_status).to eq options.fetch(:exit_status, true)
-  else
-    expect(@stderr).to be_empty
-    expect(@stdout).to eq "#{FRESH_SUCCESS_LINE}\n"
-    expect(@exit_status).to eq options.fetch(:exit_status, true)
   end
 end
 
