@@ -623,7 +623,7 @@ describe 'fresh' do
           cd #{fresh_path + 'source/repo/name'}
           git ls-tree -r --name-only abc1237
           cd #{fresh_path + 'source/repo/name'}
-          git show abc1237:aliases/.fresh-order
+          git ls-tree --name-only abc1237 aliases/.fresh-order
           cd #{fresh_path + 'source/repo/name'}
           git show abc1237:aliases/git.sh
           cd #{fresh_path + 'source/repo/name'}
@@ -931,6 +931,8 @@ describe 'fresh' do
       expect(git_log).to eq <<-EOF.strip_heredoc
         cd #{fresh_path + 'source/repo/name'}
         git ls-tree -r --name-only abc1237
+        cd #{fresh_path + 'source/repo/name'}
+        git ls-tree --name-only abc1237 order-test/.fresh-order
         cd #{fresh_path + 'source/repo/name'}
         git show abc1237:order-test/.fresh-order
         cd #{fresh_path + 'source/repo/name'}

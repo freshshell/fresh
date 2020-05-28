@@ -29,9 +29,20 @@ case "$1" in
       echo b
       exit 0
     fi
+    if [[ "$2" == "abc1237:aliases/.fresh-order" ]]; then
+      echo "fatal: Path 'aliases/.fresh-order' does not exist in 'abc1237'" >&2
+      exit 128
+    fi
     echo test data for "$2"
     ;;
   ls-tree)
+    if [[ "$*" =~ ^ls-tree\ --name-only\ abc1237\ (aliases|recursive-test)/\.fresh-order$ ]]; then
+      exit 0
+    fi
+    if [[ "$*" =~ ^ls-tree\ --name-only\ abc1237\ (hidden-test|order-test)/\.fresh-order$ ]]; then
+      echo "$4"
+      exit 0
+    fi
     if [[ "$*" =~ ^ls-tree\ -r\ --name-only\ (abc1237|1234567|abcdefg|abc123)$ ]]; then
       echo aliases/git.sh
       echo aliases/ruby.sh

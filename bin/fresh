@@ -653,7 +653,10 @@ sub get_entry_paths {
   if ($$entry{options}{ref}) {
     if ($$entry{name} =~ /\*/) {
       my $dir = dirname($$entry{name});
-      $fresh_order_data = read_cwd_cmd($prefix, 'git', 'show', "$$entry{options}{ref}:$dir/.fresh-order");
+      my $fresh_order_exists = length(read_cwd_cmd($prefix, 'git', 'ls-tree', '--name-only', $$entry{options}{ref}, "$dir/.fresh-order"));
+      if ($fresh_order_exists) {
+        $fresh_order_data = read_cwd_cmd($prefix, 'git', 'show', "$$entry{options}{ref}:$dir/.fresh-order");
+      }
     }
   } else {
     $fresh_order_data = readfile($base_entry_name . '/.fresh-order');
