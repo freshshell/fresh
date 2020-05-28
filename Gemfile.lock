@@ -43,5 +43,8 @@ DEPENDENCIES
   pry
   rspec
 
+RUBY VERSION
+   ruby 2.6.6p146
+
 BUNDLED WITH
-   1.13.7
+   2.1.4
