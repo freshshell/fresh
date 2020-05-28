@@ -27,9 +27,9 @@ case "$1" in
       echo d
       echo f
       echo b
-    else
-      echo test data for "$2"
+      exit 0
     fi
+    echo test data for "$2"
     ;;
   ls-tree)
     echo aliases/git.sh
