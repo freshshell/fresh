@@ -33,7 +33,31 @@ case "$1" in
       echo "fatal: Path 'aliases/.fresh-order' does not exist in 'abc1237'" >&2
       exit 128
     fi
-    echo test data for "$2"
+    if [[ "$*" =~ ^show\ abc1237?:(aliases/git\.sh|aliases/ruby\.sh|ackrc|sedmv)$ ]]; then
+      echo test data for "$2"
+      exit 0
+    fi
+    if [[ "$*" =~ ^show\ (1234567:ackrc|abcdefg:sedmv)$ ]]; then
+      echo test data for "$2"
+      exit 0
+    fi
+    if [[ "$*" =~ ^show\ abc1237?:recursive-test/(foo|bar|abc/def)$ ]]; then
+      echo test data for "$2"
+      exit 0
+    fi
+    if [[ "$*" =~ ^show\ abc123:recursive-test-other/abc/def$ ]]; then
+      echo test data for "$2"
+      exit 0
+    fi
+    if [[ "$*" =~ ^show\ abc1237?:hidden-test/(\.fresh-order|foo|\.bar)$ ]]; then
+      echo test data for "$2"
+      exit 0
+    fi
+    if [[ "$*" =~ ^show\ abc1237?:order-test/(\.fresh-order|[abcde])$ ]]; then
+      echo test data for "$2"
+      exit 0
+    fi
+    echo "unknown git args: $*" >&2
     ;;
   ls-tree)
     if [[ "$*" =~ ^ls-tree\ --name-only\ abc1237\ (aliases|recursive-test)/\.fresh-order$ ]]; then
