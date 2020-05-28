@@ -655,9 +655,8 @@ sub get_entry_paths {
   my $fresh_order_data;
   if ($$entry{options}{ref}) {
     if ($$entry{name} =~ /\*/) {
-      my $dir = dirname($$entry{name});
-
       if ($fresh_order_file_exists) {
+        my $dir = dirname($$entry{name});
         $fresh_order_data = read_cwd_cmd($prefix, 'git', 'show', "$$entry{options}{ref}:$dir/.fresh-order");
       }
     }
