@@ -348,7 +348,7 @@ describe 'fresh' do
           end
         end
 
-        it 'builds with ref' do
+        it 'builds with --ref' do
           rc 'fresh repo/name recursive-test --ref=abc1237 --file=vendor/test/'
           FileUtils.mkdir_p fresh_path + 'source/repo/name'
           stub_git
@@ -654,7 +654,7 @@ describe 'fresh' do
           to eq "test data for abcdefg:sedmv\n"
       end
 
-      it 'errors if source file missing at ref' do
+      it 'errors if source file missing at --ref' do
         rc 'fresh repo/name bad-file --ref=abc1237'
         FileUtils.mkdir_p fresh_path + 'source/repo/name'
         stub_git
@@ -675,7 +675,7 @@ describe 'fresh' do
       end
 
       context 'with --ignore-missing' do
-        it 'does not error if source file missing at ref with --ignore-missing' do
+        it 'does not error if source file missing at --ref with --ignore-missing' do
           rc 'fresh repo/name bad-file --ref=abc1237 --ignore-missing'
           FileUtils.mkdir_p fresh_path + 'source/repo/name'
           stub_git
@@ -688,7 +688,7 @@ describe 'fresh' do
           EOF
         end
 
-        it 'builds files with ref and ignore missing' do
+        it 'builds files with --ref and --ignore-missing' do
           rc <<-EOF.strip_heredoc
             fresh repo/name ackrc --file --ref=abc1237 --ignore-missing
             fresh repo/name missing --file --ref=abc1237 --ignore-missing
@@ -711,7 +711,7 @@ describe 'fresh' do
         end
       end
 
-      it 'errors if no ref is specified' do
+      it 'errors if no --ref value is specified' do
         rc 'fresh foo --file --ref'
 
         run_fresh error: <<-EOF.strip_heredoc
@@ -752,7 +752,7 @@ describe 'fresh' do
         expect_pathname('~/.foo/sub/file2').to exist
       end
 
-      it 'links directory of generic files for whole repo with ref' do
+      it 'links directory of generic files for whole repo with --ref' do
         rc 'fresh repo/name . --file=~/.foo/ --ref=abc123'
 
         run_fresh
@@ -821,7 +821,7 @@ describe 'fresh' do
       EOF
     end
 
-    it 'with ref' do
+    it 'with --ref' do
       rc "fresh repo/name 'recursive-test/*' --ref=abc1237"
       stub_git
 
@@ -863,7 +863,7 @@ describe 'fresh' do
       end
     end
 
-    context 'with ref' do
+    context 'with --ref' do
       before do
         stub_git
       end
@@ -878,7 +878,7 @@ describe 'fresh' do
         EOF
       end
 
-      it 'includes hidden files when explicitly referenced with ref' do
+      it 'includes hidden files when explicitly referenced with --ref' do
         rc "fresh repo/name 'hidden-test/.*' --ref=abc1237"
 
         run_fresh
@@ -913,7 +913,7 @@ describe 'fresh' do
       EOF
     end
 
-    it 'with ref' do
+    it 'with --ref' do
       rc "fresh repo/name 'order-test/*' --ref=abc1237"
       FileUtils.mkdir_p fresh_path + 'source/repo/name'
       stub_git
@@ -963,7 +963,7 @@ describe 'fresh' do
       EOF
     end
 
-    it 'runs filters on files locked to a ref' do
+    it 'runs filters on files locked to a --ref' do
       FileUtils.mkdir_p fresh_local_path
       rc "fresh aliases/git.sh --ref=abc1237 --filter='sed s/test/TEST/'"
       stub_git
