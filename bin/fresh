@@ -623,9 +623,12 @@ sub get_entry_paths {
   my $full_entry_name = "$prefix$$entry{name}";
   my $base_entry_name = dirname($full_entry_name);
 
+  my $fresh_order_file_exists = 0;
+
   if ($$entry{options}{ref}) {
     $base_entry_name = dirname($$entry{name});
     @paths = split(/\n/, read_cwd_cmd($prefix, 'git', 'ls-tree', '-r', '--name-only', $$entry{options}{ref}));
+    $fresh_order_file_exists = grep {$_ eq $base_entry_name."/.fresh-order";} @paths;
     if ($is_dir_target) {
       if ($$entry{name} ne ".") {
         @paths = prefix_filter("$$entry{name}/", @paths);
@@ -652,7 +655,11 @@ sub get_entry_paths {
   if ($$entry{options}{ref}) {
     if ($$entry{name} =~ /\*/) {
       my $dir = dirname($$entry{name});
-      $fresh_order_data = read_cwd_cmd($prefix, 'git', 'show', "$$entry{options}{ref}:$dir/.fresh-order");
+
+      if ($fresh_order_file_exists)
+      {
+        $fresh_order_data = read_cwd_cmd($prefix, 'git', 'show', "$$entry{options}{ref}:$dir/.fresh-order");
+      }
     }
   } else {
     $fresh_order_data = readfile($base_entry_name . '/.fresh-order');
