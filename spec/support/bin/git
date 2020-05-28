@@ -28,8 +28,8 @@ case "$1" in
       echo f
       echo b
     elif [[ "$2" == "abc1237:aliases/.fresh-order" ]]; then
-        echo "fatal: Path 'aliases/.fresh-order' does not exist in 'abc1237'"
-        exit 128
+      echo "fatal: Path 'aliases/.fresh-order' does not exist in 'abc1237'"
+      exit 128
     else
       echo test data for "$2"
     fi
