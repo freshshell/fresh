@@ -201,6 +201,16 @@ def format_url(url)
 end
 
 RSpec.configure do |config|
+  config.raise_errors_for_deprecations!
+
+  config.expect_with :rspec do |c|
+    c.syntax = :expect
+  end
+
+  config.mock_with :rspec do |c|
+    c.syntax = :expect
+  end
+
   config.before do
     %w[home bin].each do |dir|
       FileUtils.mkdir_p File.join(sandbox_path, dir)
