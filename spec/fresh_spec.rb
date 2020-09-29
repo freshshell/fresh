@@ -1636,7 +1636,6 @@ SH
         end.split("\n")
       end
 
-
       it 'defaults to $HOME/bin' do
         run_fresh
 
@@ -1695,6 +1694,7 @@ SH
 
       it 'unsets the __FRESH_BIN_PATH__ variable' do
         run_fresh
+
         out = capture(:stdout) do
           system <<-EOF
 /usr/bin/env bash -c "$(
