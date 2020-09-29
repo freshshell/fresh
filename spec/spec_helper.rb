@@ -211,6 +211,9 @@ RSpec.configure do |config|
     c.syntax = :expect
   end
 
+  config.filter_run_when_matching focus: true
+  config.filter_run_excluding skip: true
+
   config.before do
     %w[home bin].each do |dir|
       FileUtils.mkdir_p File.join(sandbox_path, dir)
