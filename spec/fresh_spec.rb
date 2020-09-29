@@ -599,9 +599,8 @@ describe 'fresh' do
       touch fresh_path + 'source/repo/name/file'
 
       FileUtils.mkdir_p fresh_local_path
-      silence(:stdout) do
-        expect(system 'git', 'init', fresh_local_path.to_s).to be true
-      end
+      output, status = Open3.capture2('git', 'init', fresh_local_path.to_s)
+      expect(status).to be_success
 
       run_fresh
     end
@@ -1623,17 +1622,17 @@ describe 'fresh' do
 
     describe 'FRESH_BIN_PATH' do
       let(:path) do
-        capture(:stdout) do
-          system <<-EOF
-/usr/bin/env bash -c "$(
-cat <<'SH'
-  export PATH=/usr/bin
-  source #{shell_sh_path}
-  echo "$PATH" | tr ":" "\n"
-SH
-)"
-          EOF
-        end.split("\n")
+        output, status = Open3.capture2(<<~EOF)
+          /usr/bin/env bash -c "$(
+          cat <<'SH'
+            export PATH=/usr/bin
+            source #{shell_sh_path}
+            echo "$PATH" | tr ":" "\n"
+          SH
+          )"
+        EOF
+        expect(status).to be_success
+        output.split("\n")
       end
 
       it 'defaults to $HOME/bin' do
@@ -1673,18 +1672,18 @@ SH
       it 'does not duplicate FRESH_BIN_PATH in the PATH in subshells' do
         run_fresh
 
-        path = capture(:stdout) do
-          system <<-EOF
-/usr/bin/env bash -c "$(
-cat <<'SH'
-  export PATH=/usr/bin
-  source #{shell_sh_path}
-  source #{shell_sh_path}
-  echo "$PATH" | tr ":" "\n"
-SH
-)"
-          EOF
-        end.split("\n")
+        output, status = Open3.capture2(<<~EOF)
+          /usr/bin/env bash -c "$(
+          cat <<'SH'
+            export PATH=/usr/bin
+            source #{shell_sh_path}
+            source #{shell_sh_path}
+            echo "$PATH" | tr ":" "\n"
+          SH
+          )"
+        EOF
+        expect(status).to be_success
+        path = output.split("\n")
 
         expect(path).to eq([
           (sandbox_path + 'home/bin').to_s,
@@ -1695,16 +1694,16 @@ SH
       it 'unsets the __FRESH_BIN_PATH__ variable' do
         run_fresh
 
-        out = capture(:stdout) do
-          system <<-EOF
-/usr/bin/env bash -c "$(
-cat <<'SH'
-  source #{shell_sh_path}
-  echo "$__FRESH_BIN_PATH__"
-SH
-)"
-          EOF
-        end.chomp
+        output, status = Open3.capture2(<<~EOF)
+          /usr/bin/env bash -c "$(
+          cat <<'SH'
+            source #{shell_sh_path}
+            echo "$__FRESH_BIN_PATH__"
+          SH
+          )"
+        EOF
+        expect(status).to be_success
+        out = output.chomp
 
         expect(out).to eq ''
       end

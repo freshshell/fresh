@@ -2,6 +2,7 @@ require 'active_support/core_ext/kernel/reporting'
 require 'active_support/core_ext/string/strip'
 require 'active_support/core_ext/hash/keys'
 require 'tmpdir'
+require 'open3'
 require 'pry'
 
 require_relative 'support/shared_examples'
@@ -56,15 +57,12 @@ def run_fresh(options = {})
   options.assert_valid_keys :command, :full_command, :exit_status, :success, :error, :error_title, :env
   env = options.fetch(:env, {})
 
-  @stdout = capture(:stdout) do
-    @stderr = capture(:stderr) do
-      @exit_status = if options[:full_command]
-        system(env, options[:full_command])
-      else
-        system(env, *['fresh', Array(options[:command])].flatten.compact)
-      end
-    end
+  @stdout, @stderr, status = if options[:full_command]
+    Open3.capture3(env, options[:full_command])
+  else
+    Open3.capture3(env, *['fresh', Array(options[:command])].flatten.compact)
   end
+  @exit_status = status.success?
 
   aggregate_failures do
     if options[:success] && options[:error]
