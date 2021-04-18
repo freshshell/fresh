@@ -294,6 +294,25 @@ describe 'fresh' do
             touch fresh_local_path + 'foo/bin/file6'
           end
 
+          it 'builds files with an environment variable' do
+            ENV['__TEST_DIR'] = 'somewhere'
+
+            rc 'fresh foo --file=$__TEST_DIR/misc/foo/'
+            rc 'fresh foo/bar --file=$__TEST_DIR/other/'
+
+            run_fresh
+
+            expect(files_in_build_directory).to eq %w[
+              shell.sh
+              somewhere/misc/foo/bar/file1
+              somewhere/misc/foo/bar/file2
+              somewhere/misc/foo/bin/file6
+              somewhere/misc/foo/file3
+              somewhere/other/file1
+              somewhere/other/file2
+            ]
+          end
+
           it 'builds files' do
             rc 'fresh foo --file=vendor/misc/foo/'
             rc 'fresh foo/bar --file=vendor/other/'
