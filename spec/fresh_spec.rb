@@ -599,7 +599,7 @@ describe 'fresh' do
       touch fresh_path + 'source/repo/name/file'
 
       FileUtils.mkdir_p fresh_local_path
-      output, status = Open3.capture2('git', 'init', fresh_local_path.to_s)
+      _stdout, _stderr, status = Open3.capture3('git', 'init', fresh_local_path.to_s)
       expect(status).to be_success
 
       run_fresh
