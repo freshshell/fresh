@@ -995,7 +995,7 @@ sub fresh_search {
   }
 
   my $args = join(' ', @_);
-  my $results = read_cmd('curl', '-sS', 'http://api.freshshell.com/directory', '--get', '--data-urlencode', "q=$args");
+  my $results = read_cmd('curl', '-sS', 'https://api.freshshell.com/directory', '--get', '--data-urlencode', "q=$args");
 
   if ($results eq "") {
     fatal_error "No results."

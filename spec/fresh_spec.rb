@@ -1760,7 +1760,7 @@ describe 'fresh' do
       expect(curl_log).to eq <<-EOF.strip_heredoc
         curl
         -sS
-        http://api.freshshell.com/directory
+        https://api.freshshell.com/directory
         --get
         --data-urlencode
         q=foo bar
@@ -1789,7 +1789,7 @@ describe 'fresh' do
       expect(curl_log).to eq <<-EOF.strip_heredoc
         curl
         -sS
-        http://api.freshshell.com/directory
+        https://api.freshshell.com/directory
         --get
         --data-urlencode
         q=blah
@@ -1807,7 +1807,7 @@ describe 'fresh' do
       expect(curl_log).to eq <<-EOF.strip_heredoc
         curl
         -sS
-        http://api.freshshell.com/directory
+        https://api.freshshell.com/directory
         --get
         --data-urlencode
         q=blah
