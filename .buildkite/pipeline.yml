@@ -1,0 +1,20 @@
+steps:
+  -
+    key: "docker-build"
+    label: ":docker:"
+    plugins:
+      - docker-compose#v4.9.0:
+          build: app
+    env:
+      DOCKER_BUILDKIT: 1
+      COMPOSE_DOCKER_CLI_BUILD: 1
+      BUILDKIT_PROGRESS: plain
+  -
+    key: "rspec"
+    label: ":rspec:"
+    depends_on:
+      - "docker-build"
+    plugins:
+      - docker-compose#v4.9.0:
+          run: app
+    command: rspec --format doc
