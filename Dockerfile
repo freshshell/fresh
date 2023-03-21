@@ -10,6 +10,7 @@ RUN \
   --mount=type=cache,id=fresh-apt-cache,sharing=locked,target=/var/cache/apt \
   --mount=type=cache,id=fresh-apt-lib,sharing=locked,target=/var/lib/apt \
   <<SH
+  set -euo pipefail
   rm /etc/apt/apt.conf.d/docker-clean
   echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache
   apt-get update --yes
@@ -32,6 +33,7 @@ COPY Gemfile* ./
 RUN \
   --mount=type=cache,id=fresh-bundle-cache,target=/var/cache/bundle \
   <<SH
+  set -euo pipefail
   BUNDLE_CACHE_PATH="/var/cache/bundle/debian-$(cat /etc/debian_version)-ruby-$RUBY_VERSION"
   GEM_HOME="$BUNDLE_CACHE_PATH" gem install --conservative bundler:$(tail -n1 Gemfile.lock | awk '{print $1}')
   GEM_HOME="$BUNDLE_CACHE_PATH" bundle install --no-clean
