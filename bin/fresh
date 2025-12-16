@@ -1148,7 +1148,8 @@ sub fresh_commands {
   $sep //= "# ";
 
   foreach my $command (get_commands()) {
-    printf "%s%-18s %s%s\n", $indent, "$$command{name} $$command{args}", $sep, $$command{description};
+    (my $desc = $$command{description}) =~ s/\n/\n@{[ (' ' x (length($indent) + 18 + 1)) . $sep ]}/g;
+    printf "%s%-18s %s%s\n", $indent, "$$command{name} $$command{args}", $sep, $desc;
   }
 }
 
