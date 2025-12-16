@@ -1142,6 +1142,12 @@ sub get_commands {
   return @commands;
 }
 
+sub fresh_commands {
+  foreach my $command (get_commands()) {
+    printf "%-18s # %s\n", "$$command{name} $$command{args}", $$command{description};
+  }
+}
+
 sub fresh_help {
   print <<EOF;
 Keep your dot files \033[1;32mfresh\033[0m.
@@ -1158,12 +1164,6 @@ EOF
 
   foreach my $command (get_commands()) {
     printf "    %-18s %s\n", "$$command{name} $$command{args}", $$command{description};
-  }
-}
-
-sub fresh_commands {
-  foreach my $command (get_commands()) {
-    printf "%-18s # %s\n", "$$command{name} $$command{args}", $$command{description};
   }
 }
 
