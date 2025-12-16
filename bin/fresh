@@ -1158,10 +1158,12 @@ sub fresh_clean_symlinks {
 sub get_commands {
   my @commands;
 
+  (my $directory_url = $FRESH_DIRECTORY_URL) =~ s/\.md$//;
+
   push @commands, {name => 'install', args => '', description => 'Build shell configuration and relevant symlinks (default)'};
   push @commands, {name => 'update', args => '[<filter>]', description => 'Update from source repos and rebuild'};
   push @commands, {name => 'clean', args => '', description => 'Removes dead symlinks and source repos'};
-  push @commands, {name => 'search', args => '<query>', description => "Search the fresh directory at\nhttps://github.com/freshshell/fresh/wiki/Directory"};
+  push @commands, {name => 'search', args => '<query>', description => "Search the fresh directory at\n$directory_url"};
   push @commands, {name => 'edit', args => '', description => 'Open freshrc for editing'};
   push @commands, {name => 'show', args => '', description => 'Show source references for freshrc lines'};
   push @commands, {name => 'help', args => '', description => 'Show this help'};
