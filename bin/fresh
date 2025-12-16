@@ -1143,8 +1143,12 @@ sub get_commands {
 }
 
 sub fresh_commands {
+  my ($indent, $sep) = @_;
+  $indent //= "";
+  $sep //= "# ";
+
   foreach my $command (get_commands()) {
-    printf "%-18s # %s\n", "$$command{name} $$command{args}", $$command{description};
+    printf "%s%-18s %s%s\n", $indent, "$$command{name} $$command{args}", $sep, $$command{description};
   }
 }
 
@@ -1162,9 +1166,7 @@ usage: fresh <command> [<args>]
 Available commands:
 EOF
 
-  foreach my $command (get_commands()) {
-    printf "    %-18s %s\n", "$$command{name} $$command{args}", $$command{description};
-  }
+  fresh_commands("    ", "");
 }
 
 sub confirm {
