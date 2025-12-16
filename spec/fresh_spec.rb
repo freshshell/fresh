@@ -1750,20 +1750,54 @@ describe 'fresh' do
 
   describe 'search' do
     it 'searches directory for keywords' do
-      stub_curl 'foo', 'bar baz'
+      stub_curl <<~MARKDOWN
+      This page acts as our directory.
+
+      ## Test
+
+      * `fresh example/dotfiles config/foo --file` — [example one](https://example.com/dotfiles/blob/main/config/foo)
+      * `fresh example/dotfiles config/bar --file` — [example two](https://example.com/dotfiles/blob/main/config/bar-no-foo)
+      * `fresh example/dotfiles config/foo-bar --file` — [example three](https://example.com/dotfiles/blob/main/config/foo-with-bar)
+      * `fresh example/dotfiles config/foo-BAR-baz --file` – [example four](https://example.com/dotfiles/blob/main/config/foo-BAR-baz)
+      * `fresh example/dotfiles config/food-barrel --file` - [example five](https://example.com/dotfiles/blob/main/config/food-barrel)
+      MARKDOWN
 
       run_fresh command: %w[search foo bar], success: <<-EOF.strip_heredoc
-        foo
-        bar baz
+        # example three
+        # <https://example.com/dotfiles/blob/main/config/foo-with-bar>
+        fresh example/dotfiles config/foo-bar --file
+
+        # example four
+        # <https://example.com/dotfiles/blob/main/config/foo-BAR-baz>
+        fresh example/dotfiles config/foo-BAR-baz --file
+
+        # example five
+        # <https://example.com/dotfiles/blob/main/config/food-barrel>
+        fresh example/dotfiles config/food-barrel --file
       EOF
 
-      expect(curl_log).to eq <<-EOF.strip_heredoc
+      run_fresh(
+        command: %w[search fool],
+        error: "#{ERROR_PREFIX} No results.\n"
+      )
+      run_fresh(
+        command: %w[search ood],
+        error: "#{ERROR_PREFIX} No results.\n"
+      )
+
+      run_fresh(
+        command: %w[search fresh],
+        error: "#{ERROR_PREFIX} No results.\n"
+      )
+      run_fresh(
+        command: %w[search file],
+        error: "#{ERROR_PREFIX} No results.\n"
+      )
+
+      expect(curl_log).to eq <<-EOF.strip_heredoc * 5
         curl
-        -sS
-        https://api.freshshell.com/directory
-        --get
-        --data-urlencode
-        q=foo bar
+        -sSL
+        https://github.com/freshshell/fresh/wiki/Directory.md
       EOF
     end
 
@@ -1788,11 +1822,8 @@ describe 'fresh' do
 
       expect(curl_log).to eq <<-EOF.strip_heredoc
         curl
-        -sS
-        https://api.freshshell.com/directory
-        --get
-        --data-urlencode
-        q=blah
+        -sSL
+        https://github.com/freshshell/fresh/wiki/Directory.md
       EOF
     end
 
@@ -1806,11 +1837,8 @@ describe 'fresh' do
 
       expect(curl_log).to eq <<-EOF.strip_heredoc
         curl
-        -sS
-        https://api.freshshell.com/directory
-        --get
-        --data-urlencode
-        q=blah
+        -sSL
+        https://github.com/freshshell/fresh/wiki/Directory.md
       EOF
     end
   end

@@ -21,6 +21,7 @@ my $FRESH_LOCAL = $ENV{FRESH_LOCAL} ||= "$ENV{HOME}/.dotfiles";
 my $FRESH_BIN_PATH = $ENV{FRESH_BIN_PATH} ||= "$ENV{HOME}/bin";
 my $FRESH_NO_LOCAL_CHECK = $ENV{FRESH_NO_LOCAL_CHECK} ||= 1;
 my $FRESH_NO_PATH_EXPORT = $ENV{FRESH_NO_PATH_EXPORT};
+my $FRESH_DIRECTORY_URL = $ENV{FRESH_DIRECTORY_URL} ||= "https://github.com/freshshell/fresh/wiki/Directory.md";
 
 sub parse_fresh_dsl_args {
   my ($file, $line, $cmd, $args_ref, $default_options) = @_;
@@ -989,18 +990,52 @@ EOF
   }
 }
 
+sub search_tokens_match {
+  my ($search_tokens_ref, $entry_tokens_ref) = @_;
+  my @search_tokens = map { lc $_ } @$search_tokens_ref;
+  my @entry_tokens = map { lc $_ } @$entry_tokens_ref;
+
+  for my $search_token (@search_tokens) {
+    my $found = 0;
+    for my $entry_token (@entry_tokens) {
+      if (index($entry_token, $search_token) == 0) {
+        $found = 1;
+        last;
+      }
+    }
+    return 0 unless $found;
+  }
+  return 1;
+}
+
 sub fresh_search {
   if (0 + @_ == 0) {
     fatal_error "No search query given."
   }
+  my @search_tokens = @_;
 
-  my $args = join(' ', @_);
-  my $results = read_cmd('curl', '-sS', 'https://api.freshshell.com/directory', '--get', '--data-urlencode', "q=$args");
+  my $markdown = read_cmd('curl', '-sSL', $FRESH_DIRECTORY_URL);
 
-  if ($results eq "") {
+  my @results;
+  for my $line (split /\n/, $markdown) {
+    if ($line =~ /^\* `(fresh [^`]+)`\s+(?:—|–|-)\s+\[([^]]+)\]\(([^)]+)\)\B/) {
+      my ($code, $desc, $url) = ($1, $2, $3);
+
+      my $code_cleaned = $code;
+      $code_cleaned =~ s/^fresh\s+//;
+      $code_cleaned =~ s/\s+--\S+//g;
+      my @entry_tokens = "$code_cleaned $desc" =~ /(\w+)/g;
+
+      if (search_tokens_match(\@search_tokens, \@entry_tokens)) {
+        push @results, "# $desc\n# <$url>\n$code";
+      }
+    }
+  }
+
+  if (@results == 0) {
     fatal_error "No results."
   } else {
-    print $results;
+    print join("\n\n", @results) . "\n";
   }
 }
 
