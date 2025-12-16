@@ -14,6 +14,7 @@ GEM
       concurrent-ruby (~> 1.0)
     method_source (1.0.0)
     minitest (5.19.0)
+    ostruct (0.6.3)
     pry (0.14.2)
       coderay (~> 1.1)
       method_source (~> 1.0)
@@ -39,11 +40,12 @@ PLATFORMS
 
 DEPENDENCIES
   activesupport (~> 6.1)
+  ostruct
   pry
   rspec
 
 RUBY VERSION
-   ruby 3.2.0p0
+  ruby 3.4.7
 
 BUNDLED WITH
-   2.4.5
+  4.0.1

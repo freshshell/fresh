@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.4
 
-FROM ruby:3.2.0-slim-bullseye AS ruby
+FROM ruby:3.4.7-slim-trixie AS ruby
 
 WORKDIR /app
 SHELL ["/bin/bash", "-c"]

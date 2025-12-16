@@ -3,6 +3,7 @@ require 'active_support/core_ext/string/strip'
 require 'active_support/core_ext/hash/keys'
 require 'tmpdir'
 require 'open3'
+require 'shellwords'
 require 'pry'
 
 require_relative 'support/shared_examples'
@@ -154,7 +155,7 @@ def stub_curl(*args)
       exit 1
     <% else %>
       <% args.each do |arg| %>
-        echo "<%= arg %>"
+        echo <%= Shellwords.escape arg %>
       <% end %>
     <% end %>
   ERB
