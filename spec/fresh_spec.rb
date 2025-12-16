@@ -2289,7 +2289,8 @@ describe 'fresh' do
             install            Build shell configuration and relevant symlinks (default)
             update [<filter>]  Update from source repos and rebuild
             clean              Removes dead symlinks and source repos
-            search <query>     Search the fresh directory
+            search <query>     Search the fresh directory at
+                               https://github.com/freshshell/fresh/wiki/Directory
             edit               Open freshrc for editing
             show               Show source references for freshrc lines
             help               Show this help
@@ -2305,7 +2306,8 @@ describe 'fresh' do
         install            # Build shell configuration and relevant symlinks (default)
         update [<filter>]  # Update from source repos and rebuild
         clean              # Removes dead symlinks and source repos
-        search <query>     # Search the fresh directory
+        search <query>     # Search the fresh directory at
+                           # https://github.com/freshshell/fresh/wiki/Directory
         edit               # Open freshrc for editing
         show               # Show source references for freshrc lines
         help               # Show this help
