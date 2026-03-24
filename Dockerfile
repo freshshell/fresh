@@ -15,7 +15,7 @@ RUN \
   echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache
   apt-get update --yes
   DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-    perl git
+    perl git build-essential
 SH
 
 COPY .tool-versions ./
